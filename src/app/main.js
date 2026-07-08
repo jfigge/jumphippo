@@ -145,15 +145,23 @@ function installHotReload(win) {
 }
 
 // ─── App icon ─────────────────────────────────────────────────────────────────
-// The bundled PNG icon set (src/web/icons/). A large source is loaded once and
-// Electron downscales it as needed. On Windows/Linux it becomes the window +
-// taskbar icon; on macOS the window `icon` option is ignored (the dock icon comes
-// from the packaged .app bundle), so we set the dock icon explicitly when running
-// unpackaged so `make debug` shows our icon instead of the default Electron one.
+// A large source PNG is loaded once and Electron downscales it as needed. On
+// Windows/Linux it becomes the window + taskbar icon; on macOS the window `icon`
+// option is ignored (the dock icon comes from the packaged .app bundle), so we
+// set the dock icon explicitly when running unpackaged so `make debug` shows our
+// icon instead of the default Electron one.
+//
+// macOS expects the artwork to sit inside the system "safe area" — a rounded
+// square filling ~80% of the canvas with transparent padding on every side — so
+// the dock renders it at the same visual weight as native apps. We therefore use
+// the pre-padded `porthippo-mac-icon.png` on darwin; other platforms use the
+// edge-to-edge icon set, which is designed to fill its canvas.
 function loadAppIcon() {
-  const icon = nativeImage.createFromPath(
-    path.join(__dirname, "..", "web", "icons", "512x512.png"),
-  );
+  const file =
+    process.platform === "darwin"
+      ? path.join(__dirname, "..", "web", "porthippo-mac-icon.png")
+      : path.join(__dirname, "..", "web", "icons", "512x512.png");
+  const icon = nativeImage.createFromPath(file);
   return icon.isEmpty() ? undefined : icon;
 }
 
