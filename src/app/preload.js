@@ -80,6 +80,15 @@ contextBridge.exposeInMainWorld("porthippo", {
     trust: (promptId) => ipcRenderer.invoke("hostkeys:trust", promptId),
     reject: (promptId) => ipcRenderer.invoke("hostkeys:reject", promptId),
   },
+
+  // ── Auto-update (Feature 70) ──────────────────────────────────────────────
+  // Trigger a manual update check or a restart-and-install. Update *lifecycle*
+  // events arrive as porthippo:update-* CustomEvents on window (wired below),
+  // not through this object.
+  updater: {
+    check: () => ipcRenderer.invoke("updater:check"),
+    quitAndInstall: () => ipcRenderer.invoke("updater:quit-and-install"),
+  },
 });
 
 // ── Main → renderer push events ───────────────────────────────────────────────
@@ -95,5 +104,24 @@ for (const channel of [
 ]) {
   ipcRenderer.on(channel, (_event, detail) => {
     window.dispatchEvent(new CustomEvent(channel, { detail }));
+  });
+}
+
+// ── Auto-update lifecycle events (Feature 70) ───────────────────────────────
+// Mirror each main→renderer updater:* push onto the window as a global
+// porthippo:update-* CustomEvent, following the project's one-way broadcast
+// convention. Payloads are plain serializable objects (version / progress /
+// error message) — never secrets.
+const UPDATER_EVENT_MAP = {
+  "updater:checking": "porthippo:update-checking",
+  "updater:available": "porthippo:update-available",
+  "updater:not-available": "porthippo:update-not-available",
+  "updater:progress": "porthippo:update-progress",
+  "updater:downloaded": "porthippo:update-downloaded",
+  "updater:error": "porthippo:update-error",
+};
+for (const [channel, domEvent] of Object.entries(UPDATER_EVENT_MAP)) {
+  ipcRenderer.on(channel, (_event, payload) => {
+    window.dispatchEvent(new CustomEvent(domEvent, { detail: payload }));
   });
 }

@@ -33,6 +33,7 @@
     "prettier": "^3.3.3"
   },
   "dependencies": {
+    "electron-updater": "^6.8.9",
     "ssh2": "^1.16.0"
   },
   "engines": {
@@ -63,28 +64,52 @@
       "extendInfo": {
         "ITSAppUsesNonExemptEncryption": false
       },
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "packaging/entitlements.mac.plist",
+      "entitlementsInherit": "packaging/entitlements.mac.plist",
+      "notarize": true,
       "target": [
         {
           "target": "dmg",
+          "arch": ["arm64", "x64"]
+        },
+        {
+          "target": "zip",
           "arch": ["arm64", "x64"]
         }
       ]
     },
     "win": {
       "icon": "web/icons/256x256.png",
+      "signtoolOptions": {
+        "signingHashAlgorithms": ["sha256"],
+        "rfc3161TimeStampServer": "http://timestamp.digicert.com"
+      },
       "target": [
         {
           "target": "nsis",
           "arch": ["x64", "arm64"]
+        },
+        {
+          "target": "portable",
+          "arch": ["x64", "arm64"]
         }
       ]
     },
+    "nsis": {
+      "artifactName": "Port-Hippo-Setup-${version}-${arch}.${ext}"
+    },
     "linux": {
       "category": "Network",
-      "icon": "web/icons/512x512.png",
+      "icon": "web/icons",
       "target": [
         {
           "target": "AppImage",
+          "arch": ["x64", "arm64"]
+        },
+        {
+          "target": "deb",
           "arch": ["x64", "arm64"]
         }
       ]
