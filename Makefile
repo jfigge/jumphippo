@@ -156,15 +156,34 @@ test-tunnel:
 # ─── Build ────────────────────────────────────────────────────────────────────
 build: build-mac
 
+# Fast, unsigned `--dir` packaging smoke-tests — one per platform. They exercise
+# the full electron-builder pack (asar, file globs, native deps, icons) without
+# producing installers, so CI can verify the app packages on macOS/Linux/Windows
+# in ~1× runner minutes. Linux `--dir` needs no fpm (that's only for deb/AppImage)
+# and Windows `--dir` needs no signtool, so both run credential-free. UNSIGNED_ENV
+# strips every signing var (incl. WIN_CSC_*) so the output is unsigned regardless
+# of inherited CI secrets.
 build-mac: build-setup build-install
 	@echo "Building Electron app for macOS (dir, unsigned)..."
-	@cd $(BUILD_DIR)/src; env $(UNSIGNED_ENV) npx electron-builder --mac --dir --publish never -c.mac.notarize=false
+	@cd $(BUILD_DIR)/src; env $(UNSIGNED_ENV) npx electron-builder --mac --dir --publish never -c.mac.notarize=false $(MAC_SIGN_OVERRIDES)
+	@echo "  → $(BUILD_DIR)/src/dist/"
+	@echo "--------------------------------"
+
+build-linux: build-setup build-install
+	@echo "Building Electron app for Linux (dir, unsigned)..."
+	@cd $(BUILD_DIR)/src; env $(UNSIGNED_ENV) npx electron-builder --linux --dir --publish never
+	@echo "  → $(BUILD_DIR)/src/dist/"
+	@echo "--------------------------------"
+
+build-win: build-setup build-install
+	@echo "Building Electron app for Windows (dir, unsigned)..."
+	@cd $(BUILD_DIR)/src; env $(UNSIGNED_ENV) npx electron-builder --win --dir --publish never
 	@echo "  → $(BUILD_DIR)/src/dist/"
 	@echo "--------------------------------"
 
 dmg: build-setup build-install
 	@echo "Building macOS .dmg (unsigned, un-notarized)…"
-	@cd $(BUILD_DIR)/src; env $(UNSIGNED_ENV) npx electron-builder --mac dmg --publish never -c.mac.notarize=false
+	@cd $(BUILD_DIR)/src; env $(UNSIGNED_ENV) npx electron-builder --mac dmg --publish never -c.mac.notarize=false $(MAC_SIGN_OVERRIDES)
 	@echo "  → $(BUILD_DIR)/src/dist/"
 	@echo "--------------------------------"
 
@@ -439,6 +458,6 @@ help:
 	@echo "    sync-win      Push Windows signing creds from release.env → GitHub secrets"
 
 .PHONY: version info install debug debug-inspect fmt fmt-check lint license-headers test \
-        test-license-headers test-js test-tunnel build build-mac dmg build-setup \
-        build-install icons sign-dmg sign-all dist dist-mac dist-linux dist-win \
+        test-license-headers test-js test-tunnel build build-mac build-linux build-win dmg \
+        build-setup build-install icons sign-dmg sign-all dist dist-mac dist-linux dist-win \
         staple-dmg release sync-mac sync-win clean help
