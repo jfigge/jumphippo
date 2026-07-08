@@ -30,6 +30,7 @@
     "electron-builder": "~26.8.1",
     "eslint": "^9.39.4",
     "globals": "^16.1.0",
+    "jsdom": "^27.0.1",
     "prettier": "^3.3.3"
   },
   "dependencies": {

@@ -99,11 +99,13 @@ make clean     # Remove build/ and dist/
 
 ## Git Workflow
 
-- **Never create a branch unless explicitly told to.** This is a solo project — commit
-  directly on the current branch (normally `main`). Do not auto-branch before committing,
-  even for large changes.
-- Commit and push only when the user asks.
-- End commit messages with the required `Co-Authored-By` trailer.
+- **Claude must not create commits.** Do not run `git commit` (or `git push`) — the user
+  handles all committing and pushing themselves, even when a task is finished and verified.
+  You may stage changes or draft a commit message when asked, but leave the actual commit
+  to the user.
+- **Never create a branch unless explicitly told to.** This is a solo project; work happens
+  directly on the current branch (normally `main`). Do not auto-branch, even for large changes.
+- When you draft a commit message, end it with the required `Co-Authored-By` trailer.
 
 ## Tech Stack
 

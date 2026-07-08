@@ -26,6 +26,7 @@
 const {
   app,
   BrowserWindow,
+  dialog,
   ipcMain,
   nativeImage,
   webContents,
@@ -37,6 +38,7 @@ const { parseArgs } = require("./cli-args");
 const { Stores } = require("./store/stores");
 const { registerStoreIPC } = require("./ipc/store");
 const { registerEngineIPC } = require("./ipc/engine");
+const { registerDialogIPC } = require("./ipc/dialog");
 const { TunnelEngine } = require("./tunnel/engine");
 const updater = require("./updater");
 
@@ -184,6 +186,10 @@ function registerIpc() {
 
   // Engine intents: tunnels:arm|disarm|status|apply, hostkeys:trust|reject.
   registerEngineIPC({ ipcMain, getEngine });
+
+  // Native file pickers (Feature 40): dialog:open-key-file for the auth editor's
+  // Browse. Only paths cross back to the sandboxed renderer, never file bytes.
+  registerDialogIPC({ ipcMain, dialog, getMainWindow: () => mainWindow });
 
   // Auto-update (Feature 70). The renderer triggers a manual check / restart;
   // the menu + tray triggers arrive in Feature 60. Lifecycle events flow back

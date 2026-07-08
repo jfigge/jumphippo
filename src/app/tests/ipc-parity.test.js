@@ -52,9 +52,14 @@ function channelsFor(source, fnPattern) {
 
 // The main-process IPC surface is split across main.js (app:version), the store
 // IPC module (tunnels:list|get|create|update|delete|reorder / settings:* /
-// hostkeys:list|revoke) and the engine IPC module (tunnels:arm|disarm|status|apply
-// / hostkeys:trust|reject).
-const mainProcessSource = ["main.js", "ipc/store.js", "ipc/engine.js"]
+// hostkeys:list|revoke), the engine IPC module (tunnels:arm|disarm|status|apply
+// / hostkeys:trust|reject) and the dialog IPC module (dialog:open-key-file).
+const mainProcessSource = [
+  "main.js",
+  "ipc/store.js",
+  "ipc/engine.js",
+  "ipc/dialog.js",
+]
   .map(read)
   .join("\n");
 

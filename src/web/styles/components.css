@@ -1,0 +1,541 @@
+/*
+ * Copyright 2026 Jason Figge
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/* components.css — styles for the Feature 40 Definition view and its shared
+   widgets (buttons, form fields, popups). Everything derives from the design
+   tokens in theme.css; class naming follows prefix-name / block--modifier. */
+
+/* ── Buttons ──────────────────────────────────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  height: var(--control-height);
+  padding: 0 var(--space-3);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-0);
+  color: var(--color-text);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.btn:hover {
+  background: var(--color-surface-1);
+}
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+
+.btn--primary {
+  background: var(--color-accent);
+  color: var(--color-crust);
+}
+
+.btn--primary:hover {
+  background: var(--color-accent-hover);
+}
+
+.btn--secondary {
+  background: var(--color-surface-0);
+  border-color: var(--color-overlay);
+}
+
+.btn--danger {
+  background: var(--color-danger);
+  color: var(--color-crust);
+}
+
+.btn--ghost {
+  background: transparent;
+  border-color: var(--color-overlay);
+  color: var(--color-subtext);
+}
+
+.btn--ghost:hover {
+  background: var(--color-surface-0);
+  color: var(--color-text);
+}
+
+.btn--icon {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  background: transparent;
+  color: var(--color-subtext);
+  font-size: 13px;
+}
+
+.btn--icon:hover {
+  background: var(--color-surface-1);
+  color: var(--color-text);
+}
+
+/* ── Form fields ──────────────────────────────────────────────────────────── */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin-bottom: var(--space-3);
+  min-width: 0;
+}
+
+.field-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-subtext);
+}
+
+.field input,
+.field select {
+  width: 100%;
+  height: var(--control-height);
+  padding: 0 var(--space-2);
+  background: var(--color-crust);
+  color: var(--color-text);
+  border: 1px solid var(--color-overlay);
+  border-radius: var(--radius-sm);
+  font: inherit;
+  font-size: 13px;
+}
+
+.field input:focus,
+.field select:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
+.field-hint {
+  font-size: 11px;
+  color: var(--color-muted);
+}
+
+.field-error {
+  font-size: 11px;
+  color: var(--color-danger);
+}
+
+.field--error input,
+.field--error select {
+  border-color: var(--color-danger);
+}
+
+/* ── Popups ───────────────────────────────────────────────────────────────── */
+.popup-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 120ms ease,
+    visibility 120ms ease;
+}
+
+.popup-overlay--visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+.popup {
+  min-width: 320px;
+  max-width: 460px;
+  max-height: 80vh;
+  overflow: auto;
+  background: var(--color-surface-0);
+  border: 1px solid var(--color-overlay);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-1);
+}
+
+.popup-header {
+  padding: var(--space-4) var(--space-4) 0;
+}
+
+.popup-title {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.popup-body {
+  padding: var(--space-3) var(--space-4);
+}
+
+.popup-message {
+  font-size: 13px;
+  color: var(--color-text);
+}
+
+.popup-note {
+  margin-top: var(--space-2);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--color-muted);
+  word-break: break-all;
+}
+
+.popup-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  padding: 0 var(--space-4) var(--space-4);
+}
+
+/* ── Definition view: two-pane layout ─────────────────────────────────────── */
+.definition-view {
+  display: grid;
+  grid-template-columns: minmax(220px, 300px) 1fr;
+  gap: var(--space-5);
+  align-items: start;
+}
+
+.def-list-pane {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.def-list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.def-list-title {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.def-empty {
+  padding: var(--space-4);
+  text-align: center;
+  color: var(--color-muted);
+}
+
+.def-empty-title {
+  font-size: 13px;
+}
+
+.def-empty-hint {
+  font-size: 12px;
+}
+
+.def-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.def-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto auto;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-surface-0);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+
+.def-row:hover {
+  background: var(--color-surface-1);
+}
+
+.def-row:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+
+.def-row--selected {
+  border-color: var(--color-accent);
+}
+
+.def-row-main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.def-row-name {
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.def-row-summary {
+  font-size: 11px;
+  color: var(--color-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.def-row-tools {
+  display: flex;
+  gap: 2px;
+}
+
+.def-arm-btn {
+  width: auto;
+  padding: 0 var(--space-2);
+  font-size: 11px;
+}
+
+.def-arm-btn--armed {
+  color: var(--color-warning);
+}
+
+/* ── State badges ─────────────────────────────────────────────────────────── */
+.def-badge {
+  padding: 2px var(--space-2);
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.def-badge--disarmed {
+  background: var(--color-surface-1);
+  color: var(--color-muted);
+}
+
+.def-badge--listening {
+  background: var(--color-surface-1);
+  color: var(--color-subtext);
+}
+
+.def-badge--connecting {
+  background: var(--color-surface-1);
+  color: var(--color-warning);
+}
+
+.def-badge--connected {
+  background: var(--color-success);
+  color: var(--color-crust);
+}
+
+.def-badge--paused {
+  background: var(--color-warning);
+  color: var(--color-crust);
+}
+
+.def-badge--error {
+  background: var(--color-danger);
+  color: var(--color-crust);
+}
+
+/* ── Definition view: editor pane ─────────────────────────────────────────── */
+.def-editor-pane {
+  min-width: 0;
+}
+
+.def-editor-placeholder {
+  padding: var(--space-6);
+  text-align: center;
+  color: var(--color-muted);
+  border: 1px dashed var(--color-overlay);
+  border-radius: var(--radius-md);
+}
+
+/* ── Tunnel editor ────────────────────────────────────────────────────────── */
+.tunnel-editor {
+  display: flex;
+  flex-direction: column;
+}
+
+.editor-section {
+  margin-bottom: var(--space-4);
+}
+
+.editor-section-title {
+  margin-bottom: var(--space-2);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.editor-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+}
+
+.editor-check {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+  cursor: pointer;
+}
+
+.editor-check-input {
+  width: 16px;
+  height: 16px;
+}
+
+.editor-check-label {
+  font-size: 13px;
+  color: var(--color-text);
+}
+
+.editor-bind-warning {
+  margin-top: var(--space-1);
+  padding: var(--space-2);
+  border: 1px solid var(--color-warning);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  color: var(--color-warning);
+}
+
+.editor-error {
+  margin-bottom: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-danger);
+  border-radius: var(--radius-sm);
+  background: var(--color-crust);
+  font-size: 13px;
+  color: var(--color-danger);
+}
+
+.editor-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+/* ── Hop editor (SSH server / jump host) ──────────────────────────────────── */
+.hop-editor-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1.5fr;
+  gap: var(--space-3);
+}
+
+/* ── Auth editor ──────────────────────────────────────────────────────────── */
+.auth-header,
+.jumps-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: var(--space-2) 0;
+}
+
+.auth-header-title,
+.jumps-header-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-subtext);
+}
+
+.auth-method,
+.jump-host {
+  margin-bottom: var(--space-2);
+  padding: var(--space-3);
+  background: var(--color-mantle);
+  border: 1px solid var(--color-overlay);
+  border-radius: var(--radius-md);
+}
+
+.auth-method-head,
+.jump-host-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-2);
+}
+
+.auth-method-title,
+.jump-host-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-subtext);
+}
+
+.auth-method-tools,
+.jump-host-tools {
+  display: flex;
+  gap: var(--space-1);
+}
+
+.auth-keypath-row,
+.auth-secret-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.auth-keypath-row .auth-input,
+.auth-secret-row .auth-input {
+  flex: 1;
+}
+
+.auth-secret-status {
+  font-size: 11px;
+  color: var(--color-muted);
+  white-space: nowrap;
+}
+
+.auth-agent-hint {
+  font-size: 12px;
+  color: var(--color-muted);
+}
+
+.auth-section-field {
+  margin-bottom: 0;
+}
+
+/* ── Jump-host list ───────────────────────────────────────────────────────── */
+.jumps-empty {
+  font-size: 12px;
+  font-style: italic;
+  color: var(--color-muted);
+}
+
+/* ── Narrow layouts (e.g. split view on a small window) ───────────────────── */
+@media (max-width: 900px) {
+  .definition-view {
+    grid-template-columns: 1fr;
+  }
+
+  .editor-row,
+  .hop-editor-grid {
+    grid-template-columns: 1fr;
+  }
+}

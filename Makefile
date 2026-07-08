@@ -131,7 +131,7 @@ license-headers:
 	@echo "--------------------------------"
 
 # ─── Testing ──────────────────────────────────────────────────────────────────
-test: test-license-headers test-js test-tunnel
+test: test-license-headers test-js test-tunnel test-renderer
 
 # Guard: every first-party src/ JS+CSS file and build script must carry the
 # Apache 2.0 header. Fix any failure with `make license-headers`.
@@ -151,6 +151,13 @@ test-js:
 test-tunnel:
 	@echo "Running SSH tunnel engine integration tests..."
 	@cd $(SRC_DIR) && node --test "app/tunnel/**/*.test.js"
+	@echo "--------------------------------"
+
+# Renderer component tests (jsdom). Node auto-detects ESM in these .js files, so
+# they import the real ES-module components and exercise them against a jsdom DOM.
+test-renderer:
+	@echo "Running renderer component tests (jsdom)..."
+	@cd $(SRC_DIR) && node --test "web/scripts/tests/**/*.test.js"
 	@echo "--------------------------------"
 
 # ─── Build ────────────────────────────────────────────────────────────────────

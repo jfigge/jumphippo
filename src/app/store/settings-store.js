@@ -30,6 +30,7 @@ const DEFAULTS = Object.freeze({
   defaultLingerMs: 10000, // idle grace before SSH teardown, seeded into new tunnels
   defaultBindHost: "127.0.0.1", // loopback by default (LAN exposure is opt-in)
   launchAtLogin: false,
+  viewMode: "definition", // "definition" | "monitoring" | "split" (Feature 40 shell)
 });
 
 class SettingsStore {

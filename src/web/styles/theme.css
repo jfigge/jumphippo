@@ -73,6 +73,7 @@
 
   /* ── Layout ──────────────────────────────────────────────────────────── */
   --header-height: 48px;
+  --control-height: 32px; /* text inputs, selects, and default buttons */
 }
 
 /* Light theme via the OS preference. The data-theme override (Feature 60's

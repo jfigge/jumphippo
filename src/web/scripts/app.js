@@ -14,15 +14,19 @@
  * limitations under the License.
  */
 
-// app.js — renderer bootstrap for the Feature 00 shell. Wires the
-// Definition / Monitoring / Split view toggle and shows the app version fetched
-// over the window.porthippo IPC bridge. Later features mount real components
-// into #definition-view and #monitoring-view.
+// app.js — renderer bootstrap. Wires the Definition / Monitoring / Split view
+// toggle (persisting the choice in settings), mounts the Feature 40 Definition
+// view, installs the app-wide SSH host-key trust prompt, and shows the app
+// version fetched over window.porthippo. The Monitoring pane is filled in by
+// Feature 50.
 
 // Activate the Feature 30 stats seam: importing it for its side effect starts the
 // `porthippo:stats` subscription so the latest per-tunnel snapshots are captured
 // from load, ready for the Feature 50 Monitoring view to render.
 import "./stats-store.js";
+
+import { DefinitionView } from "./components/definition-view.js";
+import { HostKeyPrompt } from "./host-key-prompt.js";
 
 const VIEWS = ["definition", "monitoring", "split"];
 
@@ -57,8 +61,35 @@ function initViewToggle() {
     const btn = event.target.closest(".view-toggle-btn");
     if (!btn) return;
     const view = btn.dataset.view;
-    if (VIEWS.includes(view)) applyView(view);
+    if (!VIEWS.includes(view)) return;
+    applyView(view);
+    // Persist the choice; non-fatal if the write fails.
+    window.porthippo?.settings?.set?.({ viewMode: view })?.catch?.(() => {});
   });
+}
+
+async function initView() {
+  // Restore the persisted view mode before the first paint of the panes.
+  let view = "definition";
+  try {
+    const settings = await window.porthippo?.settings?.get?.();
+    if (settings && VIEWS.includes(settings.viewMode)) view = settings.viewMode;
+  } catch {
+    // Non-fatal: fall back to the default view.
+  }
+  applyView(view);
+}
+
+async function initDefinitionView() {
+  const host = document.getElementById("definition-view");
+  if (!host) return;
+  const view = new DefinitionView();
+  host.appendChild(view.element);
+  try {
+    await view.load();
+  } catch (err) {
+    console.error("[app] definition view load failed:", err && err.message);
+  }
 }
 
 async function initVersion() {
@@ -74,6 +105,8 @@ async function initVersion() {
 
 document.addEventListener("DOMContentLoaded", () => {
   initViewToggle();
-  applyView("definition");
+  initView();
+  new HostKeyPrompt().install();
+  initDefinitionView();
   initVersion();
 });

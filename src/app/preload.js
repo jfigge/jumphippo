@@ -71,6 +71,14 @@ contextBridge.exposeInMainWorld("porthippo", {
     set: (patch) => ipcRenderer.invoke("settings:set", patch),
   },
 
+  // ── Native file pickers (Feature 40) ──────────────────────────────────────
+  // The sandboxed renderer can't read a typed path, so the auth editor's Browse
+  // asks main to open a native picker; only the chosen path comes back (or null
+  // if cancelled) — never file bytes.
+  dialog: {
+    openKeyFile: () => ipcRenderer.invoke("dialog:open-key-file"),
+  },
+
   // ── Accepted SSH host keys (TOFU) ─────────────────────────────────────────
   // The engine (Feature 20) records accepted keys in-process; the renderer can
   // review the accepted set and revoke entries.
