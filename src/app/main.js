@@ -30,6 +30,11 @@ const fs = require("fs");
 const { parseArgs } = require("./cli-args");
 const { Stores } = require("./store/stores");
 const { registerStoreIPC } = require("./ipc/store");
+const updater = require("./updater");
+
+// Delay the silent startup update check so it never competes with window
+// creation / first paint. A manual check (Settings/menu) runs immediately.
+const STARTUP_UPDATE_CHECK_DELAY_MS = 10_000;
 
 const {
   dev: isDev,
@@ -123,6 +128,19 @@ function registerIpc() {
 
   // Storage: tunnels:* / settings:* / hostkeys:* (see ipc/store.js).
   registerStoreIPC({ ipcMain, getStores, safeCall, safeCallWrite });
+
+  // Auto-update (Feature 70). The renderer triggers a manual check / restart;
+  // the menu + tray triggers arrive in Feature 60. Lifecycle events flow back
+  // as updater:* pushes, which preload.js re-dispatches as porthippo:update-*
+  // DOM events.
+  ipcMain.handle("updater:check", () => {
+    updater.checkForUpdates({ manual: true });
+    return null;
+  });
+  ipcMain.handle("updater:quit-and-install", () => {
+    updater.quitAndInstall();
+    return null;
+  });
 }
 
 // ─── Hot reload (dev only) ────────────────────────────────────────────────────
@@ -168,6 +186,10 @@ function loadAppIcon() {
 const appIcon = loadAppIcon();
 
 // ─── Window ───────────────────────────────────────────────────────────────────
+// The single app window. Held at module scope so the updater can push lifecycle
+// events to whichever window is currently alive.
+let mainWindow = null;
+
 function createWindow() {
   const win = new BrowserWindow({
     width: 1100,
@@ -186,6 +208,11 @@ function createWindow() {
   });
 
   win.loadFile(path.join(__dirname, "..", "web", "index.html"));
+
+  mainWindow = win;
+  win.on("closed", () => {
+    if (mainWindow === win) mainWindow = null;
+  });
 
   win.once("ready-to-show", () => win.show());
 
@@ -208,6 +235,15 @@ app.whenReady().then(() => {
 
   registerIpc();
   createWindow();
+
+  // Wire electron-updater and run one debounced, silent startup check. A dev /
+  // unpackaged build short-circuits to "not available" (see updater.js), so this
+  // is inert under `make debug`.
+  updater.initUpdater(() => mainWindow);
+  setTimeout(
+    () => updater.checkForUpdates({ manual: false }),
+    STARTUP_UPDATE_CHECK_DELAY_MS,
+  );
 
   app.on("activate", () => {
     // macOS: re-create a window when the dock icon is clicked and none are open.

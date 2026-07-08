@@ -1,0 +1,209 @@
+name: Release
+
+# Trigger a full release cycle by pushing a version tag, e.g.:
+#   git tag v0.2.0 && git push origin v0.2.0
+# `workflow_dispatch` also lets you run the build manually from the Actions tab
+# to smoke-test packaging — that path builds installers but does NOT publish a
+# GitHub Release (only tag pushes do).
+#
+# Code signing + notarization is wired into the build steps below and driven
+# entirely by repository secrets — when a secret is empty the build still
+# succeeds, just unsigned, so this workflow works before the certs are
+# configured. Add these secrets to enable signing (Settings → Secrets and
+# variables → Actions):
+#
+#   macOS signing       CSC_LINK                     base64 of the Developer ID
+#                                                    Application .p12
+#                        CSC_KEY_PASSWORD            its export password
+#   macOS notarization   APPLE_ID                     Apple ID email
+#                        APPLE_APP_SPECIFIC_PASSWORD  app-specific password
+#                        APPLE_TEAM_ID                10-char Team ID
+#   Windows signing      WIN_CSC_LINK                 base64 of the Authenticode
+#                        (Authenticode)                code-signing .pfx/.p12
+#                        WIN_CSC_KEY_PASSWORD         its export password
+#
+# All signing is graceful-skip: an empty secret means electron-builder produces
+# an unsigned artifact instead of failing, so this workflow is green before any
+# certs exist.
+#
+# The installer's internal version comes from src/package.json ("version"), so
+# bump that to match the tag before tagging.
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read # build job only reads; the release job elevates to write below
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: "22"
+
+jobs:
+  # ── Reuse the CI gates before spending native-runner minutes on a build ─────
+  check:
+    name: Lint, format & test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+
+      - name: Set up Node.js
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: src/package-lock.json
+
+      - name: Install dependencies
+        run: make install
+
+      - name: Lint
+        run: make lint
+
+      - name: Check formatting
+        run: make fmt-check
+
+      - name: Test
+        run: make test
+
+  # ── Build real installers on each native runner ─────────────────────────────
+  build:
+    name: Build installers (${{ matrix.os }})
+    needs: check
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            target: dist-mac
+          - os: ubuntu-latest
+            target: dist-linux
+          - os: windows-latest
+            target: dist-win
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        with:
+          fetch-depth: 0 # full history so `git describe --tags` resolves VERSION
+
+      - name: Set up Node.js
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: src/package-lock.json
+
+      # Windows runners lack make/rsync/bash; MSYS2 provides them so the same
+      # `make dist-win` recipe runs unchanged (see ci.yml for the rationale).
+      - name: Set up MSYS2 (Windows)
+        if: runner.os == 'Windows'
+        uses: msys2/setup-msys2@66cd2cce69caa17b53920067426061ca1de3a884 # v2
+        with:
+          msystem: UCRT64
+          install: make rsync
+          path-type: inherit
+
+      - name: Build installers (Windows)
+        if: runner.os == 'Windows'
+        shell: "msys2 {0}"
+        # Authenticode signing is applied by electron-builder when WIN_CSC_LINK
+        # is set; an empty secret means the unsigned build ships as-is (mirrors
+        # the graceful-skip used for macOS).
+        env:
+          WIN_CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
+          WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
+        run: make ${{ matrix.target }}
+
+      - name: Build installers (macOS / Linux)
+        if: runner.os != 'Windows'
+        # Developer ID signing + notarization. Auto-discovery is enabled only
+        # when a cert is present; otherwise it is forced off so the macOS build
+        # cleanly skips signing instead of hunting for an identity. Linux
+        # ignores all of these. Empty notarization secrets ⇒ notarization is
+        # skipped (no failure).
+        env:
+          CSC_LINK: ${{ secrets.CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+          CSC_IDENTITY_AUTO_DISCOVERY: ${{ secrets.CSC_LINK != '' }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: make ${{ matrix.target }}
+
+      - name: Upload installers
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: installers-${{ matrix.os }}
+          path: |
+            build/src/dist/*.dmg
+            build/src/dist/*.zip
+            build/src/dist/*.AppImage
+            build/src/dist/*.deb
+            build/src/dist/*.exe
+            build/src/dist/latest*.yml
+            build/src/dist/*.blockmap
+          if-no-files-found: error
+          # These artifacts are only a hand-off to the `release` job within the
+          # same run (which attaches them to the GitHub Release — Release assets
+          # don't count against Actions storage). Expire them fast so manual
+          # workflow_dispatch smoke-test builds don't accumulate. The minimum is
+          # 1 day; same-run downloads work regardless of retention.
+          retention-days: 1
+
+  # ── Publish a GitHub Release with all platforms' installers attached ────────
+  # Only runs for tag pushes; manual dispatch stops after the build job above.
+  release:
+    name: Publish GitHub Release
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download all installers
+        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
+        with:
+          path: artifacts
+          # Only the per-OS final installers.
+          pattern: installers-*
+
+      - name: Publish release
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
+        with:
+          files: artifacts/**/*
+          draft: false
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+
+  # ── Refresh the website now that the Release is published ───────────────────
+  # deploy-site.yml's `release: published` trigger does NOT fire from here:
+  # GitHub never starts a workflow run from an event created by the default
+  # GITHUB_TOKEN, and the Release above is published with that token. The push of
+  # the version-bump commit to main *does* run deploy-site, but ~8 min earlier —
+  # before this Release exists — so it captures the OLD version. We close the gap
+  # by explicitly dispatching deploy-site after publishing; workflow_dispatch is
+  # the sanctioned exception to the GITHUB_TOKEN no-recursion rule, so it fires
+  # reliably with the built-in token (no PAT needed). Gated on `release`, so a
+  # manual workflow_dispatch smoke build (where `release` is skipped) won't run it.
+  refresh-site:
+    name: Refresh website
+    needs: release
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write # POST .../actions/workflows/{id}/dispatches
+    steps:
+      - name: Trigger Deploy Website
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh workflow run deploy-site.yml --ref main --repo "${{ github.repository }}"
