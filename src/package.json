@@ -1,0 +1,88 @@
+{
+  "name": "porthippo",
+  "version": "0.1.0",
+  "description": "On-demand SSH tunnel manager",
+  "homepage": "https://github.com/jfigge/porthippo",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jfigge/porthippo.git"
+  },
+  "author": {
+    "name": "Jason Figge",
+    "email": "jason.figge@gmail.com"
+  },
+  "license": "Apache-2.0",
+  "main": "app/main.js",
+  "scripts": {
+    "start": "electron app/main.js",
+    "dev": "electron app/main.js --dev",
+    "build": "electron-builder",
+    "build:mac": "electron-builder --mac",
+    "build:linux": "electron-builder --linux",
+    "build:win": "electron-builder --win",
+    "fmt": "prettier --write \"web/**/*.{js,css,html}\" \"app/**/*.js\"",
+    "lint": "eslint \"web/scripts/**/*.js\" \"app/**/*.js\"",
+    "test": "node --test app/tests/"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.4",
+    "electron": "^42.1.0",
+    "electron-builder": "~26.8.1",
+    "eslint": "^9.39.4",
+    "globals": "^16.1.0",
+    "prettier": "^3.3.3"
+  },
+  "dependencies": {},
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "build": {
+    "appId": "com.porthippo.app",
+    "productName": "Port Hippo",
+    "copyright": "Copyright © 2026 Jason Figge",
+    "artifactName": "Port-Hippo-${version}-${arch}.${ext}",
+    "publish": {
+      "provider": "github",
+      "owner": "jfigge",
+      "repo": "porthippo"
+    },
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "app/**/*",
+      "web/**/*",
+      "package.json",
+      "REVISION_INFO.txt"
+    ],
+    "mac": {
+      "category": "public.app-category.developer-tools",
+      "extendInfo": {
+        "ITSAppUsesNonExemptEncryption": false
+      },
+      "target": [
+        {
+          "target": "dmg",
+          "arch": ["arm64", "x64"]
+        }
+      ]
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64", "arm64"]
+        }
+      ]
+    },
+    "linux": {
+      "category": "Network",
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": ["x64", "arm64"]
+        }
+      ]
+    }
+  }
+}

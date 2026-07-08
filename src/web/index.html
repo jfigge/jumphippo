@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!--
+      CSP: only load scripts/styles/fonts from the same origin. The renderer
+      makes no network calls of its own — all I/O goes through the main process
+      over window.porthippo.*.
+    -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="
+        default-src 'self';
+        script-src  'self';
+        style-src   'self' 'unsafe-inline';
+        font-src    'self';
+        img-src     'self' data:;
+      "
+    />
+    <title>Port Hippo</title>
+    <link rel="icon" type="image/svg+xml" href="porthippo-icon.svg" />
+
+    <!-- Design tokens + reset first, then the shell layout. -->
+    <link rel="stylesheet" href="styles/theme.css" />
+    <link rel="stylesheet" href="styles/app.css" />
+  </head>
+  <body>
+    <div id="app">
+      <!-- ── App header ────────────────────────────────────────────────── -->
+      <header id="app-header" aria-label="Application header">
+        <div class="app-header-brand">
+          <img
+            class="app-header-icon"
+            src="porthippo-icon.svg"
+            alt=""
+            aria-hidden="true"
+            draggable="false"
+          />
+          <span class="app-header-title">Port Hippo</span>
+        </div>
+
+        <!-- View toggle: Definition | Monitoring | Split -->
+        <nav
+          class="view-toggle"
+          id="view-toggle"
+          aria-label="View"
+          role="tablist"
+        >
+          <button
+            class="view-toggle-btn view-toggle-btn--active"
+            data-view="definition"
+            role="tab"
+            type="button"
+          >
+            Definition
+          </button>
+          <button
+            class="view-toggle-btn"
+            data-view="monitoring"
+            role="tab"
+            type="button"
+          >
+            Monitoring
+          </button>
+          <button
+            class="view-toggle-btn"
+            data-view="split"
+            role="tab"
+            type="button"
+          >
+            Split
+          </button>
+        </nav>
+
+        <div class="app-header-meta">
+          <span id="app-version" class="app-header-version"></span>
+        </div>
+      </header>
+
+      <!-- ── Content: two empty panes the later features fill in ───────── -->
+      <main id="app-content" class="app-content" data-view="definition">
+        <section
+          id="definition-view"
+          class="pane pane-definition"
+          aria-label="Definition"
+        >
+          <div class="pane-placeholder">
+            <h2>Definition</h2>
+            <p>Tunnel definitions will live here (Feature 40).</p>
+          </div>
+        </section>
+
+        <section
+          id="monitoring-view"
+          class="pane pane-monitoring"
+          aria-label="Monitoring"
+          hidden
+        >
+          <div class="pane-placeholder">
+            <h2>Monitoring</h2>
+            <p>Live tunnel stats will live here (Feature 50).</p>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script type="module" src="scripts/app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,47 @@
+# ── Build outputs ─────────────────────────────────────────────────────────────
+build/
+dist/
+data/
+
+# ── Node / npm ────────────────────────────────────────────────────────────────
+src/node_modules/
+src/npm-debug.log*
+.npm
+
+# ── macOS ─────────────────────────────────────────────────────────────────────
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# ── Editor / IDE ──────────────────────────────────────────────────────────────
+*.swp
+.vscode/
+
+# ── Electron builder cache ────────────────────────────────────────────────────
+.electron-builder-cache/
+
+# ── Local dev environment (shared by make debug / launch) ─────────────────────
+# Tracked template lives in dev.env.example; the real file stays local.
+dev.env
+
+# ── Release signing credentials (added in Feature 70) ─────────────────────────
+# Tracked template lives in release.env.example; the real file holds signing
+# secrets and stays local. CI supplies the same values from repository secrets.
+release.env
+
+# Raw signing material — Developer ID certs/keys, Apple notarization API .p8,
+# Authenticode .pfx. These are SECRETS; never commit them.
+keys/
+.keys/
+*.p8
+*.p12
+*.pfx
+
+# Mac App Store provisioning profiles (per-developer, embed a team-specific cert).
+*.provisionprofile
+
+# ── Website build artifacts (added in Feature 70) ─────────────────────────────
+# Generated at deploy time; never hand-edited.
+website/versions.json
+website/docs/
+website/sitemap.xml

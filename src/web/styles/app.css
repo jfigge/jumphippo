@@ -1,0 +1,143 @@
+/*
+ * Copyright 2026 Jason Figge
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/* app.css — the single-page shell: header, view toggle, and the two panes.
+   Component-specific styles arrive with Features 40/50. */
+
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ── Header ──────────────────────────────────────────────────────────────── */
+#app-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  height: var(--header-height);
+  padding: 0 var(--space-4);
+  background: var(--color-mantle);
+  border-bottom: 1px solid var(--color-crust);
+  flex: 0 0 auto;
+}
+
+.app-header-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.app-header-icon {
+  width: 24px;
+  height: 24px;
+  display: block;
+}
+
+.app-header-title {
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+
+.app-header-meta {
+  margin-left: auto;
+}
+
+.app-header-version {
+  color: var(--color-muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── View toggle ─────────────────────────────────────────────────────────── */
+.view-toggle {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  background: var(--color-crust);
+  border-radius: var(--radius-md);
+}
+
+.view-toggle-btn {
+  padding: var(--space-1) var(--space-3);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-subtext);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.view-toggle-btn:hover {
+  color: var(--color-text);
+}
+
+.view-toggle-btn--active {
+  background: var(--color-surface-0);
+  color: var(--color-text);
+}
+
+/* ── Content panes ───────────────────────────────────────────────────────── */
+.app-content {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+/* Split view lays the two panes side by side. */
+.app-content[data-view="split"] {
+  grid-template-columns: 1fr 1fr;
+}
+
+.app-content[data-view="split"] .pane-definition {
+  border-right: 1px solid var(--color-crust);
+}
+
+.pane {
+  min-width: 0;
+  overflow: auto;
+  padding: var(--space-5);
+}
+
+.pane[hidden] {
+  display: none;
+}
+
+.pane-placeholder {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--color-muted);
+  text-align: center;
+}
+
+.pane-placeholder h2 {
+  color: var(--color-subtext);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+/* Stack panes on narrow widths even in split mode. */
+@media (max-width: 720px) {
+  .app-content[data-view="split"] {
+    grid-template-columns: 1fr;
+  }
+}
