@@ -210,18 +210,11 @@
   padding: 0 var(--space-4) var(--space-4);
 }
 
-/* ── Definition view: two-pane layout ─────────────────────────────────────── */
+/* ── Definition view: list surface ────────────────────────────────────────── */
 .definition-view {
-  display: grid;
-  grid-template-columns: minmax(220px, 300px) 1fr;
-  gap: var(--space-5);
-  align-items: start;
-}
-
-.def-list-pane {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: var(--space-3);
 }
 
 .def-list-header {
@@ -264,20 +257,10 @@
   background: var(--color-surface-0);
   border: 1px solid transparent;
   border-radius: var(--radius-md);
-  cursor: pointer;
 }
 
 .def-row:hover {
   background: var(--color-surface-1);
-}
-
-.def-row:focus-visible {
-  outline: 2px solid var(--color-accent);
-  outline-offset: 1px;
-}
-
-.def-row--selected {
-  border-color: var(--color-accent);
 }
 
 .def-row-main {
@@ -306,6 +289,12 @@
 .def-row-tools {
   display: flex;
   gap: 2px;
+  visibility: hidden;
+}
+
+.def-row:hover .def-row-tools,
+.def-row:focus-within .def-row-tools {
+  visibility: visible;
 }
 
 .def-arm-btn {
@@ -359,42 +348,91 @@
   color: var(--color-crust);
 }
 
-/* ── Definition view: editor pane ─────────────────────────────────────────── */
-.def-editor-pane {
-  min-width: 0;
+/* ── Editor dialogs (native <dialog>, Feature 45) ─────────────────────────── */
+.editor-dialog {
+  width: min(520px, calc(100vw - 2 * var(--space-4)));
+  max-width: 520px;
+  padding: 0;
+  border: 1px solid var(--color-overlay);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-0);
+  color: var(--color-text);
+  box-shadow: var(--shadow-1);
 }
 
-.def-editor-placeholder {
-  padding: var(--space-6);
-  text-align: center;
-  color: var(--color-muted);
-  border: 1px dashed var(--color-overlay);
-  border-radius: var(--radius-md);
+.editor-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.5);
 }
 
-/* ── Tunnel editor ────────────────────────────────────────────────────────── */
-.tunnel-editor {
+.dialog-header {
+  padding: var(--space-4) var(--space-4) 0;
+}
+
+.dialog-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.dialog-form {
   display: flex;
   flex-direction: column;
 }
 
-.editor-section {
-  margin-bottom: var(--space-4);
+.dialog-body {
+  padding: var(--space-3) var(--space-4);
+  max-height: 70vh;
+  overflow: auto;
 }
 
-.editor-section-title {
-  margin-bottom: var(--space-2);
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  color: var(--color-muted);
+.dialog-error {
+  margin: 0 var(--space-4);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-danger);
+  border-radius: var(--radius-sm);
+  background: var(--color-crust);
+  font-size: 13px;
+  color: var(--color-danger);
 }
 
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4) var(--space-4);
+}
+
+/* Inputs inside a dialog mirror the .field input styling. */
+.dialog-input {
+  width: 100%;
+  height: var(--control-height);
+  padding: 0 var(--space-2);
+  background: var(--color-crust);
+  color: var(--color-text);
+  border: 1px solid var(--color-overlay);
+  border-radius: var(--radius-sm);
+  font: inherit;
+  font-size: 13px;
+}
+
+.dialog-input:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
+.field--error .dialog-input {
+  border-color: var(--color-danger);
+}
+
+/* Two-column rows (host+port, ssh host+port) collapse on a narrow dialog. */
 .editor-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--space-3);
+}
+
+.editor-block {
+  margin-bottom: var(--space-1);
 }
 
 .editor-check {
@@ -415,8 +453,9 @@
   color: var(--color-text);
 }
 
-.editor-bind-warning {
-  margin-top: var(--space-1);
+.editor-bind-warning,
+.editor-port-warning {
+  margin: calc(-1 * var(--space-2)) 0 var(--space-3);
   padding: var(--space-2);
   border: 1px solid var(--color-warning);
   border-radius: var(--radius-sm);
@@ -424,32 +463,43 @@
   color: var(--color-warning);
 }
 
-.editor-error {
-  margin-bottom: var(--space-3);
-  padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--color-danger);
-  border-radius: var(--radius-sm);
-  background: var(--color-crust);
-  font-size: 13px;
-  color: var(--color-danger);
-}
-
-.editor-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: var(--space-2);
+/* Advanced disclosure (native <details>). */
+.editor-advanced {
   margin-top: var(--space-2);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-overlay);
 }
 
-/* ── Hop editor (SSH server / jump host) ──────────────────────────────────── */
-.hop-editor-grid {
-  display: grid;
-  grid-template-columns: 2fr 1fr 1.5fr;
-  gap: var(--space-3);
+.editor-advanced-summary {
+  margin-bottom: var(--space-3);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--color-muted);
+  cursor: pointer;
 }
 
-/* ── Auth editor ──────────────────────────────────────────────────────────── */
-.auth-header,
+/* ── Pickers (credential / jump-host) ─────────────────────────────────────── */
+.picker-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.picker-row .dialog-input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.picker-row .btn {
+  flex: 0 0 auto;
+}
+
+.jump-host-picker {
+  margin-bottom: var(--space-3);
+}
+
 .jumps-header {
   display: flex;
   align-items: center;
@@ -457,43 +507,66 @@
   margin: var(--space-2) 0;
 }
 
-.auth-header-title,
 .jumps-header-title {
   font-size: 12px;
   font-weight: 600;
   color: var(--color-subtext);
 }
 
-.auth-method,
-.jump-host {
+.jumps-empty {
   margin-bottom: var(--space-2);
-  padding: var(--space-3);
-  background: var(--color-mantle);
-  border: 1px solid var(--color-overlay);
-  border-radius: var(--radius-md);
+  font-size: 12px;
+  font-style: italic;
+  color: var(--color-muted);
 }
 
-.auth-method-head,
-.jump-host-head {
+.jumps-chain {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin-bottom: var(--space-2);
+}
+
+.jumps-chain-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: var(--space-2);
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  background: var(--color-mantle);
+  border: 1px solid var(--color-overlay);
+  border-radius: var(--radius-sm);
 }
 
-.auth-method-title,
-.jump-host-title {
-  font-size: 12px;
-  font-weight: 600;
+.jumps-chain-num {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: var(--color-surface-1);
   color: var(--color-subtext);
+  font-size: 11px;
+  font-weight: 600;
 }
 
-.auth-method-tools,
-.jump-host-tools {
+.jumps-chain-label {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.jumps-chain-tools {
+  flex: 0 0 auto;
   display: flex;
-  gap: var(--space-1);
+  gap: 2px;
 }
 
+/* ── Auth fields shared by the credential editor ──────────────────────────── */
 .auth-keypath-row,
 .auth-secret-row {
   display: flex;
@@ -504,6 +577,7 @@
 .auth-keypath-row .auth-input,
 .auth-secret-row .auth-input {
   flex: 1;
+  min-width: 0;
 }
 
 .auth-secret-status {
@@ -513,18 +587,8 @@
 }
 
 .auth-agent-hint {
+  margin-bottom: var(--space-3);
   font-size: 12px;
-  color: var(--color-muted);
-}
-
-.auth-section-field {
-  margin-bottom: 0;
-}
-
-/* ── Jump-host list ───────────────────────────────────────────────────────── */
-.jumps-empty {
-  font-size: 12px;
-  font-style: italic;
   color: var(--color-muted);
 }
 
@@ -888,12 +952,7 @@
 
 /* ── Narrow layouts (e.g. split view on a small window) ───────────────────── */
 @media (max-width: 900px) {
-  .definition-view {
-    grid-template-columns: 1fr;
-  }
-
-  .editor-row,
-  .hop-editor-grid {
+  .editor-row {
     grid-template-columns: 1fr;
   }
 

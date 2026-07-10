@@ -1,6 +1,6 @@
 # Feature 45 — Definition View Redesign (clean list + modal editor, reusable credentials & jump hosts)
 
-> Status: in progress — **data layer (steps 1–2) landed**; UI (steps 3–7) remaining.
+> Status: **complete** — data layer (steps 1–2) + UI (steps 3–7) landed; `make fmt && lint && test` green.
 > Supersedes the always-open form behaviour introduced under Stage 40.
 > Amends the data model from Stage 10 and consumes the resolver seam from Stage 20.
 
@@ -86,21 +86,27 @@ can't drift. Examples: `:5432 → db.example.com:5432` · `… via bastion` · `
 - `secret-storage.js`: backend re-encryption now walks `credentials[].{password|passphrase}`
   (was the old per-hop `auth[]`) so a mode switch still re-encrypts every secret.
 
-## UI (Stage 40 rewrite) — REMAINING (steps 3–7)
+## UI (Stage 40 rewrite) — DONE (steps 3–7)
 
-- **`TunnelListPanel`** as the default surface: compact rows (state badge, name, `routeSummary`,
-  arm toggle, edit/duplicate/delete). Add opens the editor; Edit opens it prefilled.
-- **`TunnelEditorDialog`** (native `<dialog>`): primary fields (name, destination host+port,
-  local port, credential picker); advanced in a `<details>` (bind address, SSH server override
-  placeholder "same as destination", SSH port, jump-host chain, options).
+- **`DefinitionView`** is now list-first: compact rows (state badge, name, `routeSummary`, arm
+  toggle, and edit / duplicate / delete revealed on hover). Add / Edit open the modal editor.
+- **`TunnelEditorDialog`** — native `<dialog>` (`dialog.js` provides the shared chrome). Primary
+  fields (name, destination host + port, local port, credential picker); a collapsed native
+  `<details>` holds the local bind address (+ loopback warning), the SSH-server override
+  (placeholder "Same as destination"), SSH port, the jump-host chain, and options. Advanced
+  auto-opens when a tunnel actually uses an advanced field.
 - **`CredentialPickerField` / `CredentialEditorDialog`** and **`JumpHostPickerField` /
-  `JumpHostEditorDialog`** (ordered chain builder). Each picker has an inline "New…" that opens
-  the matching editor; on save it emits `porthippo:credentials-changed` /
-  `porthippo:jumphosts-changed` and open pickers refresh.
-- Validation pass: local-port conflicts, privileged-port warning, dangling-reference guard on
-  delete, empty states.
-- The now-obsolete inline `TunnelEditor`/`HopEditor`/`AuthEditor`/`JumpHostEditor` are replaced.
-  Two `tunnel-editor.test.js` cases are `skip`-marked pending this rewrite (see the TODO there).
+  `JumpHostEditorDialog`** (ordered chain builder). Each picker's inline "New…" opens the matching
+  editor; native `<dialog>` STACKING lets a jump-host editor's credential picker open the credential
+  editor on top. On save each editor emits `porthippo:credentials-changed` /
+  `porthippo:jumphosts-changed`, and open pickers refresh (preserving/pruning selections).
+- Validation: `validateDefinition` drives inline field errors; two soft, non-blocking warnings
+  (privileged local port, a port already claimed by another tunnel); the store's `IN_USE` guard
+  blocks deleting a referenced credential / jump host; empty states throughout.
+- Native `<dialog>` is unsupported in jsdom 27, so `jsdom-setup.js` polyfills showModal/close/
+  cancel; production uses the real element in Electron/Chromium.
+- The obsolete inline `tunnel-editor.js` / `hop-editor.js` / `auth-editor.js` /
+  `jump-host-editor.js` (and their tests) are removed; each modal editor + picker has its own test.
 
 ## Acceptance criteria
 
@@ -114,8 +120,8 @@ can't drift. Examples: `:5432 → db.example.com:5432` · `… via bastion` · `
 ## Verify
 
 ```
-make fmt && make lint && make test        # data layer: green (2 UI tests skipped pending steps 3–7)
-make debug   # (after UI) create a tunnel with only destination + local port + credential;
+make fmt && make lint && make test        # green: 131 + 17 + 74 pass, 0 fail, 0 skipped
+make debug   # create a tunnel with only destination + local port + credential;
              # confirm arm/forward; define a bastion + a jump-host chain; reuse one credential
              # across two tunnels; delete a referenced credential and confirm the guard fires;
              # reload and confirm migrated config is intact.

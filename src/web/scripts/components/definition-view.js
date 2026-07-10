@@ -14,19 +14,19 @@
  * limitations under the License.
  */
 
-// definition-view.js — the Definition pane: a master list of tunnel definitions
-// on the left, an inline TunnelEditor on the right. The list shows each tunnel's
-// name, local→destination summary, live state badge and an arm/disarm toggle, and
-// supports create / delete / reorder. Live state comes from the engine's
-// `porthippo:tunnel-state` broadcast (seeded once from `tunnels.status()`), so a
-// tunnel armed here shows its progression (listening → connecting → connected)
-// without a poll. All native work (store, engine, dialogs) goes through
+// definition-view.js — the Definition pane. Since Feature 45 the tunnel LIST is
+// the whole surface: each row shows the state badge, name, the store-computed
+// route summary, an arm/disarm toggle, and edit / duplicate / delete actions. All
+// editing happens in a modal TunnelEditorDialog launched from Add or Edit, so the
+// common fields fit in one dialog with the SSH server + local host a disclosure
+// away. Live state comes from the engine's `porthippo:tunnel-state` broadcast
+// (seeded once from `tunnels.status()`). All native work goes through
 // `window.porthippo.*`; this component never touches IPC channels directly.
 
 import { el, clear } from "../dom.js";
 import { t } from "../i18n.js";
 import { PopupManager } from "../popup-manager.js";
-import { TunnelEditor } from "./tunnel-editor.js";
+import { TunnelEditorDialog } from "./tunnel-editor-dialog.js";
 
 /** Armed = the engine holds this tunnel (anything but disarmed / error / unknown). */
 function isArmed(state) {
@@ -37,13 +37,9 @@ export class DefinitionView {
   #el;
   #listEl;
   #emptyEl;
-  #editorHost;
-  #placeholderEl;
   #editor;
   #defs = [];
   #states = new Map(); // id → latest state string
-  #selectedId = null;
-  #creating = false;
   #porthippo;
   #onTunnelState;
 
@@ -54,11 +50,11 @@ export class DefinitionView {
    */
   constructor({ porthippo, openKeyFile } = {}) {
     this.#porthippo = porthippo || window.porthippo;
-    this.#editor = new TunnelEditor({
+    this.#editor = new TunnelEditorDialog({
+      porthippo: this.#porthippo,
       openKeyFile,
       onSubmit: (payload, ctx) => this.#submit(payload, ctx),
       onSaved: (record) => this.#afterSaved(record),
-      onCancel: () => this.#cancelEdit(),
     });
     this.#el = this.#build();
 
@@ -80,35 +76,22 @@ export class DefinitionView {
     if (Array.isArray(status)) {
       for (const s of status) if (s && s.id) this.#states.set(s.id, s.state);
     }
-    // Preserve a valid selection across reloads; otherwise fall back to placeholder.
-    if (
-      this.#selectedId &&
-      !this.#defs.some((d) => d.id === this.#selectedId)
-    ) {
-      this.#selectedId = null;
-      this.#creating = false;
-      this.#showEditor(false);
-    }
     this.#renderList();
   }
 
-  /**
-   * Open a definition for editing by id (used by the Monitoring view's edit
-   * affordance). No-op if the id isn't in the loaded list.
-   * @param {string} id
-   */
+  /** Open the editor for a tunnel by id (used by Monitoring's edit affordance). */
   selectById(id) {
-    if (this.#defs.some((d) => d.id === id)) this.#select(id);
+    const def = this.#defs.find((d) => d.id === id);
+    if (def) this.#editor.openEdit(def);
   }
 
-  /** Open a blank editor for a new tunnel (used by the menu/tray "New Tunnel"). */
+  /** Open a blank editor (used by the menu/tray "New Tunnel"). */
   createNew() {
-    this.#createNew();
+    this.#editor.openCreate();
   }
 
   destroy() {
     window.removeEventListener("porthippo:tunnel-state", this.#onTunnelState);
-    this.#editor.destroy();
   }
 
   // ── Rendering ─────────────────────────────────────────────────────────────
@@ -119,45 +102,32 @@ export class DefinitionView {
       el("p", { class: "def-empty-title", text: t("def.list.empty") }),
       el("p", { class: "def-empty-hint", text: t("def.list.emptyHint") }),
     ]);
-    this.#placeholderEl = el("div", { class: "def-editor-placeholder" }, [
-      el("p", { text: t("def.editor.none") }),
-    ]);
-    this.#editorHost = el("div", { class: "def-editor-host" }, [
-      this.#placeholderEl,
-      this.#editor.element,
-    ]);
-    this.#editor.element.hidden = true;
 
     return el("div", { class: "definition-view" }, [
-      el("div", { class: "def-list-pane" }, [
-        el("div", { class: "def-list-header" }, [
-          el("span", { class: "def-list-title", text: t("def.list.title") }),
-          el("button", {
-            class: "btn btn--primary def-add-btn",
-            type: "button",
-            text: t("def.list.add"),
-            onClick: () => this.#createNew(),
-          }),
-        ]),
-        this.#emptyEl,
-        this.#listEl,
+      el("div", { class: "def-list-header" }, [
+        el("span", { class: "def-list-title", text: t("def.list.title") }),
+        el("button", {
+          class: "btn btn--primary def-add-btn",
+          type: "button",
+          text: t("def.list.add"),
+          onClick: () => this.createNew(),
+        }),
       ]),
-      el("div", { class: "def-editor-pane" }, [this.#editorHost]),
+      this.#emptyEl,
+      this.#listEl,
+      this.#editor.element,
     ]);
   }
 
   #renderList() {
     clear(this.#listEl);
     this.#emptyEl.hidden = this.#defs.length > 0;
-    this.#defs.forEach((def, i) =>
-      this.#listEl.appendChild(this.#renderRow(def, i)),
-    );
+    this.#defs.forEach((def) => this.#listEl.appendChild(this.#renderRow(def)));
   }
 
-  #renderRow(def, index) {
+  #renderRow(def) {
     const state = this.#states.get(def.id) || "disarmed";
     const armed = isArmed(state);
-    const selected = def.id === this.#selectedId;
 
     const badge = el("span", {
       class: `def-badge def-badge--${state}`,
@@ -171,116 +141,56 @@ export class DefinitionView {
       type: "button",
       text: armed ? t("def.list.disarm") : t("def.list.arm"),
       title: armed ? t("def.list.disarm") : t("def.list.arm"),
-      onClick: (e) => {
-        e.stopPropagation();
-        this.#toggleArm(def, armed);
-      },
+      onClick: () => this.#toggleArm(def, armed),
     });
 
     const tools = el("div", { class: "def-row-tools" }, [
-      this.#toolBtn(t("def.list.moveUp"), "↑", index === 0, (e) => {
-        e.stopPropagation();
-        this.#move(index, -1);
-      }),
       this.#toolBtn(
-        t("def.list.moveDown"),
-        "↓",
-        index === this.#defs.length - 1,
-        (e) => {
-          e.stopPropagation();
-          this.#move(index, 1);
-        },
+        t("def.list.edit"),
+        "✎",
+        () => this.#editor.openEdit(def),
+        "def-edit-btn",
+      ),
+      this.#toolBtn(
+        t("def.list.duplicate"),
+        "⧉",
+        () => this.#duplicate(def),
+        "def-duplicate-btn",
       ),
       this.#toolBtn(
         t("def.list.delete"),
         "✕",
-        false,
-        (e) => {
-          e.stopPropagation();
-          this.#confirmDelete(def);
-        },
+        () => this.#confirmDelete(def),
         "def-delete-btn",
       ),
     ]);
 
-    return el(
-      "div",
-      {
-        class: `def-row ${selected ? "def-row--selected" : ""}`.trim(),
-        role: "listitem",
-        tabindex: "0",
-        onClick: () => this.#select(def.id),
-        onKeydown: (e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            this.#select(def.id);
-          }
-        },
-      },
-      [
-        el("div", { class: "def-row-main" }, [
-          el("span", {
-            class: "def-row-name",
-            text: def.name || t("def.unnamed"),
-          }),
-          el("span", {
-            class: "def-row-summary",
-            text: t("def.list.summary", {
-              localPort: def.localPort ?? "?",
-              host: def.destination?.host ?? "?",
-              port: def.destination?.port ?? "?",
-            }),
-          }),
-        ]),
-        badge,
-        armBtn,
-        tools,
-      ],
-    );
+    return el("div", { class: "def-row", role: "listitem" }, [
+      el("div", { class: "def-row-main" }, [
+        el("span", {
+          class: "def-row-name",
+          text: def.name || t("def.unnamed"),
+        }),
+        el("span", {
+          class: "def-row-summary",
+          text: def.routeSummary || "",
+        }),
+      ]),
+      badge,
+      armBtn,
+      tools,
+    ]);
   }
 
-  #toolBtn(label, glyph, disabled, onClick, extraClass = "") {
+  #toolBtn(label, glyph, onClick, extraClass = "") {
     return el("button", {
       class: `btn btn--icon def-tool-btn ${extraClass}`.trim(),
       type: "button",
       title: label,
       "aria-label": label,
       text: glyph,
-      disabled,
       onClick,
     });
-  }
-
-  // ── Selection / editor visibility ─────────────────────────────────────────
-
-  #select(id) {
-    const def = this.#defs.find((d) => d.id === id);
-    if (!def) return;
-    this.#selectedId = id;
-    this.#creating = false;
-    this.#editor.setValue(def);
-    this.#showEditor(true);
-    this.#renderList();
-  }
-
-  #createNew() {
-    this.#selectedId = null;
-    this.#creating = true;
-    this.#editor.setValue(null);
-    this.#showEditor(true);
-    this.#renderList();
-  }
-
-  #cancelEdit() {
-    this.#selectedId = null;
-    this.#creating = false;
-    this.#showEditor(false);
-    this.#renderList();
-  }
-
-  #showEditor(show) {
-    this.#editor.element.hidden = !show;
-    this.#placeholderEl.hidden = show;
   }
 
   // ── Store writes ──────────────────────────────────────────────────────────
@@ -291,14 +201,27 @@ export class DefinitionView {
       : this.#porthippo.tunnels.create(payload);
   }
 
-  async #afterSaved(record) {
-    const id = record && record.id;
+  async #afterSaved() {
     this.#notifyChanged();
     await this.load();
-    if (id) this.#select(id);
   }
 
-  async #confirmDelete(def) {
+  #duplicate(def) {
+    const copy = { ...def };
+    delete copy.id;
+    delete copy.order;
+    delete copy.routeSummary;
+    copy.name = `${def.name || t("def.unnamed")}${t("editor.duplicateSuffix")}`;
+    this.#porthippo.tunnels.create(copy).then((result) => {
+      if (result && result.__hippoError) {
+        PopupManager.notify({ message: result.message || "Duplicate failed" });
+        return;
+      }
+      this.#afterSaved();
+    });
+  }
+
+  #confirmDelete(def) {
     PopupManager.confirmDelete({
       message: t("def.delete.message", { name: def.name || t("def.unnamed") }),
       onConfirm: async () => {
@@ -307,23 +230,10 @@ export class DefinitionView {
           PopupManager.notify({ message: result.message || "Delete failed" });
           return;
         }
-        if (this.#selectedId === def.id) this.#cancelEdit();
         this.#notifyChanged();
         await this.load();
       },
     });
-  }
-
-  async #move(index, delta) {
-    const to = index + delta;
-    if (to < 0 || to >= this.#defs.length) return;
-    const ids = this.#defs.map((d) => d.id);
-    const [moved] = ids.splice(index, 1);
-    ids.splice(to, 0, moved);
-    const result = await this.#porthippo.tunnels.reorder(ids);
-    if (result && result.__hippoError) return;
-    this.#notifyChanged();
-    await this.load();
   }
 
   async #toggleArm(def, armed) {
@@ -349,7 +259,6 @@ export class DefinitionView {
       this.#states.set(detail.id, detail.state);
       if (detail.error) this.#states.set(`${detail.id}:error`, detail.error);
     }
-    // Only re-render if this tunnel is on screen.
     if (this.#defs.some((d) => d.id === detail.id)) this.#renderList();
   }
 

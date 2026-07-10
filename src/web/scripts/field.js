@@ -17,10 +17,10 @@
 // field.js — form-field construction + centralized inline-error application.
 //
 // `field({...})` wraps a control in a `.field` that carries `data-error-key` — a
-// dotted validation path like "sshServer.auth[0].privateKeyPath". The editors
-// build their controls with the matching key; the TunnelEditor validates the
-// whole definition on every change and calls `applyFieldErrors(root, errors)`,
-// which routes each keyed message to its field with no per-editor error plumbing.
+// dotted validation path like "destination.host" or "credentialId". The editors
+// build their controls with the matching key and call `applyFieldErrors(root,
+// errors)`, which routes each keyed message to its field with no per-editor error
+// plumbing.
 
 import { el } from "./dom.js";
 

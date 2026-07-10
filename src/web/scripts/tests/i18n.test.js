@@ -52,7 +52,7 @@ test("interpolates {placeholder} tokens, leaving unmatched ones intact", () => {
     t("def.list.summary", { localPort: 5432, host: "db", port: 6543 }),
     "localhost:5432 → db:6543",
   );
-  assert.equal(t("jumps.label", {}), "Hop {n}"); // unmatched left as-is
+  assert.equal(t("mon.rateUp", {}), "▲ {rate}"); // unmatched left as-is
 });
 
 test("resolution order is active → English fallback → key", () => {

@@ -19,6 +19,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { DefinitionView } from "../components/definition-view.js";
 
+const flush = () => new Promise((r) => setTimeout(r, 0));
+
 function fixtureDefs() {
   return [
     {
@@ -26,16 +28,18 @@ function fixtureDefs() {
       name: "Alpha",
       localPort: 5432,
       destination: { host: "db", port: 5432 },
-      sshServer: { host: "s", port: 22, user: "u", auth: [{ type: "agent" }] },
-      jumps: [],
+      credentialId: "c1",
+      jumpHostIds: [],
+      routeSummary: ":5432 → db:5432",
     },
     {
       id: "b",
       name: "Beta",
       localPort: 6379,
       destination: { host: "cache", port: 6379 },
-      sshServer: { host: "s", port: 22, user: "u", auth: [{ type: "agent" }] },
-      jumps: [],
+      credentialId: "c1",
+      jumpHostIds: [],
+      routeSummary: ":6379 → cache:6379",
     },
   ];
 }
@@ -53,14 +57,20 @@ function stubPorthippo(defs, calls = {}) {
         (calls.disarm ||= []).push(id),
         { id, state: "disarmed" }
       ),
-      create: async (def) => ({ id: "new", ...def }),
-      update: async (id, patch) => ({ id, ...patch }),
-      delete: async (id) => ((calls.delete ||= []).push(id), { id }),
-      reorder: async (ids) => (
-        (calls.reorder ||= []).push(ids),
-        ids.map((id) => ({ id }))
+      create: async (def) => (
+        (calls.create ||= []).push(def),
+        { id: "new", ...def }
       ),
+      update: async (id, patch) => (
+        (calls.update ||= []).push({ id, patch }),
+        { id, ...patch }
+      ),
+      delete: async (id) => ((calls.delete ||= []).push(id), { id }),
     },
+    credentials: {
+      list: async () => [{ id: "c1", label: "Prod", authType: "agent" }],
+    },
+    jumpHosts: { list: async () => [] },
   };
 }
 
@@ -72,44 +82,44 @@ async function mount(defs = fixtureDefs(), calls = {}) {
   return view;
 }
 
-test("lists a row per definition with its summary", async () => {
+test("lists a row per definition with its route summary", async () => {
   const view = await mount();
   const rows = view.element.querySelectorAll(".def-row");
   assert.equal(rows.length, 2);
   assert.equal(rows[0].querySelector(".def-row-name").textContent, "Alpha");
-  assert.match(
-    rows[0].querySelector(".def-row-summary").textContent,
-    /5432.*db.*5432/,
-  );
-});
-
-test("selecting a row opens the editor", async () => {
-  const view = await mount();
-  const editor = view.element.querySelector(".tunnel-editor");
-  assert.equal(editor.hidden, true, "editor hidden until a row is chosen");
-
-  view.element.querySelector(".def-row").click();
-  assert.equal(editor.hidden, false, "editor shown");
   assert.equal(
-    view.element.querySelector(".editor-input-name").value,
-    "Alpha",
-    "editor loaded the selected definition",
+    rows[0].querySelector(".def-row-summary").textContent,
+    ":5432 → db:5432",
   );
 });
 
-test("New tunnel reveals a blank editor", async () => {
+test("Edit opens the modal prefilled from the definition", async () => {
+  const view = await mount();
+  const dialog = view.element.querySelector(".tunnel-dialog");
+  assert.ok(!dialog.open, "modal closed until Edit");
+
+  view.element.querySelector(".def-edit-btn").click();
+  await flush();
+
+  assert.ok(dialog.open, "modal opened");
+  assert.equal(dialog.querySelector(".editor-input-name").value, "Alpha");
+  assert.equal(dialog.querySelector(".editor-input-destHost").value, "db");
+});
+
+test("New tunnel opens a blank modal", async () => {
   const view = await mount();
   view.element.querySelector(".def-add-btn").click();
-  const editor = view.element.querySelector(".tunnel-editor");
-  assert.equal(editor.hidden, false);
-  assert.equal(view.element.querySelector(".editor-input-name").value, "");
+  await flush();
+  const dialog = view.element.querySelector(".tunnel-dialog");
+  assert.ok(dialog.open);
+  assert.equal(dialog.querySelector(".editor-input-name").value, "");
 });
 
 test("the arm toggle sends an arm intent for a disarmed tunnel", async () => {
   const calls = {};
   const view = await mount(fixtureDefs(), calls);
   view.element.querySelector(".def-arm-btn").click();
-  await new Promise((r) => setTimeout(r, 0));
+  await flush();
   assert.deepEqual(calls.arm, ["a"]);
 });
 
@@ -121,18 +131,27 @@ test("a tunnel-state broadcast updates the badge", async () => {
     }),
   );
   const betaRow = view.element.querySelectorAll(".def-row")[1];
-  assert.ok(
-    betaRow.querySelector(".def-badge--connected"),
-    "Beta badge reflects the connected state",
-  );
+  assert.ok(betaRow.querySelector(".def-badge--connected"));
 });
 
 test("deleting confirms then calls delete", async () => {
   const calls = {};
   const view = await mount(fixtureDefs(), calls);
   view.element.querySelector(".def-delete-btn").click();
-  // The confirm dialog is mounted on the shared overlay; click its danger button.
   document.querySelector(".popup-confirm .btn--danger").click();
-  await new Promise((r) => setTimeout(r, 0));
+  await flush();
   assert.deepEqual(calls.delete, ["a"]);
+});
+
+test("duplicate creates a copy with a suffixed name and same references", async () => {
+  const calls = {};
+  const view = await mount(fixtureDefs(), calls);
+  view.element.querySelector(".def-duplicate-btn").click();
+  await flush();
+  assert.equal(calls.create.length, 1);
+  const copy = calls.create[0];
+  assert.equal(copy.name, "Alpha (copy)");
+  assert.equal(copy.credentialId, "c1");
+  assert.equal(copy.id, undefined, "the copy is a fresh record");
+  assert.equal(copy.routeSummary, undefined, "derived fields are stripped");
 });

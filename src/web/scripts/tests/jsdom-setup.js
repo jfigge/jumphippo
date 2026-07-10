@@ -48,6 +48,28 @@ export function resetDom() {
   if (!window.HTMLElement.prototype.scrollIntoView) {
     window.HTMLElement.prototype.scrollIntoView = () => {};
   }
+
+  // jsdom (27) doesn't implement the <dialog> modal surface the editor dialogs
+  // use. Polyfill just enough of it — showModal/show set `open`; close clears it
+  // and fires a `close` event; Escape is simulated by the test dispatching a
+  // `cancel` event, which native <dialog> also fires. Production uses the real
+  // element in Electron/Chromium.
+  const dialogProto = window.HTMLDialogElement
+    ? window.HTMLDialogElement.prototype
+    : window.HTMLElement.prototype;
+  if (!dialogProto.showModal) {
+    dialogProto.showModal = function showModal() {
+      this.open = true;
+      this.setAttribute("open", "");
+    };
+    dialogProto.show = dialogProto.showModal;
+    dialogProto.close = function close(returnValue) {
+      if (returnValue !== undefined) this.returnValue = returnValue;
+      this.open = false;
+      this.removeAttribute("open");
+      this.dispatchEvent(new window.Event("close"));
+    };
+  }
   return window;
 }
 
