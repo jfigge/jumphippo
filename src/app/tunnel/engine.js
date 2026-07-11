@@ -71,7 +71,12 @@ class TunnelEngine {
     if (!def) return { id, state: "disarmed", error: "definition not found" };
 
     let tunnel = this.#tunnels.get(id);
-    if (tunnel && tunnel.state !== "disarmed") return tunnel.status();
+    // Already actively armed → return its status. But an `error` tunnel (e.g. a
+    // transient bind conflict like EADDRINUSE) is re-armable: fall through to
+    // dispose + re-make it, exactly like `disarmed`, so a retry can recover
+    // rather than the short-circuit turning arm() into a permanent no-op.
+    if (tunnel && tunnel.state !== "disarmed" && tunnel.state !== "error")
+      return tunnel.status();
     if (tunnel) await tunnel.dispose();
 
     tunnel = this.#makeTunnel(def);

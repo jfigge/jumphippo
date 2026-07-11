@@ -94,6 +94,14 @@ function startRelay({ client, socket, destination, stats, onClose, onError }) {
     onClose?.(counters);
   };
 
+  // Wire the local socket's teardown up front — BEFORE `forwardOut` resolves.
+  // If the client drops during the channel-open window, `finish()` runs now
+  // (firing `onClose` exactly once) instead of the close being missed: otherwise
+  // the pending forwarded channel leaks and the owning Tunnel's ref-count never
+  // reaches zero, so its SSH connection would never idle-tear-down.
+  socket.on("close", finish);
+  socket.on("error", finish);
+
   forwardOut(
     client,
     socket.remoteAddress || "127.0.0.1",
@@ -103,7 +111,9 @@ function startRelay({ client, socket, destination, stats, onClose, onError }) {
   )
     .then((s) => {
       if (closed) {
-        // The local socket already went away before the channel opened.
+        // The local socket already went away before (or during) the channel
+        // open — `finish()` has already fired `onClose`. Just drop the now-
+        // orphaned forwarded channel so it doesn't leak.
         try {
           s.destroy();
         } catch {
@@ -129,8 +139,8 @@ function startRelay({ client, socket, destination, stats, onClose, onError }) {
       socket.pipe(stream);
       stream.pipe(socket);
 
-      socket.on("close", finish);
-      socket.on("error", finish);
+      // The local socket's close/error are already wired (above); wire the
+      // forwarded channel's so either end ending tears the other down.
       stream.on("close", finish);
       stream.on("error", finish);
 

@@ -363,6 +363,41 @@ test("engine armAll arms enabled definitions and skips disabled ones", async () 
   }
 });
 
+test("re-arming a tunnel stuck in error (transient bind conflict) recovers it", async () => {
+  const echo = await startEcho();
+  const ssh = await startSsh();
+  const blocker = net.createServer();
+  const localPort = await listen(blocker); // occupy the port so the first arm fails
+  const def = makeDef({ localPort, echoPort: echo.port, sshPort: ssh.port });
+  const engine = new TunnelEngine({
+    getStores: () => fakeStores([def]),
+    broadcast: () => {},
+    knownHostsFile: "/nonexistent/known_hosts",
+  });
+  try {
+    // First arm can't bind — the port is taken — so the tunnel lands in `error`.
+    const first = await engine.arm(def.id);
+    assert.equal(first.state, "error");
+    assert.match(first.error, /in use/);
+
+    // Free the port and arm again. The bug was that arm() short-circuited on the
+    // non-disarmed `error` state and became a permanent no-op; the retry must now
+    // dispose + re-make the tunnel and actually rebind.
+    await closeServer(blocker);
+    const second = await engine.arm(def.id);
+    assert.equal(second.state, "listening");
+
+    // The recovered tunnel works end-to-end.
+    const client = await connectLocal(localPort);
+    assert.equal(await roundtrip(client, "recovered"), "recovered");
+    client.destroy();
+  } finally {
+    await engine.disarmAll();
+    await ssh.close();
+    await echo.close();
+  }
+});
+
 test("an unknown host key holds the connection pending until the user trusts it", async () => {
   const echo = await startEcho();
   const ssh = await startSsh();
