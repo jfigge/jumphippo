@@ -84,6 +84,8 @@ class Tunnel {
   #listener = null;
   #sshConnection = null; // { client, dispose } once connected
   #connectPromise = null; // in-flight connectChain (dedupes concurrent first hits)
+  #connectGeneration = 0; // bumped by #teardown; a connect that resolves against a
+  // stale generation was disarmed/reapplied mid-handshake and must not resurrect.
 
   #connections = new Set(); // live/pending connections: { socket, relay }
   #lingerTimer = null;
@@ -352,6 +354,7 @@ class Tunnel {
 
     this.#setState("connecting");
     const hops = [...(this.#def.jumps || []), this.#def.sshServer];
+    const generation = this.#connectGeneration;
 
     this.#connectPromise = connectChain({
       hops,
@@ -361,9 +364,19 @@ class Tunnel {
     })
       .then((sshConn) => {
         this.#connectPromise = null;
-        if (this.#disposed) {
-          sshConn.dispose();
-          throw new Error("tunnel disposed during connect");
+        // A disarm / reapply / dispose during the handshake bumps the generation
+        // (dispose also sets #disposed). Either way this SSH session is orphaned:
+        // dispose it and resolve WITHOUT touching tunnel state, rather than
+        // resurrecting a connection teardown already accounted for. Callers guard
+        // the resolved value (#handleConnection checks #connections; the eager /
+        // reconnect callers only wire .catch), so a no-op resolve is safe.
+        if (this.#disposed || generation !== this.#connectGeneration) {
+          try {
+            sshConn.dispose();
+          } catch {
+            // disposing an already-closing connection is fine
+          }
+          return sshConn;
         }
         this.#sshConnection = sshConn;
         this.#reconnectAttempts = 0;
@@ -515,6 +528,9 @@ class Tunnel {
   }
 
   async #teardown() {
+    // Invalidate any in-flight connect: its .then resolves into a no-op instead
+    // of resurrecting an SSH session this teardown is destroying.
+    this.#connectGeneration += 1;
     this.#cancelReconnect();
     this.#failAllConnections();
     this.#disposeSsh();

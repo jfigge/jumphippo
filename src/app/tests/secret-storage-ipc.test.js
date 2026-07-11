@@ -30,7 +30,6 @@ const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
 
-const crypto = require("../store/crypto");
 const { Paths } = require("../store/paths");
 const { SecretStorage } = require("../store/secret-storage");
 const { registerSecretStorageIPC } = require("../ipc/secret-storage");

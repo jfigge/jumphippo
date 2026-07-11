@@ -44,6 +44,7 @@ const {
   sshHop,
   makeDef,
   makeTunnel,
+  gatedVerifier,
   fakeStores,
 } = require("./harness");
 
@@ -70,6 +71,52 @@ test("arming binds the listener but does NOT connect SSH until first access", as
     assert.equal(await roundtrip(client, "hello"), "hello");
     assert.equal(tunnel.state, "connected");
     assert.equal(ssh.total(), 1);
+    client.destroy();
+  } finally {
+    await tunnel.dispose();
+    await ssh.close();
+    await echo.close();
+  }
+});
+
+test("disarm during an in-flight connect never resurrects or leaks the SSH connection", async () => {
+  const echo = await startEcho();
+  const ssh = await startSsh();
+  const localPort = await freePort();
+
+  // Hold the handshake pending at host verification so we can disarm mid-connect.
+  const gate = gatedVerifier();
+  const { tunnel, states } = makeTunnel(
+    makeDef({ localPort, echoPort: echo.port, sshPort: ssh.port }),
+    { lingerMs: 60000, hostVerifierFactory: gate.factory },
+  );
+
+  try {
+    await tunnel.arm();
+    const client = await connectLocal(localPort); // triggers the lazy connect
+    await waitFor(() => tunnel.state === "connecting");
+
+    // Disarm while the connect is still gated: teardown must invalidate it.
+    await tunnel.disarm();
+    assert.equal(tunnel.state, "disarmed");
+
+    // Let the gated handshake complete. The connect resolves AFTER the disarm —
+    // the bug was that its .then re-established #sshConnection and drove the
+    // tunnel back to "connected". With the generation guard it is a no-op.
+    gate.release();
+    await waitFor(() => ssh.active() === 0);
+
+    assert.equal(
+      tunnel.state,
+      "disarmed",
+      "stays disarmed after the late connect",
+    );
+    assert.ok(
+      !states.includes("connected"),
+      "never reaches connected once disarmed",
+    );
+    assert.equal(ssh.active(), 0, "no SSH connection leaks past the disarm");
+
     client.destroy();
   } finally {
     await tunnel.dispose();

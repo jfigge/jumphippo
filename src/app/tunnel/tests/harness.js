@@ -210,14 +210,33 @@ function makeDef({
 
 const trustAll = () => (_key, verify) => verify(true);
 
-function makeTunnel(def, { lingerMs = 60 } = {}) {
+function makeTunnel(
+  def,
+  { lingerMs = 60, hostVerifierFactory = trustAll } = {},
+) {
   const states = [];
   const tunnel = new Tunnel(def, {
-    hostVerifierFactory: trustAll,
+    hostVerifierFactory,
     getLingerMs: () => lingerMs,
     onStateChange: (s) => states.push(s.state),
   });
   return { tunnel, states };
+}
+
+/**
+ * A host-verifier factory that holds every handshake pending at host
+ * verification until `release()` is called (then accepts). Lets a test freeze a
+ * tunnel in `connecting` and drive teardown races deterministically.
+ */
+function gatedVerifier() {
+  let release;
+  const gate = new Promise((r) => {
+    release = r;
+  });
+  const factory = () => (_key, verify) => {
+    gate.then(() => verify(true));
+  };
+  return { factory, release: () => release() };
 }
 
 function fakeStores(defs, { defaultLingerMs = 10000 } = {}) {
@@ -248,5 +267,6 @@ module.exports = {
   makeDef,
   trustAll,
   makeTunnel,
+  gatedVerifier,
   fakeStores,
 };

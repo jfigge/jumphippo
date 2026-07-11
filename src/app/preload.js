@@ -40,29 +40,27 @@ contextBridge.exposeInMainWorld("porthippo", {
   getVersion: () => ipcRenderer.invoke("app:version"),
 
   // ── Tunnel definitions (Feature 10 store) ─────────────────────────────────
-  // CRUD + reorder over the encrypted-at-rest store. Reads return secrets as a
-  // `hasSecret` flag only; a create/update writes a NEW secret as a plaintext
-  // string or keeps an existing one by sending the auth entry back with
-  // `hasSecret: true` and no value. Writes resolve to the record, or to a
-  // `{ __hippoError, code, errors }` envelope on failure.
+  // CRUD over the encrypted-at-rest store. Reads return secrets as a `hasSecret`
+  // flag only; a create/update writes a NEW secret as a plaintext string or keeps
+  // an existing one by sending the auth entry back with `hasSecret: true` and no
+  // value. Writes resolve to the record, or to a `{ __hippoError, code, errors }`
+  // envelope on failure.
   tunnels: {
     list: () => ipcRenderer.invoke("tunnels:list"),
     get: (id) => ipcRenderer.invoke("tunnels:get", id),
     create: (def) => ipcRenderer.invoke("tunnels:create", def),
     update: (id, patch) => ipcRenderer.invoke("tunnels:update", id, patch),
     delete: (id) => ipcRenderer.invoke("tunnels:delete", id),
-    reorder: (ids) => ipcRenderer.invoke("tunnels:reorder", ids),
 
     // ── Engine intents (Feature 20) ─────────────────────────────────────────
     // The renderer only sends intents; live state arrives via the
     // `porthippo:tunnel-state` / `porthippo:stats` events below. Arm binds the
-    // local listener (SSH is opened lazily on first access); `apply` force-applies
-    // a pending edit, dropping live connections; `pause`/`resume` freeze and
-    // restore traffic without tearing SSH down or altering the stored definition.
+    // local listener (SSH is opened lazily on first access); `pause`/`resume`
+    // freeze and restore traffic without tearing SSH down or altering the stored
+    // definition.
     arm: (id) => ipcRenderer.invoke("tunnels:arm", id),
     disarm: (id) => ipcRenderer.invoke("tunnels:disarm", id),
     status: () => ipcRenderer.invoke("tunnels:status"),
-    apply: (id) => ipcRenderer.invoke("tunnels:apply", id),
     pause: (id) => ipcRenderer.invoke("tunnels:pause", id),
     resume: (id) => ipcRenderer.invoke("tunnels:resume", id),
   },
@@ -107,25 +105,11 @@ contextBridge.exposeInMainWorld("porthippo", {
   },
 
   // ── Accepted SSH host keys (TOFU) ─────────────────────────────────────────
-  // The engine (Feature 20) records accepted keys in-process; the renderer can
-  // review the accepted set and revoke entries.
+  // Resolve an unknown-host-key prompt raised during a connection (TOFU). The
+  // engine holds the connection pending until one of these is called.
   hostkeys: {
-    list: () => ipcRenderer.invoke("hostkeys:list"),
-    revoke: (hostPort) => ipcRenderer.invoke("hostkeys:revoke", hostPort),
-
-    // Resolve an unknown-host-key prompt raised during a connection (TOFU). The
-    // engine holds the connection pending until one of these is called.
     trust: (promptId) => ipcRenderer.invoke("hostkeys:trust", promptId),
     reject: (promptId) => ipcRenderer.invoke("hostkeys:reject", promptId),
-  },
-
-  // ── Auto-update (Feature 70) ──────────────────────────────────────────────
-  // Trigger a manual update check or a restart-and-install. Update *lifecycle*
-  // events arrive as porthippo:update-* CustomEvents on window (wired below),
-  // not through this object.
-  updater: {
-    check: () => ipcRenderer.invoke("updater:check"),
-    quitAndInstall: () => ipcRenderer.invoke("updater:quit-and-install"),
   },
 
   // ── App shell (Feature 60) ────────────────────────────────────────────────
@@ -176,25 +160,6 @@ for (const channel of [
 ]) {
   ipcRenderer.on(channel, (_event, detail) => {
     window.dispatchEvent(new CustomEvent(channel, { detail }));
-  });
-}
-
-// ── Auto-update lifecycle events (Feature 70) ───────────────────────────────
-// Mirror each main→renderer updater:* push onto the window as a global
-// porthippo:update-* CustomEvent, following the project's one-way broadcast
-// convention. Payloads are plain serializable objects (version / progress /
-// error message) — never secrets.
-const UPDATER_EVENT_MAP = {
-  "updater:checking": "porthippo:update-checking",
-  "updater:available": "porthippo:update-available",
-  "updater:not-available": "porthippo:update-not-available",
-  "updater:progress": "porthippo:update-progress",
-  "updater:downloaded": "porthippo:update-downloaded",
-  "updater:error": "porthippo:update-error",
-};
-for (const [channel, domEvent] of Object.entries(UPDATER_EVENT_MAP)) {
-  ipcRenderer.on(channel, (_event, payload) => {
-    window.dispatchEvent(new CustomEvent(domEvent, { detail: payload }));
   });
 }
 

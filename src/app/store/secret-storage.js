@@ -389,6 +389,21 @@ class SecretStorage {
   }
 
   /**
+   * Abort an in-flight switch TO master-password: drop the marker AND the
+   * kdf/verifier it minted. The mode never flipped, so that key material
+   * protects nothing — leaving it behind would make getState().hasPassword
+   * report a configured password that doesn't exist and strand a stale verifier
+   * as an offline brute-force target. Safe only when the target (not the source)
+   * was master-password; a switch AWAY keeps the still-in-use verifier.
+   */
+  _abortMasterPasswordSwitch() {
+    const config = this.readConfig();
+    if (!config) return;
+    const { migration: _m, kdf: _k, verifier: _v, ...rest } = config;
+    this.writeConfig(rest);
+  }
+
+  /**
    * Finish a crash-interrupted migration. Loads whatever keys are needed to read
    * `from` and seal to `to`, re-encrypts the stragglers (idempotent), then flips
    * the mode LAST and reconfigures the live backend. A master-password direction
@@ -540,9 +555,15 @@ class SecretStorage {
 
     const result = this.reencryptAll(targetMode);
     if (!result.ok) {
-      this.clearMigration();
-      // Undo an unused freshly-set master key so the session doesn't linger unlocked.
-      if (targetMode === "master-password") crypto.lock();
+      if (targetMode === "master-password") {
+        // Drop the marker AND the kdf/verifier this aborted switch minted (the
+        // mode never became master-password), then re-lock the unused session
+        // key so it doesn't linger unlocked.
+        this._abortMasterPasswordSwitch();
+        crypto.lock();
+      } else {
+        this.clearMigration();
+      }
       return {
         ok: false,
         reason: "migration-failed",

@@ -15,7 +15,8 @@
  */
 
 /**
- * ipc/store.js — storage IPC handlers (tunnels:* / settings:* / hostkeys:*).
+ * ipc/store.js — storage IPC handlers (tunnels:* / credentials:* / jumphosts:* /
+ * settings:*).
  *
  * Pure delegation to the store modules behind the injected `getStores()`. Reads
  * use safeCall (quiet: log + look-alike fallback); authoritative writes use
@@ -93,12 +94,6 @@ function registerStoreIPC({
     );
     return notify(result, id);
   });
-
-  ipcMain.handle("tunnels:reorder", (_event, ids) =>
-    safeCallWrite("tunnels:reorder", () =>
-      getStores().tunnelStore().reorder(ids),
-    ),
-  );
 
   // ── Reusable credentials (Feature 45) ───────────────────────────────────────
 
@@ -189,18 +184,6 @@ function registerStoreIPC({
     if (result && !result.__hippoError) afterSettingsWrite?.(result);
     return result;
   });
-
-  // ── Accepted SSH host keys (TOFU) ───────────────────────────────────────────
-
-  ipcMain.handle("hostkeys:list", () =>
-    safeCall("hostkeys:list", () => getStores().knownHostsStore().list(), []),
-  );
-
-  ipcMain.handle("hostkeys:revoke", (_event, hostPort) =>
-    safeCallWrite("hostkeys:revoke", () =>
-      getStores().knownHostsStore().revoke(hostPort),
-    ),
-  );
 }
 
 module.exports = { registerStoreIPC };

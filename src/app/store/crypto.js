@@ -35,9 +35,11 @@
  * receives a `hasSecret` flag, never a decrypted value (see tunnel-store.js).
  *
  * The active backend + its key are set once at bootstrap via {@link configure}
- * (see secret-storage.js) BEFORE the first decrypt. When neither a keystore nor
- * an app key is available (a plain unit-test process), os-keychain encrypt is a
- * no-op that returns its input — so tests that need real ciphertext configure
+ * (see secret-storage.js) BEFORE the first decrypt. Production always configures
+ * a mode, so an os-keychain write with the keystore unavailable REFUSES (never a
+ * silent plaintext-at-rest downgrade). Only an UNCONFIGURED process that never
+ * called configure() (a plain unit-test process, which holds no real secrets)
+ * falls through to a plaintext no-op; tests that need real ciphertext configure
  * app-key mode.
  */
 "use strict";
@@ -74,6 +76,7 @@ const DERIVED_KEY_LEN = 32; // AES-256
 // The default "os-keychain" preserves the historical no-key behaviour for any
 // caller that never calls configure() (the unit tests, which run in no-op mode).
 let _activeMode = "os-keychain";
+let _modeConfigured = false; // true once configure() has set an explicit mode
 let _appKey = null; // Buffer(32) when app-key mode is active
 let _masterKey = null; // Buffer(32) when the master password is unlocked this session
 
@@ -85,7 +88,10 @@ let _masterKey = null; // Buffer(32) when the master password is unlocked this s
  * @param {{mode?:string, appKey?:Buffer|null, masterKey?:Buffer|null}} opts
  */
 function configure({ mode, appKey, masterKey } = {}) {
-  if (mode !== undefined) _activeMode = mode;
+  if (mode !== undefined) {
+    _activeMode = mode;
+    _modeConfigured = true;
+  }
   if (appKey !== undefined) _appKey = appKey;
   if (masterKey !== undefined) _masterKey = masterKey;
 }
@@ -236,11 +242,18 @@ function _rawEncryptTo(plain, backend) {
   switch (backend) {
     case "os-keychain": {
       if (!isAvailable()) {
-        // SECURITY: keystore unavailable → this secret would be written as
-        // cleartext. Surface once per process so a silent plaintext-at-rest
-        // downgrade doesn't go unnoticed. (The app-key default avoids this on the
-        // normal path; this branch is the no-op test / misconfigured mode. A real
-        // switch TO os-keychain is refused upstream when the keystore is absent.)
+        // SECURITY: keystore unavailable. When os-keychain mode was deliberately
+        // configured (i.e. production, which always calls configure()), REFUSE —
+        // writing the secret as cleartext would be a silent plaintext-at-rest
+        // downgrade, breaking the "no mode ever downgrades a secret to plaintext"
+        // guarantee. The mode-*switch* guard only covers switching INTO
+        // os-keychain; this covers the keystore going away while already in it
+        // (e.g. a Linux Secret Service provider stopping mid-session).
+        if (_modeConfigured) {
+          throw new DecryptError("encryption-unavailable");
+        }
+        // Only reached by an UNCONFIGURED process that never called configure()
+        // (a plain unit-test process with no real secrets): historical no-op.
         if (!_warnedUnavailable) {
           _warnedUnavailable = true;
           console.warn(

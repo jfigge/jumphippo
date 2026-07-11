@@ -48,15 +48,31 @@ function redact(text) {
   if (!text) return "";
   let out = String(text);
 
-  // PEM private-key blocks (OpenSSH / PKCS#8 / RSA / EC …).
+  // PEM private-key blocks (OpenSSH / PKCS#8 / RSA / EC …). Redact a complete
+  // block first, then the two halves a log-rotation boundary can split a block
+  // into: a BEGIN whose END landed in the next file (redact to end of this
+  // one), and a trailing END whose BEGIN was in the previous file (redact from
+  // the start). Over-redaction is deliberately preferred to any risk of key
+  // material surviving the per-file gap.
   out = out.replace(
     /-----BEGIN [^-]*PRIVATE KEY-----[\s\S]*?-----END [^-]*PRIVATE KEY-----/g,
     "[redacted private key]",
   );
-
-  // key: value / key = "value" pairs whose key names a secret.
   out = out.replace(
-    /("?\b(?:password|passphrase|secret|token|privatekey|private_key)\b"?\s*[:=]\s*)("[^"]*"|'[^']*'|\S+)/gi,
+    /-----BEGIN [^-]*PRIVATE KEY-----[\s\S]*$/g,
+    "[redacted private key]",
+  );
+  out = out.replace(
+    /^[\s\S]*?-----END [^-]*PRIVATE KEY-----/g,
+    "[redacted private key]",
+  );
+
+  // key: value / key = "value" pairs whose key names (or ends in) a secret —
+  // including compound names like client_secret, x-api-key and api_key. An
+  // unquoted value is scrubbed to end-of-line, since a passphrase may contain
+  // spaces (a quoted value is scrubbed only within its quotes).
+  out = out.replace(
+    /("?\b[\w.-]*(?:password|passphrase|secret|token|api[_-]?key|privatekey|private_key|authorization|bearer)\b"?\s*[:=]\s*)("[^"]*"|'[^']*'|.+)/gi,
     (_m, head) => `${head}${REDACTED}`,
   );
 

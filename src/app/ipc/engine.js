@@ -18,9 +18,9 @@
  * ipc/engine.js — SSH tunnel engine IPC handlers.
  *
  * The renderer only ever sends *intents* over these channels — arm/disarm a
- * definition, pause/resume it, ask for a status snapshot, force-apply a pending
- * edit, or answer a host-key trust prompt. All sockets and SSH live in the engine
- * (main). Live state flows the other way as `porthippo:tunnel-state` /
+ * definition, pause/resume it, ask for a status snapshot, or answer a host-key
+ * trust prompt. All sockets and SSH live in the engine (main). Live state flows
+ * the other way as `porthippo:tunnel-state` /
  * `porthippo:stats` / `porthippo:hostkey-*` broadcasts (see main.js), not through
  * these request/response channels.
  *
@@ -68,12 +68,6 @@ function registerEngineIPC({ ipcMain, getEngine }) {
   ipcMain.handle(
     "tunnels:status",
     wrap("tunnels:status", () => getEngine().status()),
-  );
-
-  // Force-apply a pending, connection-affecting edit now (drops live connections).
-  ipcMain.handle(
-    "tunnels:apply",
-    wrap("tunnels:apply", (id) => getEngine().apply(id)),
   );
 
   // Pause / resume: freeze (or restore) traffic without touching SSH or the store.

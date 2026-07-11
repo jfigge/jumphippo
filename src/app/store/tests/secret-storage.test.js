@@ -372,8 +372,42 @@ test("setMode refuses OS keychain when safeStorage is unavailable (no plaintext 
   }
 });
 
-test("setMode is a no-op when the target equals the current mode", () => {
+test("a failed switch to master-password leaves no orphaned verifier", () => {
   const { dir, paths, sec } = fresh();
+  try {
+    // Current mode: os-keychain with a sealed secret...
+    crypto._setSafeStorage(keychainMock());
+    crypto.configure({ mode: "os-keychain", appKey: null, masterKey: null });
+    const pw = crypto.encryptString("db-pass");
+    io.writeJSON(paths.tunnelsPath(), tunnelsDoc(pw, pw));
+    sec.writeConfig({ mode: "os-keychain" });
+
+    // ...then the keystore vanishes, so re-encrypting to master-password can't
+    // decrypt the existing secrets and the switch aborts.
+    crypto._setSafeStorage(null);
+    const res = sec.setMode("master-password", "open sesame");
+    assert.equal(res.ok, false);
+    assert.equal(res.reason, "migration-failed");
+
+    // The switch minted a kdf/verifier but never flipped the mode — they must be
+    // dropped, or the Security UI would report a master password that isn't set.
+    assert.equal(
+      sec.getState().hasPassword,
+      false,
+      "no phantom master password after an aborted switch",
+    );
+    const config = sec.readConfig();
+    assert.equal(config.verifier, undefined, "orphaned verifier removed");
+    assert.equal(config.kdf, undefined, "orphaned kdf removed");
+    assert.equal(sec.pendingMigration(), null, "marker rolled back");
+    assert.equal(crypto.getMode(), "os-keychain", "still in the original mode");
+  } finally {
+    cleanup(dir);
+  }
+});
+
+test("setMode is a no-op when the target equals the current mode", () => {
+  const { dir, sec } = fresh();
   try {
     crypto.configure({ mode: "app-key", appKey: sec.ensureAppKey() });
     sec.writeConfig({ mode: "app-key" });

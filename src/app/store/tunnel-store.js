@@ -63,6 +63,12 @@ function applyDefaults(def) {
   };
 }
 
+// Optional fields the editor omits from its payload when the user leaves them
+// blank. On update the (full, authoritative) payload's ABSENCE of one means the
+// user cleared it, so a shallow merge must not resurrect the stored value —
+// mirrors credential-store's SECRET_FIELDS handling.
+const OPTIONAL_FIELDS = ["bindHost", "sshHost", "sshPort", "lingerMs"];
+
 /** Index an array of `{ id }` records into a Map for O(1) reference lookup. */
 function indexById(records) {
   const map = new Map();
@@ -168,8 +174,11 @@ class TunnelStore {
   }
 
   /**
-   * Patch an existing definition (shallow top-level override). Throws NOT_FOUND
-   * for an unknown id, INVALID_DEFINITION on a bad merged result or dangling ref.
+   * Patch an existing definition (shallow top-level override). The OPTIONAL_FIELDS
+   * are authoritative: one absent from `patch` is treated as cleared (dropped from
+   * the merged record), so the editor's full payload can un-set a bastion / LAN
+   * bind / linger by leaving the field blank. Throws NOT_FOUND for an unknown id,
+   * INVALID_DEFINITION on a bad merged result or dangling ref.
    */
   update(id, patch) {
     const doc = this._read();
@@ -177,6 +186,12 @@ class TunnelStore {
     if (i === -1) throw io.notFoundError(`tunnel not found: ${id}`);
 
     const merged = applyDefaults({ ...doc.tunnels[i], ...patch, id });
+    // The editor sends a complete definition, so an optional field missing from
+    // `patch` was cleared by the user — drop it rather than inherit the stale
+    // stored value through the shallow merge.
+    for (const f of OPTIONAL_FIELDS) {
+      if (!(f in patch)) delete merged[f];
+    }
     const { valid, errors } = validateDefinition(merged);
     if (!valid) throw invalidDefinitionError(errors);
     this._assertRefs(doc, merged);

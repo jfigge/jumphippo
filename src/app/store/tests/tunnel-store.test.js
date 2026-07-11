@@ -207,6 +207,48 @@ test("an update that changes only the name keeps its references", () => {
   }
 });
 
+test("an update can clear an optional field (bastion / linger) by omitting it", () => {
+  const dir = freshDir();
+  try {
+    const stores = new Stores(dir);
+    const cred = makeCred(stores.credentialStore());
+    const created = stores.tunnelStore().create(
+      makeDef(cred.id, {
+        sshHost: "bastion.example.com",
+        sshPort: 2222,
+        bindHost: "0.0.0.0",
+        lingerMs: 60000,
+      }),
+    );
+    assert.equal(created.sshHost, "bastion.example.com");
+
+    // The editor omits blanked optionals from its payload; the update must not
+    // resurrect the stored values through the shallow merge.
+    const updated = stores.tunnelStore().update(created.id, {
+      name: created.name,
+      localPort: created.localPort,
+      destination: created.destination,
+      credentialId: created.credentialId,
+      jumpHostIds: [],
+      keepAlive: false,
+      enabled: true,
+      autoReconnect: false,
+    });
+
+    assert.equal(updated.sshHost, undefined, "bastion cleared");
+    assert.equal(updated.sshPort, undefined, "bastion port cleared");
+    assert.equal(updated.bindHost, undefined, "LAN bind cleared");
+    assert.equal(updated.lingerMs, undefined, "linger override cleared");
+
+    // ...and it survives a reload from disk.
+    const reloaded = new Stores(dir).tunnelStore().get(created.id);
+    assert.equal(reloaded.sshHost, undefined);
+    assert.equal(reloaded.bindHost, undefined);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 test("list is ordered, reorder rewrites order, delete reindexes", () => {
   const dir = freshDir();
   try {

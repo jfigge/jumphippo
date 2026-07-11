@@ -133,6 +133,45 @@ test("a report never leaks a secret that slipped into a log line", () => {
   assert.ok(report.includes("[redacted]"));
 });
 
+test("redact scrubs an unquoted multi-word secret value to end of line", () => {
+  const cleaned = redact("passphrase: correct horse battery staple\nnext line");
+  assert.ok(!cleaned.includes("correct horse battery staple"));
+  assert.ok(!cleaned.includes("horse"));
+  assert.ok(cleaned.includes("[redacted]"));
+  assert.ok(cleaned.includes("next line"), "only the value line is scrubbed");
+});
+
+test("redact scrubs compound secret key names (client_secret, api_key)", () => {
+  const cleaned = redact(
+    "client_secret=abc123XYZ\napi_key: def456\nx-api-key = ghi789\nAuthorization: Bearer tok.en.value",
+  );
+  assert.ok(!cleaned.includes("abc123XYZ"));
+  assert.ok(!cleaned.includes("def456"));
+  assert.ok(!cleaned.includes("ghi789"));
+  assert.ok(!cleaned.includes("tok.en.value"));
+});
+
+test("a PEM key split across a rotation boundary never leaks either half", () => {
+  const report = buildReport({
+    logs: [
+      {
+        name: "main.1.log",
+        content:
+          "connecting\n-----BEGIN OPENSSH PRIVATE KEY-----\nSECRETHALF_AAAA\n",
+      },
+      {
+        name: "main.log",
+        content:
+          "SECRETHALF_BBBB\n-----END OPENSSH PRIVATE KEY-----\nconnected\n",
+      },
+    ],
+  });
+  assert.ok(!report.includes("SECRETHALF_AAAA"), "head half redacted");
+  assert.ok(!report.includes("SECRETHALF_BBBB"), "tail half redacted");
+  assert.ok(report.includes("[redacted private key]"));
+  assert.ok(report.includes("connected"), "surrounding log lines survive");
+});
+
 test("summarizeTunnel marks a tunnel with no bastion as direct", () => {
   const line = summarizeTunnel({
     name: "x",

@@ -427,16 +427,6 @@ function registerIpc() {
     broadcast,
     safeCall,
   });
-
-  // Auto-update (Feature 70).
-  ipcMain.handle("updater:check", () => {
-    updater.checkForUpdates({ manual: true });
-    return null;
-  });
-  ipcMain.handle("updater:quit-and-install", () => {
-    updater.quitAndInstall();
-    return null;
-  });
 }
 
 // ─── Hot reload (dev only) ────────────────────────────────────────────────────
