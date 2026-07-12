@@ -361,6 +361,7 @@ class Tunnel {
             this.#error = String(
               (err && err.message) || err || "forward failed",
             );
+            this.#stats.onError();
             this.#emitState();
           },
         });
@@ -385,6 +386,7 @@ class Tunnel {
 
   #handleListenerError(err) {
     this.#error = err.message;
+    this.#stats.onError();
     this.#setState("error");
   }
 
@@ -504,6 +506,7 @@ class Tunnel {
   /** A connect attempt failed (lazy connect, eager keepAlive, or reconnect). */
   #failConnect(err) {
     this.#error = String((err && err.message) || err || "connection failed");
+    this.#stats.onError();
     if (this.#shouldStayHot()) {
       this.#attemptReconnect();
     } else {

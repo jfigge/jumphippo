@@ -53,9 +53,13 @@ class Stats {
   // Public, serializable fields (mirrored verbatim into snapshot()).
   bytesUp = 0;
   bytesDown = 0;
-  activeConnections = 0;
+  activeConnections = 0; // live relay connections right now
+  connectionCount = 0; // cumulative relay connections since the current arm
+  errorCount = 0; // cumulative connect/forward/listener errors since the current arm
   lastActiveAt = null;
-  openedAt = null;
+  openedAt = null; // ms epoch the CURRENT SSH session connected (null if not connected)
+  firstConnectedAt = null; // ms epoch the FIRST SSH session connected since the arm
+  lastDisconnectedAt = null; // ms epoch the last SSH session was torn down
   armedAt = null;
 
   /**
@@ -99,11 +103,17 @@ class Stats {
   /** A relay's forwarded channel opened. */
   connOpened() {
     this.activeConnections += 1;
+    this.connectionCount += 1; // cumulative — never decremented
   }
 
   /** A relay closed. */
   connClosed() {
     if (this.activeConnections > 0) this.activeConnections -= 1;
+  }
+
+  /** A connect / forward / listener error occurred (cumulative since arm). */
+  onError() {
+    this.errorCount += 1;
   }
 
   // ── Lifecycle (called by tunnel.js) ─────────────────────────────────────────
@@ -113,20 +123,27 @@ class Stats {
     this.bytesUp = 0;
     this.bytesDown = 0;
     this.activeConnections = 0;
+    this.connectionCount = 0;
+    this.errorCount = 0;
     this.lastActiveAt = null;
     this.openedAt = null;
+    this.firstConnectedAt = null;
+    this.lastDisconnectedAt = null;
     this.armedAt = this.#now();
     this.#buckets = [];
   }
 
-  /** The SSH session connected — stamp the current open time. */
+  /** The SSH session connected — stamp the current open time (and the first). */
   onConnected() {
-    this.openedAt = this.#now();
+    const now = this.#now();
+    this.openedAt = now;
+    if (this.firstConnectedAt === null) this.firstConnectedAt = now;
   }
 
   /** The SSH session was torn down (idle linger, drop, or reconnect boundary). */
   onDisconnected() {
     this.openedAt = null;
+    this.lastDisconnectedAt = this.#now();
     this.#buckets = []; // no live session → rates read zero immediately
   }
 
@@ -151,12 +168,16 @@ class Stats {
     const perSec = RATE_WINDOW_MS / 1000;
     return {
       activeConnections: this.activeConnections,
+      connectionCount: this.connectionCount,
+      errorCount: this.errorCount,
       bytesUp: this.bytesUp,
       bytesDown: this.bytesDown,
       totalBytes: this.bytesUp + this.bytesDown,
       rateUp: Math.round(up / perSec),
       rateDown: Math.round(down / perSec),
       openedAt: this.openedAt,
+      firstConnectedAt: this.firstConnectedAt,
+      lastDisconnectedAt: this.lastDisconnectedAt,
       armedAt: this.armedAt,
       lastActiveAt: this.lastActiveAt,
     };

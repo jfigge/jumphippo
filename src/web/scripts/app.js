@@ -14,65 +14,23 @@
  * limitations under the License.
  */
 
-// app.js — renderer bootstrap. Wires the Definition / Monitoring view
-// toggle (persisting the choice in settings), mounts the Feature 40 Definition
-// view, installs the app-wide SSH host-key trust prompt, and shows the app
-// version fetched over window.porthippo. The Monitoring pane is filled in by
-// Feature 50.
+// app.js — renderer bootstrap. Mounts the single master-detail TunnelsView
+// (sidebar list + live detail), installs the app-wide SSH host-key trust prompt +
+// update notifier, wires the Settings/About shell, and applies the chosen theme.
 
-// Activate the Feature 30 stats seam: importing it for its side effect starts the
-// `porthippo:stats` subscription so the latest per-tunnel snapshots are captured
-// from load, ready for the Feature 50 Monitoring view to render.
+// Activate the stats seam: importing it for its side effect starts the
+// `porthippo:stats` subscription so snapshots are captured from load.
 import "./stats-store.js";
 
-import { DefinitionView } from "./components/definition-view.js";
-import { MonitoringView } from "./components/monitoring-view.js";
+import { TunnelsView } from "./components/tunnels-view.js";
 import { HostKeyPrompt } from "./host-key-prompt.js";
 import { UpdateNotifier } from "./update-notifier.js";
 import { SettingsPopup } from "./components/settings-popup.js";
 import { AboutDialog } from "./components/about-dialog.js";
 import { init as initI18n, t } from "./i18n.js";
 
-const VIEWS = ["definition", "monitoring"];
-
-// The two panes are each mounted once and kept alive across view switches — so
-// the Monitoring view holds a single `porthippo:stats` subscription whichever
-// view is active. `applyView` only toggles visibility.
-let definitionView = null;
-let monitoringView = null;
+let tunnelsView = null;
 let settingsPopup = null;
-
-function applyView(view) {
-  const content = document.getElementById("app-content");
-  const definition = document.getElementById("definition-view");
-  const monitoring = document.getElementById("monitoring-view");
-  if (!content || !definition || !monitoring) return;
-
-  content.dataset.view = view;
-
-  // Show only the active pane.
-  definition.hidden = view === "monitoring";
-  monitoring.hidden = view === "definition";
-
-  for (const btn of document.querySelectorAll(".view-toggle-btn")) {
-    btn.classList.toggle("view-toggle-btn--active", btn.dataset.view === view);
-    btn.setAttribute("aria-selected", String(btn.dataset.view === view));
-  }
-}
-
-function initViewToggle() {
-  const toggle = document.getElementById("view-toggle");
-  if (!toggle) return;
-  toggle.addEventListener("click", (event) => {
-    const btn = event.target.closest(".view-toggle-btn");
-    if (!btn) return;
-    const view = btn.dataset.view;
-    if (!VIEWS.includes(view)) return;
-    applyView(view);
-    // Persist the choice; non-fatal if the write fails.
-    window.porthippo?.settings?.set?.({ viewMode: view })?.catch?.(() => {});
-  });
-}
 
 // Apply the chosen theme (Feature 60). "light"/"dark" force a palette via the
 // data-theme attribute (which wins over the OS preference in theme.css);
@@ -83,51 +41,21 @@ function applyTheme(theme) {
   else delete root.dataset.theme;
 }
 
-async function initDefinitionView() {
-  const host = document.getElementById("definition-view");
+async function initTunnelsView() {
+  const host = document.getElementById("tunnels-view");
   if (!host) return;
-  definitionView = new DefinitionView();
-  host.appendChild(definitionView.element);
+  tunnelsView = new TunnelsView();
+  host.appendChild(tunnelsView.element);
   try {
-    await definitionView.load();
+    await tunnelsView.load();
   } catch (err) {
-    console.error("[app] definition view load failed:", err && err.message);
+    console.error("[app] tunnels view load failed:", err && err.message);
   }
-}
-
-async function initMonitoringView() {
-  const host = document.getElementById("monitoring-view");
-  if (!host) return;
-  monitoringView = new MonitoringView();
-  host.appendChild(monitoringView.element);
-  try {
-    await monitoringView.load();
-  } catch (err) {
-    console.error("[app] monitoring view load failed:", err && err.message);
-  }
-}
-
-// A row's "Edit" affordance in the Monitoring view asks the shell to jump to the
-// Definition view for that tunnel. Stay put when already showing Definition;
-// only flip away from the Monitoring view.
-function initEditTunnelBridge() {
-  window.addEventListener("porthippo:edit-tunnel", (event) => {
-    const id = event.detail && event.detail.id;
-    if (!id) return;
-    const content = document.getElementById("app-content");
-    if (content && content.dataset.view === "monitoring") {
-      applyView("definition");
-      window.porthippo?.settings
-        ?.set?.({ viewMode: "definition" })
-        ?.catch?.(() => {});
-    }
-    definitionView?.selectById(id);
-  });
 }
 
 // App-shell wiring (Feature 60): the Settings panel + the commands the native
-// menu / tray dispatch to the renderer (settings, new tunnel, view switch), plus
-// live theme re-apply when settings change.
+// menu / tray dispatch to the renderer (settings, new tunnel), plus live theme
+// re-apply when settings change.
 function initShell() {
   settingsPopup = new SettingsPopup();
 
@@ -159,22 +87,15 @@ function initShell() {
 
   window.addEventListener("porthippo:show-about", () => AboutDialog.open());
 
-  window.addEventListener("porthippo:new-tunnel", () => {
-    const content = document.getElementById("app-content");
-    if (content && content.dataset.view === "monitoring") {
-      applyView("definition");
-      window.porthippo?.settings
-        ?.set?.({ viewMode: "definition" })
-        ?.catch?.(() => {});
-    }
-    definitionView?.createNew();
-  });
+  // "New Tunnel" from the native menu / tray opens the editor.
+  window.addEventListener("porthippo:new-tunnel", () =>
+    tunnelsView?.createNew(),
+  );
 
-  window.addEventListener("porthippo:set-view", (event) => {
-    const view = event.detail;
-    if (!VIEWS.includes(view)) return;
-    applyView(view);
-    window.porthippo?.settings?.set?.({ viewMode: view })?.catch?.(() => {});
+  // "Edit" affordances (e.g. from the tray) select the tunnel in the detail view.
+  window.addEventListener("porthippo:edit-tunnel", (event) => {
+    const id = event.detail && event.detail.id;
+    if (id) tunnelsView?.selectById(id);
   });
 
   // A settings change re-applies the theme live (other prefs are read on demand
@@ -192,7 +113,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   // locales ship — but awaiting it keeps the ordering guarantee).
   await initI18n();
 
-  // One settings read drives the pre-paint theme + view restore.
+  // One settings read drives the pre-paint theme.
   let settings = {};
   try {
     settings = (await window.porthippo?.settings?.get?.()) || {};
@@ -201,14 +122,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
   applyTheme(settings.theme);
 
-  initViewToggle();
-  applyView(
-    VIEWS.includes(settings.viewMode) ? settings.viewMode : "definition",
-  );
   new HostKeyPrompt().install();
   new UpdateNotifier().install();
-  initEditTunnelBridge();
   initShell();
-  initDefinitionView();
-  initMonitoringView();
+  initTunnelsView();
 });

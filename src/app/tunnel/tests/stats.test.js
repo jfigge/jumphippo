@@ -109,6 +109,68 @@ test("connection counting tracks opens and closes and never goes negative", () =
   assert.equal(stats.snapshot().activeConnections, 0);
 });
 
+test("connectionCount is cumulative and errorCount tracks onError()", () => {
+  const stats = new Stats({ now: fakeClock().now });
+  stats.onArmed();
+  assert.equal(stats.snapshot().connectionCount, 0);
+  assert.equal(stats.snapshot().errorCount, 0);
+
+  // Cumulative: closes never decrement it, unlike activeConnections.
+  stats.connOpened();
+  stats.connOpened();
+  stats.connClosed();
+  const s = stats.snapshot();
+  assert.equal(s.activeConnections, 1, "one still live");
+  assert.equal(s.connectionCount, 2, "two were opened in total");
+
+  stats.onError();
+  stats.onError();
+  assert.equal(stats.snapshot().errorCount, 2);
+});
+
+test("firstConnectedAt is stamped once; lastDisconnectedAt tracks teardown", () => {
+  const clock = fakeClock(9_000_000);
+  const stats = new Stats({ now: clock.now });
+  stats.onArmed();
+  assert.equal(stats.snapshot().firstConnectedAt, null);
+  assert.equal(stats.snapshot().lastDisconnectedAt, null);
+
+  clock.advance(1000);
+  stats.onConnected();
+  assert.equal(stats.snapshot().firstConnectedAt, 9_001_000);
+  assert.equal(stats.snapshot().openedAt, 9_001_000);
+
+  clock.advance(500);
+  stats.onDisconnected();
+  assert.equal(stats.snapshot().lastDisconnectedAt, 9_001_500);
+  assert.equal(stats.snapshot().openedAt, null);
+
+  // A later reconnect keeps firstConnectedAt (the FIRST), moves openedAt.
+  clock.advance(2000);
+  stats.onConnected();
+  const s = stats.snapshot();
+  assert.equal(s.firstConnectedAt, 9_001_000, "first connect is sticky");
+  assert.equal(s.openedAt, 9_003_500, "openedAt is the current session");
+});
+
+test("re-arming zeroes the new cumulative counters and session timestamps", () => {
+  const clock = fakeClock();
+  const stats = new Stats({ now: clock.now });
+  stats.onArmed();
+  stats.connOpened();
+  stats.onError();
+  stats.onConnected();
+  stats.onDisconnected();
+
+  clock.advance(5000);
+  stats.onArmed(); // fresh session
+  const s = stats.snapshot();
+  assert.equal(s.connectionCount, 0);
+  assert.equal(s.errorCount, 0);
+  assert.equal(s.firstConnectedAt, null);
+  assert.equal(s.lastDisconnectedAt, null);
+});
+
 test("lifecycle stamps armedAt / openedAt / lastActiveAt correctly", () => {
   const clock = fakeClock(5_000_000);
   const stats = new Stats({ now: clock.now });

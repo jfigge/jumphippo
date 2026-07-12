@@ -91,35 +91,7 @@
   background: transparent;
 }
 
-/* ── View toggle ─────────────────────────────────────────────────────────── */
-.view-toggle {
-  display: inline-flex;
-  gap: 2px;
-  padding: 2px;
-  background: var(--color-crust);
-  border-radius: var(--radius-md);
-}
-
-.view-toggle-btn {
-  padding: var(--space-1) var(--space-3);
-  border: 0;
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--color-subtext);
-  font-size: 13px;
-  line-height: 1.6;
-}
-
-.view-toggle-btn:hover {
-  color: var(--color-text);
-}
-
-.view-toggle-btn--active {
-  background: var(--color-surface-0);
-  color: var(--color-text);
-}
-
-/* ── Content panes ───────────────────────────────────────────────────────── */
+/* ── Content: the single master-detail Tunnels surface ───────────────────── */
 .app-content {
   flex: 1 1 auto;
   min-height: 0;
@@ -129,27 +101,11 @@
 
 .pane {
   min-width: 0;
-  overflow: auto;
-  padding: var(--space-5);
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
 }
 
 .pane[hidden] {
   display: none;
-}
-
-.pane-placeholder {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  color: var(--color-muted);
-  text-align: center;
-}
-
-.pane-placeholder h2 {
-  color: var(--color-subtext);
-  font-size: 15px;
-  font-weight: 600;
 }

@@ -185,7 +185,6 @@ for (const channel of [
 const MENU_EVENT_MAP = {
   "menu:open-settings": "porthippo:open-settings",
   "menu:new-tunnel": "porthippo:new-tunnel",
-  "menu:set-view": "porthippo:set-view",
   "menu:show-about": "porthippo:show-about",
 };
 for (const [channel, domEvent] of Object.entries(MENU_EVENT_MAP)) {

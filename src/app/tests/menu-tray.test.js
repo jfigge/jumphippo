@@ -61,7 +61,6 @@ test("installAppMenu builds and installs a menu and wires custom items", () => {
     armAll: () => fired.push("armAll"),
     disarmAll: () => fired.push("disarmAll"),
     openSettings: () => fired.push("openSettings"),
-    setView: (v) => fired.push(`setView:${v}`),
     copyDiagnostics: () => fired.push("copyDiagnostics"),
     showLogs: () => fired.push("showLogs"),
     about: () => fired.push("about"),
@@ -81,13 +80,7 @@ test("installAppMenu builds and installs a menu and wires custom items", () => {
   findItem(template, "New Tunnel").click();
   findItem(template, "Arm All Tunnels").click();
   findItem(template, "Copy Diagnostics").click();
-  findItem(template, "Definition").click();
-  assert.deepEqual(fired, [
-    "newTunnel",
-    "armAll",
-    "copyDiagnostics",
-    "setView:definition",
-  ]);
+  assert.deepEqual(fired, ["newTunnel", "armAll", "copyDiagnostics"]);
 });
 
 test("the About item routes to the about action (in-app dialog)", () => {

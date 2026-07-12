@@ -1103,3 +1103,327 @@
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
 }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Master-detail Tunnels surface (sidebar list + live detail).
+   ───────────────────────────────────────────────────────────────────────────── */
+.tunnels-view {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+/* ── Sidebar (master list) ─────────────────────────────────────────────────── */
+.tunnel-sidebar {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--color-mantle);
+  border-right: 1px solid var(--color-crust);
+}
+
+.tunnel-sidebar-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-3) var(--space-2) var(--space-4);
+}
+
+.tunnel-sidebar-title {
+  flex: 1 1 auto;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.tunnel-add-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tunnel-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--space-1) var(--space-2) var(--space-3);
+}
+
+.tunnel-list-empty {
+  padding: var(--space-4);
+  color: var(--color-muted);
+}
+
+.tunnel-list-empty-title {
+  color: var(--color-subtext);
+  font-weight: 600;
+}
+
+.tunnel-list-empty-hint {
+  font-size: 13px;
+  margin-top: var(--space-1);
+}
+
+/* ── Tunnel row ────────────────────────────────────────────────────────────── */
+.tunnel-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-2) var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+
+.tunnel-row:hover {
+  background: var(--color-surface-0);
+}
+
+.tunnel-row:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: -2px;
+}
+
+.tunnel-row--selected,
+.tunnel-row--selected:hover {
+  background: var(--color-surface-1);
+}
+
+.tunnel-dot {
+  flex: 0 0 auto;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-muted);
+}
+
+.tunnel-dot--disarmed {
+  background: var(--color-muted);
+}
+.tunnel-dot--armed {
+  background: var(--color-success);
+  box-shadow: 0 0 6px color-mix(in srgb, var(--color-success) 60%, transparent);
+}
+.tunnel-dot--paused {
+  background: var(--color-warning);
+}
+.tunnel-dot--error {
+  background: var(--color-danger);
+  box-shadow: 0 0 6px color-mix(in srgb, var(--color-danger) 60%, transparent);
+}
+
+.tunnel-row-port {
+  flex: 0 0 auto;
+  min-width: 42px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--color-subtext);
+}
+
+.tunnel-row--selected .tunnel-row-port {
+  color: var(--color-text);
+}
+
+.tunnel-row-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  color: var(--color-text);
+}
+
+.tunnel-row-tools {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 2px;
+  opacity: 0;
+  transition: opacity 0.1s ease;
+}
+
+.tunnel-row:hover .tunnel-row-tools,
+.tunnel-row:focus-within .tunnel-row-tools,
+.tunnel-row--selected .tunnel-row-tools {
+  opacity: 1;
+}
+
+.tunnel-row-btn {
+  width: 24px;
+  height: 24px;
+}
+
+.tunnel-delete-btn:hover {
+  color: var(--color-danger);
+}
+
+.tunnel-row-btn svg,
+.tunnel-add-btn svg,
+.detail-ctrl svg {
+  display: block;
+}
+
+/* ── Detail panel ──────────────────────────────────────────────────────────── */
+.tunnel-detail {
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--space-4) var(--space-5) var(--space-5);
+}
+
+.detail-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--color-muted);
+}
+
+/* A `display` rule overrides the UA `[hidden] { display: none }`, so the hidden
+   states need their own guard or both the empty hint and the content show at once. */
+.detail-empty[hidden],
+.detail-content[hidden] {
+  display: none;
+}
+
+/* ── Title: breadcrumb + controls ──────────────────────────────────────────── */
+.detail-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 34px;
+  margin-bottom: var(--space-5);
+}
+
+.detail-route {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.route-seg {
+  padding: 5px var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-0);
+  color: var(--color-subtext);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.route-seg--local {
+  color: var(--color-text);
+}
+
+.route-seg--target {
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.route-sep {
+  color: var(--color-muted);
+  font-size: 14px;
+}
+
+.detail-controls {
+  flex: 0 0 auto;
+  display: flex;
+  gap: var(--space-1);
+}
+
+.detail-ctrl {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+}
+
+.detail-ctrl:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.detail-arm-btn--armed {
+  color: var(--color-success);
+}
+
+/* ── Stat cards ────────────────────────────────────────────────────────────── */
+.detail-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: var(--space-3);
+}
+
+.detail-card {
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-0);
+  border: 1px solid transparent;
+  cursor: grab;
+  user-select: none;
+}
+
+.detail-card:active {
+  cursor: grabbing;
+}
+
+.detail-card--dragging {
+  opacity: 0.5;
+}
+
+.detail-card--drop {
+  border-color: var(--color-accent);
+}
+
+.card-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--color-muted);
+  margin-bottom: var(--space-2);
+}
+
+.card-value {
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--color-text);
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+
+.card-value--down {
+  color: var(--color-success);
+}
+.card-value--up {
+  color: var(--color-info);
+}
+.card-value--error {
+  color: var(--color-danger);
+}
+
+/* State card value coloured by the live state. */
+.card-value--state-connected {
+  color: var(--color-success);
+}
+.card-value--state-listening,
+.card-value--state-connecting {
+  color: var(--color-subtext);
+}
+.card-value--state-paused {
+  color: var(--color-warning);
+}
+.card-value--state-error {
+  color: var(--color-danger);
+}
+.card-value--state-disarmed {
+  color: var(--color-muted);
+}

@@ -45,19 +45,9 @@ function installAppMenu({ app, Menu, label, actions, isDev = false }) {
   const isMac = process.platform === "darwin";
   const a = actions || {};
 
-  // View-switch items shared by macOS + other platforms.
+  // Standard View menu (the app is now a single master-detail surface, so there
+  // are no Definition/Monitoring view-switch items).
   const viewItems = [
-    {
-      label: label("menu.viewDefinition", "Definition"),
-      accelerator: "CmdOrCtrl+1",
-      click: () => a.setView?.("definition"),
-    },
-    {
-      label: label("menu.viewMonitoring", "Monitoring"),
-      accelerator: "CmdOrCtrl+2",
-      click: () => a.setView?.("monitoring"),
-    },
-    { type: "separator" },
     ...(isDev
       ? [
           { role: "reload" },

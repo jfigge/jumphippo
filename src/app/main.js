@@ -353,10 +353,6 @@ function refreshMenu() {
       armAll,
       disarmAll,
       openSettings,
-      setView: (view) => {
-        showWindow();
-        sendToRenderer("menu:set-view", view);
-      },
       copyDiagnostics,
       showLogs: () => shell.openPath(logger.dir),
       about: showAbout,

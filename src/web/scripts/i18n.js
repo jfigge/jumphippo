@@ -169,6 +169,41 @@ export const EN = {
   "state.paused": "Paused",
   "state.error": "Error",
 
+  // ── Tunnels sidebar (master list) ───────────────────────────────────────
+  "tunnels.title": "Tunnels",
+  "tunnels.add": "Add tunnel",
+  "tunnels.edit": "Edit tunnel",
+  "tunnels.delete": "Delete tunnel",
+  "tunnels.empty": "No tunnels yet.",
+  "tunnels.emptyHint": "Add one to get started.",
+  "tunnels.selectHint": "Select a tunnel to see its live details.",
+
+  // ── Tunnel detail (breadcrumb + controls) ───────────────────────────────
+  "detail.arm": "Arm tunnel",
+  "detail.disarm": "Disarm tunnel",
+  "detail.pause": "Pause traffic",
+  "detail.resume": "Resume traffic",
+  "detail.reorderHint": "Drag to rearrange",
+  "detail.route.local": "Local",
+  "detail.route.target": "Target",
+
+  // ── Detail cards ────────────────────────────────────────────────────────
+  "card.download": "Download",
+  "card.upload": "Upload",
+  "card.connections": "Connections",
+  "card.connectionCount": "Total connections",
+  "card.transferred": "Transferred",
+  "card.sent": "Sent",
+  "card.received": "Received",
+  "card.openFor": "Open for",
+  "card.idle": "Idle",
+  "card.firstConnection": "First connection",
+  "card.lastConnection": "Last connection",
+  "card.lastDisconnect": "Last disconnect",
+  "card.errors": "Errors",
+  "card.state": "State",
+  "card.none": "—",
+
   // ── Host-key trust prompt (TOFU) ────────────────────────────────────────
   "hostkey.unknown.title": "Unknown SSH host key",
   "hostkey.unknown.message":

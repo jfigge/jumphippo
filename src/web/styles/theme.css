@@ -45,7 +45,8 @@
 
   --color-accent: #d0d0d0; /* primary accent (monochrome) */
   --color-accent-hover: #e0e0e0;
-  --color-success: #80c080; /* connected / active */
+  --color-success: #80c080; /* connected / active / download */
+  --color-info: #78a8d8; /* upload / informational accent */
   --color-warning: #d4b060; /* paused / caution */
   --color-danger: #e07070; /* error */
 
@@ -97,6 +98,7 @@
     --color-accent: #383838;
     --color-accent-hover: #202020;
     --color-success: #2a7a2a;
+    --color-info: #3a6ea5;
     --color-warning: #9a6800;
     --color-danger: #b82020;
     --shadow-1: 0 1px 3px rgba(0, 0, 0, 0.12);
@@ -117,6 +119,7 @@
   --color-accent: #383838;
   --color-accent-hover: #202020;
   --color-success: #2a7a2a;
+  --color-info: #3a6ea5;
   --color-warning: #9a6800;
   --color-danger: #b82020;
   --shadow-1: 0 1px 3px rgba(0, 0, 0, 0.12);

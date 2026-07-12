@@ -52,31 +52,6 @@
           <span class="app-header-title">SSH Tunnel Manager</span>
         </div>
 
-        <!-- View toggle: Definition | Monitoring -->
-        <nav
-          class="view-toggle"
-          id="view-toggle"
-          aria-label="View"
-          role="tablist"
-        >
-          <button
-            class="view-toggle-btn view-toggle-btn--active"
-            data-view="definition"
-            role="tab"
-            type="button"
-          >
-            Definition
-          </button>
-          <button
-            class="view-toggle-btn"
-            data-view="monitoring"
-            role="tab"
-            type="button"
-          >
-            Monitoring
-          </button>
-        </nav>
-
         <div class="app-header-meta">
           <button
             id="settings-btn"
@@ -108,21 +83,13 @@
         </div>
       </header>
 
-      <!-- ── Content: two empty panes the later features fill in ───────── -->
-      <main id="app-content" class="app-content" data-view="definition">
-        <!-- Definition view (Feature 40) is mounted here by app.js. -->
+      <!-- ── Content: the single master-detail Tunnels surface ─────────── -->
+      <main id="app-content" class="app-content">
+        <!-- TunnelsView (sidebar list + detail panel) is mounted here by app.js. -->
         <section
-          id="definition-view"
-          class="pane pane-definition"
-          aria-label="Definition"
-        ></section>
-
-        <!-- Monitoring view (Feature 50) is mounted here by app.js. -->
-        <section
-          id="monitoring-view"
-          class="pane pane-monitoring"
-          aria-label="Monitoring"
-          hidden
+          id="tunnels-view"
+          class="pane pane-tunnels"
+          aria-label="Tunnels"
         ></section>
       </main>
     </div>
