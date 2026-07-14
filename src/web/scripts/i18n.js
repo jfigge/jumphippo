@@ -385,6 +385,10 @@ export const EN = {
     "Unlock your secrets first, then switch storage method.",
   "settings.security.error.generic": "Something went wrong. Please try again.",
 
+  // ── Unlock-on-launch prompt (master-password mode boots locked) ─────────
+  "unlock.title": "Unlock secrets",
+  "unlock.later": "Not now",
+
   // ── Native menu (rendered by the MAIN process via its own i18n) ─────────
   "menu.file": "File",
   "menu.edit": "Edit",

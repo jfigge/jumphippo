@@ -207,6 +207,19 @@
   word-break: break-all;
 }
 
+/* Unlock-on-launch prompt: a full-width password field + an inline error line. */
+.unlock-input {
+  display: block;
+  width: 100%;
+  margin-top: var(--space-3);
+}
+
+.popup-error {
+  margin-top: var(--space-2);
+  font-size: 12px;
+  color: var(--color-danger);
+}
+
 .popup-footer {
   display: flex;
   justify-content: flex-end;

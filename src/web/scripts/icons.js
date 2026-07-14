@@ -52,6 +52,15 @@ export const icons = {
     stroke(
       '<path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/>',
     ),
+  // The disarmed counterpart to `power`: the same glyph struck through with a
+  // corner-to-corner slash (Feather's convention for its *-off variants), so
+  // armed/disarmed differ in shape, not just colour — legible without colour.
+  powerOff: () =>
+    stroke(
+      '<path d="M18.36 6.64a9 9 0 1 1-12.73 0"/>' +
+        '<line x1="12" y1="2" x2="12" y2="12"/>' +
+        '<line x1="1" y1="1" x2="23" y2="23"/>',
+    ),
   pause: () =>
     fill(
       '<rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/>',

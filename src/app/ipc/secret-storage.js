@@ -31,9 +31,11 @@
  *
  * On a successful unlock or mode switch the engine is asked to `reconcileAll()`
  * so tunnels that armed while a secret was undecryptable (a locked master key)
- * pick up the now-decryptable definition and can (re)connect — arming is never
- * blocked on the lock state — and a one-way `porthippo:secret-storage-changed`
- * broadcast lets the UI reflect the new mode/lock status. Reason codes are
+ * pick up the now-decryptable definition and can (re)connect, and a one-way
+ * `porthippo:secret-storage-changed` broadcast lets the UI reflect the new
+ * mode/lock status. A successful unlock additionally fires the optional
+ * `onUnlock` hook, which main uses to run any startup arming it DEFERRED because
+ * the store booted locked (the unlock-on-launch prompt). Reason codes are
  * machine-readable only; a secret never crosses this boundary.
  *
  * Every channel registered here MUST have a matching `window.porthippo.*`
@@ -46,6 +48,8 @@
  * @param {() => import('../tunnel/engine').TunnelEngine|null} deps.getEngine
  * @param {(channel: string, payload: object) => void} deps.broadcast
  * @param {(channel: string, fn: Function, fallback?: any) => any} deps.safeCall
+ * @param {() => void} [deps.onUnlock]  fired after a successful unlock (main runs
+ *        any startup arming it deferred while the store booted locked)
  */
 function registerSecretStorageIPC({
   ipcMain,
@@ -53,6 +57,7 @@ function registerSecretStorageIPC({
   getEngine,
   broadcast,
   safeCall,
+  onUnlock,
 }) {
   const state = () =>
     safeCall(
@@ -111,7 +116,18 @@ function registerSecretStorageIPC({
       () => getStores().secretStorage().unlock(password),
       { ok: false, reason: "error" },
     );
-    if (res && res.ok) announce({ reconcile: true });
+    if (res && res.ok) {
+      announce({ reconcile: true });
+      // Resume any launch arming main deferred while the store was locked.
+      try {
+        onUnlock?.();
+      } catch (err) {
+        console.error(
+          "[ipc] secret-storage onUnlock failed:",
+          err && err.message,
+        );
+      }
+    }
     return res;
   });
 

@@ -298,6 +298,41 @@ const armAll = () =>
     ?.armAll()
     .catch((err) => console.error("[main] armAll failed:", err && err.message));
 
+// Set true when startup arming is deferred because the secret store booted
+// LOCKED (master-password mode). A successful unlock — from the launch prompt or
+// Settings → Security — runs the deferred armAll exactly once (see onUnlock).
+let armOnUnlockPending = false;
+
+/** Is the secret store currently locked (master-password mode, no key loaded)? */
+function secretStorageLocked() {
+  return safeCall(
+    "startup:lock-state",
+    () => getStores().secretStorage().getState().locked === true,
+    false,
+  );
+}
+
+/**
+ * Arm enabled definitions now, or — when the store booted locked — defer until
+ * the session is unlocked. Binding a listener needs no secret, but a locked
+ * store can't decrypt a stored password/passphrase, so we hold off entirely and
+ * let the unlock-on-launch prompt resume us rather than surface auth failures.
+ */
+function armEnabledOrDeferForUnlock() {
+  if (secretStorageLocked()) {
+    armOnUnlockPending = true;
+    return;
+  }
+  armAll();
+}
+
+/** Resume the deferred launch arm after the session is unlocked. */
+function resumeDeferredArm() {
+  if (!armOnUnlockPending) return;
+  armOnUnlockPending = false;
+  armAll();
+}
+
 const disarmAll = () =>
   getEngine()
     ?.disarmAll()
@@ -447,6 +482,8 @@ function registerIpc() {
     getEngine,
     broadcast,
     safeCall,
+    // A successful unlock resumes any startup arming deferred while locked.
+    onUnlock: resumeDeferredArm,
   });
 
   // Auto-update (Feature 70) intents. `check` runs a manual (noisy) check; the
@@ -696,8 +733,10 @@ function bootstrap() {
       STARTUP_UPDATE_CHECK_DELAY_MS,
     );
 
-    // Arm enabled definitions on startup unless the user opted out.
-    if (settings.armOnLaunch !== false) armAll();
+    // Arm enabled definitions on startup unless the user opted out. In
+    // master-password mode the store can boot LOCKED — defer arming until the
+    // unlock-on-launch prompt (or Settings) unlocks the session.
+    if (settings.armOnLaunch !== false) armEnabledOrDeferForUnlock();
 
     app.on("activate", () => {
       // macOS: clicking the dock re-shows the (hidden or closed) window.

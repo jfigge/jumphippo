@@ -266,6 +266,8 @@
   "settings.security.error.keychainUnavailable": "The OS keychain isn’t available on this system.",
   "settings.security.error.lockedSwitch": "Unlock your secrets first, then switch storage method.",
   "settings.security.error.generic": "Something went wrong. Please try again.",
+  "unlock.title": "Unlock secrets",
+  "unlock.later": "Not now",
   "menu.file": "File",
   "menu.edit": "Edit",
   "menu.window": "Window",

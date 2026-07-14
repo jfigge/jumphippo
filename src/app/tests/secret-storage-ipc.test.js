@@ -56,6 +56,7 @@ function harness() {
       return fallback;
     }
   };
+  const unlockHooks = [];
 
   registerSecretStorageIPC({
     ipcMain,
@@ -63,12 +64,14 @@ function harness() {
     getEngine,
     broadcast,
     safeCall,
+    onUnlock: () => unlockHooks.push("unlock"),
   });
 
   return {
     dir,
     engineCalls,
     broadcasts,
+    unlockHooks,
     invoke: (channel, arg) => handlers.get(channel)(null, arg),
   };
 }
@@ -154,7 +157,7 @@ test("a successful mode switch reconciles the engine and broadcasts the new stat
 });
 
 test("unlock rejects a wrong password and accepts the right one", () => {
-  const { dir, invoke, engineCalls } = harness();
+  const { dir, invoke, engineCalls, unlockHooks } = harness();
   try {
     invoke("secret-storage:set-mode", {
       mode: "master-password",
@@ -172,11 +175,39 @@ test("unlock rejects a wrong password and accepts the right one", () => {
       before,
       "a failed unlock reconciles nothing",
     );
+    assert.equal(
+      unlockHooks.length,
+      0,
+      "a failed unlock does not resume deferred arming",
+    );
 
     assert.deepEqual(invoke("secret-storage:unlock", { password: "hunter2" }), {
       ok: true,
     });
     assert.equal(engineCalls.length, before + 1);
+    assert.deepEqual(
+      unlockHooks,
+      ["unlock"],
+      "a successful unlock fires the onUnlock hook once",
+    );
+  } finally {
+    cleanup(dir);
+  }
+});
+
+test("a mode switch and lock never fire the onUnlock hook", () => {
+  const { dir, invoke, unlockHooks } = harness();
+  try {
+    invoke("secret-storage:set-mode", {
+      mode: "master-password",
+      password: "hunter2",
+    });
+    invoke("secret-storage:lock");
+    assert.equal(
+      unlockHooks.length,
+      0,
+      "only an unlock resumes deferred arming",
+    );
   } finally {
     cleanup(dir);
   }

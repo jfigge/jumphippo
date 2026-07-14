@@ -24,6 +24,7 @@ import "./stats-store.js";
 
 import { TunnelsView } from "./components/tunnels-view.js";
 import { HostKeyPrompt } from "./host-key-prompt.js";
+import { UnlockPrompt } from "./unlock-prompt.js";
 import { UpdateNotifier } from "./update-notifier.js";
 import { SettingsPopup } from "./components/settings-popup.js";
 import { AboutDialog } from "./components/about-dialog.js";
@@ -151,6 +152,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   new HostKeyPrompt().install();
   new UpdateNotifier().install();
+  // Master-password mode boots locked — prompt to unlock for the session so the
+  // deferred tunnels (held disarmed in main until unlock) can arm.
+  new UnlockPrompt().install();
   initShell();
   initTunnelsView();
 });
