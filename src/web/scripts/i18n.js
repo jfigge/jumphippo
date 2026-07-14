@@ -267,9 +267,9 @@ export const EN = {
   "errors.level.warning": "Warning",
 
   // ── View mode + all-tunnels list (table) ────────────────────────────────
-  "view.mode.label": "View",
-  "view.mode.cards": "Cards",
-  "view.mode.list": "List",
+  // The header toggle's hint names the mode it switches TO (opposite of current).
+  "view.mode.showCards": "Display Cards",
+  "view.mode.showList": "Display List",
   "table.tunnel": "Tunnel",
   "table.sortHint": "Sort by {name}",
 

@@ -118,8 +118,8 @@ export class TunnelsView {
 
     this.#onStats = (e) => this.#applyStats(e.detail);
     this.#onTunnelState = (e) => this.#applyState(e.detail);
-    // The view-mode selector lives in the app header; it broadcasts the intent
-    // and we echo the resolved mode back so the <select> stays in sync.
+    // The view-mode toggle lives in the app header; it broadcasts the intent
+    // and we echo the resolved mode back so the toggle's glyph/hint stays in sync.
     this.#onSetMode = (e) => this.#setMode(e.detail && e.detail.mode);
     window.addEventListener("porthippo:stats-updated", this.#onStats);
     window.addEventListener("porthippo:tunnel-state", this.#onTunnelState);

@@ -92,21 +92,21 @@
   gap: var(--space-3);
 }
 
-/* View-mode selector (cards ↔ list), right-aligned in the header. */
-.app-header-view-select {
-  height: 28px;
-  padding: 0 var(--space-2);
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--color-overlay);
-  background: var(--color-surface-0);
-  color: var(--color-text);
-  font-size: 13px;
-  cursor: pointer;
+/* View-mode toggle (cards ↔ list), right-aligned in the header. Like the gear,
+   it's just the icon — no box — brightening on hover via .btn--icon. */
+.app-header-view-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.app-header-view-select:focus-visible {
-  outline: 2px solid var(--color-accent);
-  outline-offset: 1px;
+.app-header-view-toggle svg {
+  display: block;
+}
+
+.app-header-view-toggle,
+.app-header-view-toggle:hover {
+  background: transparent;
 }
 
 /* Vertical separator bar between the selector and the settings gear. */

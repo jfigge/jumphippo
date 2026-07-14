@@ -28,6 +28,7 @@ import { UpdateNotifier } from "./update-notifier.js";
 import { SettingsPopup } from "./components/settings-popup.js";
 import { AboutDialog } from "./components/about-dialog.js";
 import { init as initI18n, t } from "./i18n.js";
+import { icons } from "./icons.js";
 
 let tunnelsView = null;
 let settingsPopup = null;
@@ -70,24 +71,33 @@ function initShell() {
     settingsPopup.open(),
   );
 
-  // The header view-mode selector (cards ↔ list). It's the control; TunnelsView
-  // owns the state, so a change is broadcast to it and it echoes the resolved
-  // mode back (incl. on load from settings) to keep the <select> in sync.
-  const viewMode = document.getElementById("view-mode");
-  if (viewMode) {
-    viewMode.setAttribute("aria-label", t("view.mode.label"));
-    viewMode.options[0].textContent = t("view.mode.cards");
-    viewMode.options[1].textContent = t("view.mode.list");
-    viewMode.addEventListener("change", () => {
+  // The header view-mode toggle (cards ↔ list). It's the control; TunnelsView
+  // owns the state, so a click broadcasts the OTHER mode and the view echoes the
+  // resolved mode back (incl. on load from settings) to keep the toggle in sync.
+  // The button shows the glyph + hint for the mode it switches TO: in cards view
+  // it offers "Display List", in list view it offers "Display Cards".
+  const viewToggle = document.getElementById("view-mode-toggle");
+  if (viewToggle) {
+    let currentMode = "cards";
+    const renderToggle = (mode) => {
+      currentMode = mode === "list" ? "list" : "cards";
+      const toList = currentMode === "cards"; // clicking would switch to list
+      viewToggle.innerHTML = toList ? icons.list() : icons.cards();
+      const hint = toList ? t("view.mode.showList") : t("view.mode.showCards");
+      viewToggle.setAttribute("aria-label", hint);
+      viewToggle.setAttribute("title", hint);
+    };
+    renderToggle(currentMode); // sensible default until the view echoes back
+    viewToggle.addEventListener("click", () => {
       window.dispatchEvent(
         new CustomEvent("porthippo:set-detail-mode", {
-          detail: { mode: viewMode.value },
+          detail: { mode: currentMode === "cards" ? "list" : "cards" },
         }),
       );
     });
     window.addEventListener("porthippo:detail-mode-changed", (event) => {
       const mode = event.detail && event.detail.mode;
-      if (mode) viewMode.value = mode;
+      if (mode) renderToggle(mode);
     });
   }
 

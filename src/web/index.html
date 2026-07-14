@@ -56,15 +56,15 @@
         </div>
 
         <div class="app-header-meta">
-          <!-- View-mode selector (cards ↔ list); localized + wired in app.js. -->
-          <select
-            id="view-mode"
-            class="app-header-view-select"
-            aria-label="View mode"
-          >
-            <option value="cards">Cards</option>
-            <option value="list">List</option>
-          </select>
+          <!-- View-mode toggle (cards ↔ list). Shows the icon + hint for the
+               mode it switches TO; glyph, label + click are wired in app.js. -->
+          <button
+            id="view-mode-toggle"
+            class="btn--icon app-header-view-toggle"
+            type="button"
+            aria-label="Display List"
+            title="Display List"
+          ></button>
 
           <span class="app-header-sep" aria-hidden="true"></span>
 
