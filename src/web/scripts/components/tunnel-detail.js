@@ -125,13 +125,35 @@ const CARDS = [
 const CARD_BY_KEY = new Map(CARDS.map((cd) => [cd.key, cd]));
 export const DEFAULT_CARD_ORDER = CARDS.map((cd) => cd.key);
 
-/** Normalise a saved order to a full, valid one: keep known keys, append the rest. */
-export function normalizeOrder(saved) {
-  const known = Array.isArray(saved)
-    ? saved.filter((k) => CARD_BY_KEY.has(k))
-    : [];
-  const seen = new Set(known);
-  return [...known, ...DEFAULT_CARD_ORDER.filter((k) => !seen.has(k))];
+/**
+ * The VISIBLE cards, in order, for a saved value. A saved array IS the visible
+ * set (unknown keys dropped, de-duped); any valid card absent from it is hidden
+ * and available to add. A missing/invalid value is "first run" → every card is
+ * shown. An empty array is honoured (the user hid them all).
+ */
+export function visibleCards(saved) {
+  if (!Array.isArray(saved)) return [...DEFAULT_CARD_ORDER];
+  const seen = new Set();
+  const out = [];
+  for (const k of saved) {
+    if (CARD_BY_KEY.has(k) && !seen.has(k)) {
+      seen.add(k);
+      out.push(k);
+    }
+  }
+  return out;
+}
+
+/** The cards NOT currently visible, in default order — the "add" list. */
+export function hiddenCards(visible) {
+  const shown = new Set(visible);
+  return DEFAULT_CARD_ORDER.filter((k) => !shown.has(k));
+}
+
+/** Label for a card key (for the manage-cards checklist). */
+export function cardLabel(key) {
+  const c = CARD_BY_KEY.get(key);
+  return c ? t(c.labelKey) : key;
 }
 
 /** Move `fromKey` to `toKey`'s slot; pure so it can be unit-tested. */
@@ -153,24 +175,40 @@ export class TunnelDetail {
   #pauseBtn;
   #cardsEl;
 
+  #cardsBtn;
+  #cardMenu;
+  #menuBoxes = new Map(); // card key → checkbox input
+
   #def = null;
   #state = "disarmed";
   #snap = null;
   #jumpsById = new Map();
-  #order = [...DEFAULT_CARD_ORDER];
+  #visible = [...DEFAULT_CARD_ORDER]; // ordered VISIBLE card keys
   #cardNodes = new Map(); // key → { root, valueEl }
   #dragKey = null;
+  #menuOpen = false;
+  #onDocPointerDown;
+  #onMenuKeydown;
 
   #now;
   #onToggleArm;
   #onTogglePause;
-  #onReorder;
+  #onCardsChange;
 
-  constructor({ now, onToggleArm, onTogglePause, onReorder } = {}) {
+  constructor({ now, onToggleArm, onTogglePause, onCardsChange } = {}) {
     this.#now = now || Date.now;
     this.#onToggleArm = onToggleArm || (() => {});
     this.#onTogglePause = onTogglePause || (() => {});
-    this.#onReorder = onReorder || (() => {});
+    this.#onCardsChange = onCardsChange || (() => {});
+    // Close the manage-cards menu on an outside click / Escape.
+    this.#onDocPointerDown = (e) => {
+      if (this.#menuOpen && !this.#cardMenu.parentNode.contains(e.target)) {
+        this.#closeCardMenu();
+      }
+    };
+    this.#onMenuKeydown = (e) => {
+      if (e.key === "Escape") this.#closeCardMenu();
+    };
     this.#el = this.#build();
   }
 
@@ -203,10 +241,37 @@ export class TunnelDetail {
 
     this.#cardsEl = el("div", { class: "detail-cards", role: "list" });
 
+    // "Cards" control: a button that toggles a checklist of every card
+    // (checked = shown). Anchored in a relative wrapper so the menu drops beneath.
+    this.#cardsBtn = el("button", {
+      class: "detail-ctrl detail-cards-btn",
+      type: "button",
+      title: t("detail.cards.title"),
+      "aria-haspopup": "true",
+      "aria-expanded": "false",
+      onClick: (e) => {
+        e.stopPropagation();
+        this.#toggleCardMenu();
+      },
+    });
+    this.#cardsBtn.append(
+      document.createTextNode(t("detail.cards")),
+      el("span", { class: "detail-cards-caret", html: icons.chevronDown() }),
+    );
+    this.#cardMenu = this.#buildCardMenu();
+    const cardsMenuWrap = el("div", { class: "detail-cards-menu-wrap" }, [
+      this.#cardsBtn,
+      this.#cardMenu,
+    ]);
+
     this.#contentEl = el("div", { class: "detail-content", hidden: true }, [
       el("div", { class: "detail-title" }, [
         this.#breadcrumbEl,
-        el("div", { class: "detail-controls" }, [this.#pauseBtn, this.#armBtn]),
+        el("div", { class: "detail-controls" }, [
+          cardsMenuWrap,
+          this.#pauseBtn,
+          this.#armBtn,
+        ]),
       ]),
       this.#cardsEl,
     ]);
@@ -218,9 +283,10 @@ export class TunnelDetail {
     );
   }
 
-  /** Adopt a persisted card order (re-renders the grid if a tunnel is shown). */
+  /** Adopt the persisted set of visible cards, in order (re-renders if shown). */
   setCardOrder(order) {
-    this.#order = normalizeOrder(order);
+    this.#visible = visibleCards(order);
+    this.#syncCardMenu();
     if (this.#def) this.#renderCards();
   }
 
@@ -305,7 +371,16 @@ export class TunnelDetail {
   #renderCards() {
     clear(this.#cardsEl);
     this.#cardNodes.clear();
-    for (const key of this.#order) {
+    if (this.#visible.length === 0) {
+      this.#cardsEl.appendChild(
+        el("p", {
+          class: "detail-cards-empty",
+          text: t("detail.cards.empty"),
+        }),
+      );
+      return;
+    }
+    for (const key of this.#visible) {
       const card = CARD_BY_KEY.get(key);
       if (!card) continue;
       const valueEl = el("div", { class: "card-value" });
@@ -388,9 +463,9 @@ export class TunnelDetail {
     const from = this.#dragKey;
     this.#clearDropMarks();
     if (!from || from === key) return;
-    this.#order = reorderCards(this.#order, from, key);
+    this.#visible = reorderCards(this.#visible, from, key);
     this.#renderCards();
-    this.#onReorder([...this.#order]);
+    this.#onCardsChange([...this.#visible]);
   }
 
   #clearDropMarks() {
@@ -398,5 +473,69 @@ export class TunnelDetail {
     for (const [, rec] of this.#cardNodes) {
       rec.root.classList.remove("detail-card--drop", "detail-card--dragging");
     }
+  }
+
+  // ── Manage cards (the checklist menu — add + remove) ──────────────────────
+
+  #buildCardMenu() {
+    this.#menuBoxes.clear();
+    const items = DEFAULT_CARD_ORDER.map((key) => {
+      const box = el("input", {
+        type: "checkbox",
+        class: "card-menu-check",
+        dataset: { card: key },
+        onChange: (e) => this.#toggleCard(key, e.target.checked),
+      });
+      this.#menuBoxes.set(key, box);
+      return el("label", { class: "card-menu-item" }, [
+        box,
+        el("span", { class: "card-menu-label", text: cardLabel(key) }),
+      ]);
+    });
+    return el("div", { class: "card-menu", role: "menu", hidden: true }, [
+      el("div", {
+        class: "card-menu-title",
+        text: t("detail.cards.menuTitle"),
+      }),
+      el("div", { class: "card-menu-grid" }, items),
+    ]);
+  }
+
+  #syncCardMenu() {
+    const shown = new Set(this.#visible);
+    for (const [key, box] of this.#menuBoxes) box.checked = shown.has(key);
+  }
+
+  #toggleCardMenu() {
+    if (this.#menuOpen) this.#closeCardMenu();
+    else this.#openCardMenu();
+  }
+
+  #openCardMenu() {
+    this.#syncCardMenu();
+    this.#menuOpen = true;
+    this.#cardMenu.hidden = false;
+    this.#cardsBtn.setAttribute("aria-expanded", "true");
+    document.addEventListener("pointerdown", this.#onDocPointerDown, true);
+    document.addEventListener("keydown", this.#onMenuKeydown);
+  }
+
+  #closeCardMenu() {
+    this.#menuOpen = false;
+    this.#cardMenu.hidden = true;
+    this.#cardsBtn.setAttribute("aria-expanded", "false");
+    document.removeEventListener("pointerdown", this.#onDocPointerDown, true);
+    document.removeEventListener("keydown", this.#onMenuKeydown);
+  }
+
+  /** Show/hide a card from the checklist (appends when re-shown). */
+  #toggleCard(key, show) {
+    const shown = this.#visible.includes(key);
+    if (show === shown) return;
+    this.#visible = show
+      ? [...this.#visible, key]
+      : this.#visible.filter((k) => k !== key);
+    this.#renderCards();
+    this.#onCardsChange([...this.#visible]);
   }
 }

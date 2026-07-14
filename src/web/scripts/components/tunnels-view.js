@@ -78,7 +78,7 @@ export class TunnelsView {
       now: this.#now,
       onToggleArm: (id) => this.#toggleArm(id),
       onTogglePause: (id) => this.#togglePause(id),
-      onReorder: (order) => this.#persistCardOrder(order),
+      onCardsChange: (order) => this.#persistCardOrder(order),
     });
 
     this.#el = el("div", { class: "tunnels-view" }, [

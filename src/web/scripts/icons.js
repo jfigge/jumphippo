@@ -57,4 +57,5 @@ export const icons = {
       '<rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/>',
     ),
   play: () => fill('<polygon points="6 4 20 12 6 20 6 4"/>'),
+  chevronDown: () => stroke('<polyline points="6 9 12 15 18 9"/>'),
 };

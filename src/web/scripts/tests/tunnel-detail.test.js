@@ -25,7 +25,8 @@ import { resetDom } from "./jsdom-setup.js";
 import {
   TunnelDetail,
   reorderCards,
-  normalizeOrder,
+  visibleCards,
+  hiddenCards,
   DEFAULT_CARD_ORDER,
 } from "../components/tunnel-detail.js";
 
@@ -33,17 +34,19 @@ const NOW = 1_000_000;
 
 function mount(opts = {}) {
   resetDom();
-  const calls = { arm: [], pause: [], reorder: [] };
+  const calls = { arm: [], pause: [], change: [] };
   const detail = new TunnelDetail({
     now: () => NOW,
     onToggleArm: (id) => calls.arm.push(id),
     onTogglePause: (id) => calls.pause.push(id),
-    onReorder: (order) => calls.reorder.push(order),
+    onCardsChange: (order) => calls.change.push(order),
     ...opts,
   });
   document.body.appendChild(detail.element);
   return { detail, calls };
 }
+
+const DEF = { id: "t1", localPort: 1, destination: { host: "h", port: 2 } };
 
 const cards = (el) =>
   [...el.querySelectorAll(".detail-card")].map((c) => c.dataset.card);
@@ -58,12 +61,27 @@ test("reorderCards moves a key to the target slot", () => {
   assert.deepEqual(reorderCards(["a", "b", "c"], "b", "b"), ["a", "b", "c"]);
 });
 
-test("normalizeOrder keeps known keys, drops unknown, appends the rest", () => {
-  const out = normalizeOrder(["errors", "bogus", "download"]);
-  assert.deepEqual(out.slice(0, 2), ["errors", "download"]);
-  assert.ok(!out.includes("bogus"));
-  // Every default key is present exactly once.
-  assert.deepEqual([...out].sort(), [...DEFAULT_CARD_ORDER].sort());
+test("visibleCards treats a saved array as the visible set (no appending)", () => {
+  // A saved subset is exactly the visible cards — the rest are hidden.
+  assert.deepEqual(visibleCards(["errors", "download"]), [
+    "errors",
+    "download",
+  ]);
+  // Unknown keys dropped, de-duped.
+  assert.deepEqual(visibleCards(["download", "bogus", "download"]), [
+    "download",
+  ]);
+  // First run (no saved value) shows every card.
+  assert.deepEqual(visibleCards(undefined), [...DEFAULT_CARD_ORDER]);
+  // An empty array is honoured (the user hid them all).
+  assert.deepEqual(visibleCards([]), []);
+});
+
+test("hiddenCards is the default-order complement of the visible set", () => {
+  const hidden = hiddenCards(["download", "upload"]);
+  assert.ok(!hidden.includes("download"));
+  assert.ok(hidden.includes("errors"));
+  assert.equal(hidden.length, DEFAULT_CARD_ORDER.length - 2);
 });
 
 // ── Breadcrumb ──────────────────────────────────────────────────────────────
@@ -235,8 +253,49 @@ test("dragging one card onto another reorders and reports the new order", () => 
   cardEl(from).dispatchEvent(new Event("dragstart", { bubbles: true }));
   cardEl(to).dispatchEvent(new Event("drop", { bubbles: true }));
 
-  assert.equal(calls.reorder.length, 1, "onReorder fired once");
-  assert.deepEqual(calls.reorder[0], reorderCards(order, from, to));
+  assert.equal(calls.change.length, 1, "onCardsChange fired once");
+  assert.deepEqual(calls.change[0], reorderCards(order, from, to));
   // The DOM reflects the new order.
   assert.deepEqual(cards(detail.element), reorderCards(order, from, to));
+});
+
+// ── Choose which cards show (per-card [X] + the checklist menu) ────────────────
+
+test("only the saved visible cards render; the rest are hidden", () => {
+  const { detail } = mount();
+  detail.setCardOrder(["download", "state"]);
+  detail.show(DEF, { state: "connected" });
+  assert.deepEqual(cards(detail.element), ["download", "state"]);
+});
+
+test("the Cards menu adds and removes cards, re-adding at the end", () => {
+  const { detail, calls } = mount();
+  detail.show(DEF, { state: "disarmed" });
+
+  // Open the menu.
+  const btn = detail.element.querySelector(".detail-cards-btn");
+  btn.click();
+  assert.equal(detail.element.querySelector(".card-menu").hidden, false);
+
+  const box = (key) =>
+    detail.element.querySelector(`.card-menu-check[data-card="${key}"]`);
+
+  // Uncheck "errors" → it disappears from the grid.
+  box("errors").checked = false;
+  box("errors").dispatchEvent(new Event("change", { bubbles: true }));
+  assert.ok(!cards(detail.element).includes("errors"));
+
+  // Re-check it → it comes back at the END of the grid.
+  box("errors").checked = true;
+  box("errors").dispatchEvent(new Event("change", { bubbles: true }));
+  assert.equal(cards(detail.element).at(-1), "errors", "re-added at the end");
+  assert.deepEqual(calls.change.at(-1), cards(detail.element));
+});
+
+test("hiding every card shows the empty hint", () => {
+  const { detail } = mount();
+  detail.setCardOrder([]); // nothing visible
+  detail.show(DEF, { state: "disarmed" });
+  assert.equal(cards(detail.element).length, 0);
+  assert.ok(detail.element.querySelector(".detail-cards-empty"));
 });

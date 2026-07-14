@@ -186,6 +186,10 @@ export const EN = {
   "detail.reorderHint": "Drag to rearrange",
   "detail.route.local": "Local",
   "detail.route.target": "Target",
+  "detail.cards": "Cards",
+  "detail.cards.title": "Choose which cards to show",
+  "detail.cards.menuTitle": "Show cards",
+  "detail.cards.empty": "No cards shown — use “Cards” to add some.",
 
   // ── Detail cards ────────────────────────────────────────────────────────
   "card.download": "Download",
