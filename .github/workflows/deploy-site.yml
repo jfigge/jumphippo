@@ -52,14 +52,14 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: node scripts/build-versions.mjs --repo "${{ github.repository }}" --out website/versions.json
 
-      # TODO(Feature 80): the hosted user guide (Markdown → HTML) is not built
-      # until Port Hippo's docs land in Feature 80. Re-enable this step then —
-      # commenting it out keeps deploy-site green while scripts/build-docs.mjs
-      # does not yet exist.
-      # - name: Build hosted user guide (Markdown → HTML)
-      #   run: |
-      #     npm install --no-save --no-audit --no-fund --prefix /tmp/docsdeps marked@18
-      #     MARKED_DIR=/tmp/docsdeps/node_modules node scripts/build-docs.mjs
+      # Render the single-source user guide (src/web/docs/*.md) into
+      # website/docs/*.html so the hosted guide never drifts from the in-app one.
+      # marked is installed to a temp prefix and pointed at via MARKED_DIR (a full
+      # `make install` isn't needed just to render Markdown).
+      - name: Build hosted user guide (Markdown → HTML)
+        run: |
+          npm install --no-save --no-audit --no-fund --prefix /tmp/docsdeps marked@18
+          MARKED_DIR=/tmp/docsdeps/node_modules node scripts/build-docs.mjs
 
       - name: Configure Pages
         uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5

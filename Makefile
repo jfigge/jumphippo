@@ -130,6 +130,22 @@ license-headers:
 	@node $(WORKSPACE)/scripts/license-header.mjs
 	@echo "--------------------------------"
 
+# ─── Docs (Feature 80) ────────────────────────────────────────────────────────
+# Bundle the Markdown renderer (marked + DOMPurify) → web/scripts/vendor/markdown.js.
+# Re-run after bumping marked/DOMPurify; the generated bundle is committed.
+vendor-markdown:
+	@echo "Bundling Markdown (marked + DOMPurify) vendor file..."
+	@cd $(SRC_DIR) && npm run vendor-markdown
+	@echo "--------------------------------"
+
+# Render the single-source user guide (src/web/docs/*.md) into website/docs/*.html
+# (+ sitemap). The same Markdown feeds the in-app DocsViewer, so the two never
+# drift; keep the PAGES lists in docs-viewer.js and build-docs.mjs in lockstep.
+build-docs:
+	@echo "Building hosted user guide (Markdown → website/docs/)..."
+	@node $(WORKSPACE)/scripts/build-docs.mjs
+	@echo "--------------------------------"
+
 # ─── Testing ──────────────────────────────────────────────────────────────────
 # Per-test timeout so a leaked handle / never-resolving promise fails the run
 # loudly instead of hanging the suite (and CI) forever. Individual tests finish in
@@ -507,6 +523,8 @@ help:
 	@echo "    lint          Lint JS (eslint)"
 	@echo "    test          Run license-header guard + JS unit tests"
 	@echo "    license-headers  Stamp the Apache 2.0 header on any file missing it"
+	@echo "    vendor-markdown  Bundle marked+DOMPurify → web/scripts/vendor/markdown.js"
+	@echo "    build-docs    Render the user guide (Markdown) → website/docs/"
 	@echo "    build         Build Electron app for macOS (dir only, unsigned)"
 	@echo "    dmg           Build unsigned macOS .dmg (default 'make')"
 	@echo "    icons         Regenerate app icons from icons/1024x1024.png"
@@ -536,7 +554,8 @@ help:
 	@echo "    sandbox-access  Re-print the access details"
 	@echo "    sandbox-status  docker compose ps  ·  sandbox-logs  Follow logs"
 
-.PHONY: version info install debug debug-inspect fmt fmt-check lint license-headers test \
+.PHONY: version info install debug debug-inspect fmt fmt-check lint license-headers \
+        vendor-markdown build-docs test \
         test-license-headers test-js test-tunnel build build-mac build-linux build-win dmg \
         build-setup build-install icons sign-dmg sign-all dist dist-mac dist-linux dist-win \
         staple-dmg release sync-mac sync-win clean help \

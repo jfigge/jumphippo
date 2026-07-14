@@ -126,14 +126,15 @@ test("locales/en.json is byte-identical to the embedded EN catalog", () => {
 });
 
 test('every literal t("…") key used in the renderer exists in EN', () => {
-  // Walk the renderer source (excluding tests + the i18n module itself).
+  // Walk the renderer source (excluding tests, vendored third-party bundles, and
+  // the i18n module itself).
   const root = fileURLToPath(new URL("../../scripts", import.meta.url));
   const files = [];
   const walk = (dir) => {
     for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
       const p = `${dir}/${entry.name}`;
       if (entry.isDirectory()) {
-        if (entry.name !== "tests") walk(p);
+        if (entry.name !== "tests" && entry.name !== "vendor") walk(p);
       } else if (entry.name.endsWith(".js") && entry.name !== "i18n.js") {
         files.push(p);
       }

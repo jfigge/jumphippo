@@ -71,7 +71,12 @@ const mainProcessSource = [
   .join("\n");
 
 const handlers = channelsFor(mainProcessSource, "ipcMain\\.handle");
-const invokes = channelsFor(read("preload.js"), "ipcRenderer\\.invoke");
+// Invokes come from the main bridge (preload.js) AND the docs window's narrow
+// bridge (preload-docs.js → docs:read); a handler matched by either is not orphan.
+const invokes = channelsFor(
+  [read("preload.js"), read("preload-docs.js")].join("\n"),
+  "ipcRenderer\\.invoke",
+);
 
 test("no IPC channel is handled more than once", () => {
   const seen = new Set();

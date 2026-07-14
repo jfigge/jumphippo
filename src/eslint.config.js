@@ -5,6 +5,13 @@ const js = require("@eslint/js");
 const globals = require("globals");
 
 module.exports = [
+  // Vendored third-party bundles (esbuild output — marked + DOMPurify) are not
+  // ours to lint; they ship their own eslint-disable directives for rules we
+  // don't configure. Skip the whole vendor tree (mirrors the license-header guard).
+  {
+    ignores: ["web/scripts/vendor/**"],
+  },
+
   // ── Renderer / browser scripts ─────────────────────────────────────────────
   {
     files: ["web/scripts/**/*.js"],

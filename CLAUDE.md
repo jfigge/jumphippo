@@ -15,12 +15,14 @@ setup mirrors its sibling project **Rest Hippo** (`../resthippo`).
 
 ## Status
 
-Being built stage-by-stage from the plans in `features/` (see `features/ROADMAP.md`).
-**Features 00–70 and 90 have landed:** the data model + encrypted store, the SSH tunnel
+Built stage-by-stage from the plans in `features/` (see `features/ROADMAP.md`).
+**All stages have landed (00–100):** the data model + encrypted store, the SSH tunnel
 engine, monitoring/stats, the Definition + Monitoring views, CI/CD packaging, the app shell
-(tray, hide-to-tray, launch-at-login, settings, native menu, logging/diagnostics, i18n), and
-selectable secret storage (Settings → Security: device key / OS keychain / master password).
-Remaining: docs (80). When a stage is finished, move its plan file into `features/done/`.
+(tray, hide-to-tray, launch-at-login, settings, native menu, logging/diagnostics, i18n),
+selectable secret storage (Settings → Security: device key / OS keychain / master password),
+hostname-resolution validation, and the docs layer (Feature 80: single-source user guide
+rendered in-app + on the website, plus repo hygiene files). When a stage is finished, move
+its plan file into `features/done/`.
 
 ## Source Directories
 
@@ -146,6 +148,32 @@ Port Hippo is a **background utility**, so the shell keeps tunnels alive:
   "Copy Diagnostics" (Help menu / tray / Settings). It reads the **sealed** tunnel list (no
   secret values) and passes the log tail through `redact()` (PEM keys, `password:`-style
   key/values, URL creds). **Secrets must never reach a report or the log** (tested).
+
+### User Guide (Feature 80)
+
+The user guide is **one Markdown source, two renderers** (Rest Hippo's model), so the
+in-app and hosted guides can never drift.
+
+- **Source of truth:** `src/web/docs/*.md`. `README.md` is the overview (slug `overview`).
+- **In-app:** Help → *Port Hippo User Guide* opens a standalone window (`docs.html` +
+  `docs-window.js` → `components/docs-viewer.js`), created by `showDocsWindow()` in
+  `main.js` with the narrow `preload-docs.js` (exposes only `docs:read`). The viewer
+  fetches Markdown over the `docs:read` IPC and renders it with the vendored
+  `marked` + DOMPurify (`web/scripts/vendor/markdown.js`), styled by `styles/docs.css`.
+- **Website:** `scripts/build-docs.mjs` renders the same Markdown to `website/docs/*.html`
+  (+ `sitemap.xml`); `deploy-site.yml` runs it on every push to `main`. **Never hand-edit
+  `website/docs/` — it's generated.**
+- **PAGES lockstep:** the `PAGES` array (slug + title + order) MUST match between
+  `docs-viewer.js` and `build-docs.mjs`. Update both together.
+- **Vendored `marked`:** regenerate the bundle with `make vendor-markdown` (or
+  `npm run vendor-markdown`) after bumping marked/DOMPurify; the bundle is committed and is
+  **exempt** from lint / prettier / the license-header guard (see the `vendor/` exclusions).
+- **Keep docs in step with features:** a user-facing change updates the relevant
+  `src/web/docs/*.md` page in the *same* change.
+
+Repo hygiene lives at the root (`README.md`, `CONTRIBUTING.md`, `SECURITY.md`, `NOTICE`,
+`DCO`, `LICENSE`) plus `src/packaging/export-compliance.md` (SSH/crypto export note). The
+DCO sign-off is enforced by `.github/workflows/dco.yml`.
 
 ## Common Commands
 

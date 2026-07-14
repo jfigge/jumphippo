@@ -398,6 +398,7 @@ function refreshMenu() {
       openSettings,
       copyDiagnostics,
       showLogs: () => shell.openPath(logger.dir),
+      userGuide: showDocsWindow,
       about: showAbout,
       checkUpdates: () => updater.checkForUpdates({ manual: true }),
       // View ▸ font zoom: the renderer owns the step logic (it also handles the
@@ -500,6 +501,25 @@ function registerIpc() {
     updater.quitAndInstall();
     return { ok: true };
   });
+
+  // User-guide docs (Feature 80): return the markdown source of a bundled help
+  // page so the docs window's DocsViewer can render it. Reading over IPC (not
+  // fetch) works identically under file:// (packaged / make debug). `page` is a
+  // bare slug → src/web/docs/<slug>.md; it is strictly validated and the resolved
+  // path confirmed to stay inside docsDir, so a crafted name can't escape it.
+  // Invoked from the docs window's narrow preload-docs.js (see the ipc-parity
+  // test, which scans both preloads).
+  const docsDir = path.join(__dirname, "..", "web", "docs");
+  ipcMain.handle("docs:read", async (_event, page) => {
+    if (typeof page !== "string" || !/^[A-Za-z0-9-]+$/.test(page)) {
+      throw new Error(`Invalid docs page: ${page}`);
+    }
+    const filePath = path.join(docsDir, `${page}.md`);
+    if (path.relative(docsDir, filePath).startsWith("..")) {
+      throw new Error(`Docs page outside docs dir: ${page}`);
+    }
+    return fs.promises.readFile(filePath, "utf8");
+  });
 }
 
 // ─── Hot reload (dev only) ────────────────────────────────────────────────────
@@ -532,6 +552,7 @@ const appIcon = loadAppIcon();
 
 // ─── Window ───────────────────────────────────────────────────────────────────
 let mainWindow = null;
+let _docsWin = null; // singleton user-guide window (Feature 80)
 // Set true only by an explicit Quit; the window `close` handler hides instead of
 // closing until this flips, so closing the window keeps tunnels alive.
 let isQuitting = false;
@@ -629,6 +650,62 @@ function showWindow() {
 function openSettings() {
   showWindow();
   sendToRenderer("menu:open-settings");
+}
+
+// ─── User guide (Feature 80) ────────────────────────────────────────────────
+// A singleton, independent window (no `parent`) so the guide can stay open beside
+// the main window while the user keeps working. Markdown is rendered in-window;
+// its narrow preload (preload-docs.js) exposes only the docs:read IPC.
+function showDocsWindow() {
+  if (_docsWin && !_docsWin.isDestroyed()) {
+    _docsWin.focus();
+    return;
+  }
+  // Pass the active theme so the guide opens in the same palette as the app.
+  const theme = safeCall(
+    "docs:theme",
+    () => getStores().settingsStore().get().theme,
+    "system",
+  );
+
+  _docsWin = new BrowserWindow({
+    width: 960,
+    height: 720,
+    minWidth: 640,
+    minHeight: 480,
+    autoHideMenuBar: true,
+    title: label("menu.userGuide", "Port Hippo User Guide"),
+    icon: appIcon,
+    backgroundColor: "#1c1c1c",
+    webPreferences: {
+      preload: path.join(__dirname, "preload-docs.js"),
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: true,
+    },
+  });
+  _docsWin.loadFile(path.join(__dirname, "..", "web", "docs.html"), {
+    query: { theme },
+  });
+
+  // Open external doc links (DOMPurify forces target=_blank) in the system
+  // browser; deny everything else — the docs window never navigates itself.
+  _docsWin.webContents.setWindowOpenHandler(({ url }) => {
+    let scheme = "";
+    try {
+      scheme = new URL(url).protocol;
+    } catch {
+      return { action: "deny" };
+    }
+    if (scheme === "http:" || scheme === "https:" || scheme === "mailto:") {
+      shell.openExternal(url).catch(() => {});
+    }
+    return { action: "deny" };
+  });
+
+  _docsWin.once("closed", () => {
+    _docsWin = null;
+  });
 }
 
 // One-off "still running in the tray" notification, persisted so it shows once.

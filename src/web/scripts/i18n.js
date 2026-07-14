@@ -406,6 +406,7 @@ export const EN = {
   "menu.view": "View",
   "menu.viewDefinition": "Definition",
   "menu.viewMonitoring": "Monitoring",
+  "menu.userGuide": "Port Hippo User Guide",
   "menu.copyDiagnostics": "Copy Diagnostics",
   "menu.showLogs": "Show Logs Folder",
   "menu.about": "About Port Hippo",

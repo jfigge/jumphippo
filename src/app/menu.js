@@ -84,6 +84,11 @@ function installAppMenu({ app, Menu, label, actions, isDev = false }) {
 
   const helpItems = [
     {
+      label: label("menu.userGuide", "Port Hippo User Guide"),
+      click: () => a.userGuide?.(),
+    },
+    { type: "separator" },
+    {
       label: label("menu.copyDiagnostics", "Copy Diagnostics"),
       click: () => a.copyDiagnostics?.(),
     },

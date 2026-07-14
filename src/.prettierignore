@@ -1,0 +1,3 @@
+# Vendored third-party bundles (esbuild output) are generated, not hand-edited —
+# don't reformat them (mirrors the ESLint + license-header vendor exclusions).
+web/scripts/vendor/
