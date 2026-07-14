@@ -437,6 +437,7 @@ export class TunnelTable {
     const armed = hasSel && isArmed(state);
     this.#armBtn.disabled = !hasSel;
     this.#armBtn.classList.toggle("detail-arm-btn--armed", armed);
+    this.#armBtn.innerHTML = armed ? icons.power() : icons.powerOff();
     const armLabel = armed ? t("detail.disarm") : t("detail.arm");
     this.#armBtn.title = armLabel;
     this.#armBtn.setAttribute("aria-label", armLabel);

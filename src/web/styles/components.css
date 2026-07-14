@@ -977,6 +977,15 @@
   border-radius: var(--radius-md);
 }
 
+/* A `display` rule overrides the UA `[hidden] { display: none }`, so the locked
+   unlock row, the set-master-password fields, and the switch-confirm row (all
+   toggled via the `hidden` attribute) must guard it or they never hide. */
+.security-locked-row[hidden],
+.security-master-fields[hidden],
+.security-confirm-row[hidden] {
+  display: none;
+}
+
 .security-master-warn {
   margin: 0;
   color: var(--color-warning);
