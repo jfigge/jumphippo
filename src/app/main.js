@@ -35,6 +35,7 @@ const {
   dialog,
   ipcMain,
   nativeImage,
+  screen,
   shell,
   webContents,
 } = require("electron");
@@ -59,6 +60,11 @@ const { installAppMenu } = require("./menu");
 const { createTray, LIVE_STATES } = require("./tray");
 const { buildTrayImage } = require("./tray-icon");
 const { createLoginItem } = require("./login-item");
+const {
+  DEFAULT_BOUNDS,
+  resolveWindowBounds,
+  trackWindowState,
+} = require("./window-state");
 const updater = require("./updater");
 
 // Delay the silent startup update check so it never competes with window
@@ -491,9 +497,25 @@ let mainWindow = null;
 let isQuitting = false;
 
 function createWindow({ show = true } = {}) {
+  // Restore the last position/size when it still fits on a connected display;
+  // otherwise fall back to the centred default (resolveWindowBounds decides).
+  const displays = safeCall(
+    "window:displays",
+    () =>
+      screen
+        .getAllDisplays()
+        .map((d) => ({ bounds: d.bounds, workArea: d.workArea })),
+    [],
+  );
+  const savedBounds = safeCall(
+    "window:bounds",
+    () => getStores().settingsStore().get().windowBounds,
+    null,
+  );
+  const bounds = resolveWindowBounds(savedBounds, displays, DEFAULT_BOUNDS);
+
   const win = new BrowserWindow({
-    width: 1100,
-    height: 720,
+    ...bounds, // x/y only when restored; width/height always
     minWidth: 720,
     minHeight: 480,
     backgroundColor: "#1c1c1c",
@@ -510,6 +532,14 @@ function createWindow({ show = true } = {}) {
   win.loadFile(path.join(__dirname, "..", "web", "index.html"));
 
   mainWindow = win;
+
+  // Persist position/size as the user moves/resizes (debounced) and on close.
+  trackWindowState(win, {
+    save: (b) =>
+      safeCall("window:save-bounds", () =>
+        getStores().settingsStore().set({ windowBounds: b }),
+      ),
+  });
 
   // Close hides to the tray (keeping tunnels alive) until a real Quit is in
   // progress; first time, tell the user where the app went.

@@ -1187,12 +1187,57 @@
   min-width: 0;
   min-height: 0;
   display: grid;
-  grid-template-columns: 240px 1fr;
+  /* [ master list | draggable divider | detail ]. The list width is driven by
+     --split-left (persisted + clamped by SplitResizer); the detail pane fills
+     the rest. */
+  grid-template-columns: var(--split-left, 240px) auto 1fr;
 }
 
 /* A `display` rule overrides the UA `[hidden] { display: none }`, so guard it. */
 .tunnels-split[hidden] {
   display: none;
+}
+
+/* ── Draggable divider between the list and the detail ─────────────────────── */
+.tunnels-splitter {
+  width: 6px;
+  cursor: col-resize;
+  touch-action: none; /* claim pointer drags instead of scroll/pan gestures */
+  background: transparent;
+  position: relative;
+}
+
+/* The resting seam is the sidebar's own border-right; the divider reveals a
+   brighter grab line on hover, keyboard focus, or while actively dragging. */
+.tunnels-splitter::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 2px;
+  background: var(--color-overlay);
+  opacity: 0;
+  transition: opacity 0.12s ease;
+}
+
+.tunnels-splitter:hover::before,
+.tunnels-splitter:focus-visible::before {
+  opacity: 1;
+}
+
+.tunnels-splitter:focus-visible {
+  outline: none;
+}
+
+/* While dragging, pin the grab line to the accent colour and suppress text
+   selection across the whole surface. */
+.tunnels-split--resizing {
+  user-select: none;
+}
+
+.tunnels-split--resizing .tunnels-splitter::before {
+  opacity: 1;
+  background: var(--color-accent);
 }
 
 /* ── Sidebar (master list) ─────────────────────────────────────────────────── */

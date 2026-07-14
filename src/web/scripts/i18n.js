@@ -213,6 +213,7 @@ export const EN = {
   "tunnels.empty": "No tunnels yet.",
   "tunnels.emptyHint": "Add one to get started.",
   "tunnels.selectHint": "Select a tunnel to see its live details.",
+  "tunnels.split.resize": "Resize the tunnel list",
 
   // ── Tunnel row right-click context menu (native OS menu) ────────────────
   "tunnels.menu.edit": "Edit",

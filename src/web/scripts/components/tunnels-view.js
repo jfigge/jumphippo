@@ -30,7 +30,15 @@ import { TunnelEditorDialog } from "./tunnel-editor-dialog.js";
 import { TunnelList } from "./tunnel-list.js";
 import { TunnelDetail } from "./tunnel-detail.js";
 import { TunnelTable } from "./tunnel-table.js";
+import { SplitResizer } from "./split-resizer.js";
 import { buildErrorHistory } from "./error-history-dialog.js";
+
+// The master list column's fallback width when no split position is stored yet
+// (matches the CSS default). The list can't be dragged narrower than MIN_LEFT
+// nor the detail pane narrower than MIN_RIGHT.
+const DEFAULT_SPLIT_LEFT = 240;
+const MIN_LEFT = 150;
+const MIN_RIGHT = 300;
 
 /** Armed = the engine holds this tunnel (anything but disarmed / error). */
 function isArmed(state) {
@@ -47,6 +55,7 @@ export class TunnelsView {
   #now;
 
   #split;
+  #resizer;
   #tableEl;
   #mode = "cards";
 
@@ -107,6 +116,16 @@ export class TunnelsView {
       this.#list.element,
       this.#detail.element,
     ]);
+    // A draggable divider between the list and the detail cards; its committed
+    // width is persisted so the split is restored on the next launch.
+    this.#resizer = new SplitResizer({
+      container: this.#split,
+      minLeft: MIN_LEFT,
+      minRight: MIN_RIGHT,
+      label: t("tunnels.split.resize"),
+      onCommit: (px) => this.#persistSplit(px),
+    });
+    this.#split.insertBefore(this.#resizer.element, this.#detail.element);
     this.#tableEl = this.#table.element;
 
     this.#el = el("div", { class: "tunnels-view" }, [
@@ -155,6 +174,11 @@ export class TunnelsView {
       settings && Array.isArray(settings.cardOrder) ? settings.cardOrder : null;
     this.#detail.setCardOrder(this.#cardOrder);
     this.#table.setCardOrder(this.#cardOrder);
+    // Restore the persisted splitter position (falls back to the default width).
+    const splitLeft = Number(settings?.splitLeft);
+    this.#resizer.setLeft(
+      Number.isFinite(splitLeft) ? splitLeft : DEFAULT_SPLIT_LEFT,
+    );
     if (settings && settings.listSort) this.#table.setSort(settings.listSort);
     // Always (re)apply so the header selector syncs, even for the default.
     this.#setMode(settings?.detailMode, { persist: false });
@@ -188,6 +212,7 @@ export class TunnelsView {
     window.removeEventListener("porthippo:stats-updated", this.#onStats);
     window.removeEventListener("porthippo:tunnel-state", this.#onTunnelState);
     window.removeEventListener("porthippo:set-detail-mode", this.#onSetMode);
+    this.#resizer.destroy();
   }
 
   // ── View mode ─────────────────────────────────────────────────────────────
@@ -210,6 +235,9 @@ export class TunnelsView {
     this.#split.hidden = list;
     this.#tableEl.hidden = !list;
     this.#el.classList.toggle("tunnels-view--list", list);
+    // The split was zero-width while hidden in list mode, so re-clamp its stored
+    // width against the now-measurable container the moment it's shown again.
+    if (!list) this.#resizer.refresh();
   }
 
   // ── Selection ─────────────────────────────────────────────────────────────
@@ -458,5 +486,11 @@ export class TunnelsView {
 
   #persistListSort(sort) {
     this.#porthippo?.settings?.set?.({ listSort: sort })?.catch?.(() => {});
+  }
+
+  #persistSplit(px) {
+    this.#porthippo?.settings
+      ?.set?.({ splitLeft: Math.round(px) })
+      ?.catch?.(() => {});
   }
 }
