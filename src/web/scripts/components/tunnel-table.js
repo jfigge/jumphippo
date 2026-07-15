@@ -36,7 +36,7 @@ import {
   cardToneClasses,
 } from "./card-catalog.js";
 import { CardMenu } from "./card-menu.js";
-import { signalLamp, buildSignal, typeBadge } from "./tunnel-list.js";
+import { signalLamp, buildSignal, typeIcon } from "./tunnel-list.js";
 
 /** The synthetic key of the fixed identity column (sorts by tunnel name). */
 export const TABLE_TUNNEL_COLUMN = "__tunnel";
@@ -347,7 +347,7 @@ export class TunnelTable {
     const identityCell = el("td", { class: "tt-td tt-td--identity" }, [
       el("div", { class: "tt-identity" }, [
         signal,
-        typeBadge(def),
+        typeIcon(def),
         el("span", {
           class: "tunnel-row-name",
           text: def.name || t("def.unnamed"),

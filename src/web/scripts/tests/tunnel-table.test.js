@@ -28,6 +28,7 @@ import {
   TABLE_TUNNEL_COLUMN,
   normalizeSort,
 } from "../components/tunnel-table.js";
+import { t } from "../i18n.js";
 
 const NOW = 2_000_000;
 
@@ -142,6 +143,28 @@ test("the identity cell shows the status signal and name", () => {
   );
   assert.equal(rowA.querySelector(".tunnel-row-port"), null);
   assert.ok(rowA.textContent.includes("Charlie"));
+});
+
+test("the identity cell carries a forwarding-type icon per tunnel (parity with the sidebar)", () => {
+  const { table } = mount();
+  table.setCardOrder([]);
+  table.setData(
+    [
+      { id: "a", name: "Local", destination: { host: "h", port: 1 } },
+      { id: "b", name: "Reverse", type: "remote" },
+      { id: "c", name: "Proxy", type: "dynamic" },
+    ],
+    new Map(),
+    new Map(),
+  );
+  const icon = (id) =>
+    table.element.querySelector(`.tt-row[data-id="${id}"] .tunnel-type-icon`);
+
+  assert.ok(icon("a").classList.contains("tunnel-type-icon--local"));
+  assert.ok(icon("a").querySelector("svg"), "the glyph is an inline SVG");
+  assert.equal(icon("a").getAttribute("aria-label"), t("editor.type.local"));
+  assert.ok(icon("b").classList.contains("tunnel-type-icon--remote"));
+  assert.ok(icon("c").classList.contains("tunnel-type-icon--dynamic"));
 });
 
 test("metric cells render the card values", () => {

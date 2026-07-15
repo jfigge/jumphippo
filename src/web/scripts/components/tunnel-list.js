@@ -92,19 +92,28 @@ export function buildSignal(state) {
 }
 
 /**
- * A compact forwarding-type badge for a row (Feature 110), or null for the default
- * `local` type (which stays unbadged to keep the common case clean). The full type
- * name is the tooltip.
+ * A monochrome forwarding-type glyph for a row (Feature 110 redesign): every type
+ * gets a consistent icon — `local`, `remote`, or `dynamic` (SOCKS) — replacing the
+ * old text badges so the type reads at a glance and the common case is no longer a
+ * blank. The full type name is the tooltip and accessible label.
  * @param {object} def
- * @returns {HTMLElement|null}
+ * @returns {HTMLElement}
  */
-export function typeBadge(def) {
+export function typeIcon(def) {
   const type = (def && def.type) || "local";
-  if (type !== "remote" && type !== "dynamic") return null;
+  const glyph =
+    type === "remote"
+      ? icons.tunnelRemote
+      : type === "dynamic"
+        ? icons.tunnelDynamic
+        : icons.tunnelLocal;
+  const label = t(`editor.type.${type}`);
   return el("span", {
-    class: `tunnel-type-badge tunnel-type-badge--${type}`,
-    text: t(`type.badge.${type}`),
-    title: t(`editor.type.${type}`),
+    class: `tunnel-type-icon tunnel-type-icon--${type}`,
+    html: glyph(),
+    role: "img",
+    title: label,
+    "aria-label": label,
   });
 }
 
@@ -253,7 +262,7 @@ export class TunnelList {
       },
       [
         signal,
-        typeBadge(def),
+        typeIcon(def),
         el("span", {
           class: "tunnel-row-name",
           text: def.name || t("def.unnamed"),

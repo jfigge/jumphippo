@@ -33,7 +33,7 @@ import {
   cardToneClasses,
 } from "./card-catalog.js";
 import { CardMenu } from "./card-menu.js";
-import { typeBadge } from "./tunnel-list.js";
+import { typeIcon } from "./tunnel-list.js";
 
 /** Armed = the engine holds this tunnel (anything but disarmed / error). */
 function isArmed(state) {
@@ -228,8 +228,7 @@ export class TunnelDetail {
 
   #renderBreadcrumb() {
     clear(this.#breadcrumbEl);
-    const badge = typeBadge(this.#def);
-    if (badge) this.#breadcrumbEl.appendChild(badge);
+    this.#breadcrumbEl.appendChild(typeIcon(this.#def));
     const segs = this.#routeSegments();
     segs.forEach((seg, i) => {
       if (i > 0) {

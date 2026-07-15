@@ -23,6 +23,7 @@ import assert from "node:assert/strict";
 
 import { resetDom } from "./jsdom-setup.js";
 import { TunnelList, dotState, signalLamp } from "../components/tunnel-list.js";
+import { t } from "../i18n.js";
 
 function mount() {
   resetDom();
@@ -87,6 +88,34 @@ test("renders a row per definition with signal and name", () => {
     ),
     "disarmed → no lamp lit",
   );
+});
+
+test("every row shows a forwarding-type icon; the type drives the glyph + label", () => {
+  const { list } = mount();
+  list.setData(
+    [
+      { id: "a", name: "Local one" }, // no type → local (no longer blank)
+      { id: "b", name: "Reverse", type: "remote" },
+      { id: "c", name: "Proxy", type: "dynamic" },
+    ],
+    new Map(),
+  );
+  const r = rows(list);
+  const icon = (row) => row.querySelector(".tunnel-type-icon");
+
+  assert.ok(
+    icon(r[0]),
+    "local row is badged (the common case is no longer blank)",
+  );
+  assert.ok(icon(r[0]).classList.contains("tunnel-type-icon--local"));
+  assert.ok(icon(r[0]).querySelector("svg"), "the glyph is an inline SVG");
+  assert.equal(icon(r[0]).getAttribute("aria-label"), t("editor.type.local"));
+
+  assert.ok(icon(r[1]).classList.contains("tunnel-type-icon--remote"));
+  assert.equal(icon(r[1]).getAttribute("title"), t("editor.type.remote"));
+
+  assert.ok(icon(r[2]).classList.contains("tunnel-type-icon--dynamic"));
+  assert.equal(icon(r[2]).getAttribute("aria-label"), t("editor.type.dynamic"));
 });
 
 test("empty state shows when there are no tunnels", () => {

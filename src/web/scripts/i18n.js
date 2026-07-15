@@ -81,10 +81,6 @@ export const EN = {
   "editor.type.dynamic.desc":
     "Run a local SOCKS5 proxy that forwards each request through the SSH server (ssh -D).",
 
-  // Compact row/breadcrumb badges for the non-default forwarding types.
-  "type.badge.remote": "R",
-  "type.badge.dynamic": "SOCKS",
-
   // Remote-forward fields (type = remote).
   "editor.remoteBind": "Remote bind",
   "editor.remoteBind.hint": "port on the server (or address:port)",

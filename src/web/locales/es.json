@@ -33,8 +33,6 @@
   "editor.type.remote.desc": "Vincula un puerto en el servidor SSH y lo reenvía de vuelta a un destino en esta máquina (ssh -R).",
   "editor.type.dynamic": "Dinámico (SOCKS)",
   "editor.type.dynamic.desc": "Ejecuta un proxy SOCKS5 local que reenvía cada solicitud a través del servidor SSH (ssh -D).",
-  "type.badge.remote": "R",
-  "type.badge.dynamic": "SOCKS",
   "editor.remoteBind": "Vínculo remoto",
   "editor.remoteBind.hint": "puerto en el servidor (o dirección:puerto)",
   "editor.remoteBind.placeholder": "8080  o  0.0.0.0:8080",

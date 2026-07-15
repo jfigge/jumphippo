@@ -33,8 +33,6 @@
   "editor.type.remote.desc": "Ouvre un port sur le serveur SSH et le redirige vers une cible sur cette machine (ssh -R).",
   "editor.type.dynamic": "Dynamique (SOCKS)",
   "editor.type.dynamic.desc": "Lance un proxy SOCKS5 local qui redirige chaque requête à travers le serveur SSH (ssh -D).",
-  "type.badge.remote": "R",
-  "type.badge.dynamic": "SOCKS",
   "editor.remoteBind": "Liaison distante",
   "editor.remoteBind.hint": "port sur le serveur (ou adresse:port)",
   "editor.remoteBind.placeholder": "8080  ou  0.0.0.0:8080",

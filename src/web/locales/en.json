@@ -33,8 +33,6 @@
   "editor.type.remote.desc": "Bind a port on the SSH server and forward it back to a target on this machine (ssh -R).",
   "editor.type.dynamic": "Dynamic (SOCKS)",
   "editor.type.dynamic.desc": "Run a local SOCKS5 proxy that forwards each request through the SSH server (ssh -D).",
-  "type.badge.remote": "R",
-  "type.badge.dynamic": "SOCKS",
   "editor.remoteBind": "Remote bind",
   "editor.remoteBind.hint": "port on the server (or address:port)",
   "editor.remoteBind.placeholder": "8080  or  0.0.0.0:8080",

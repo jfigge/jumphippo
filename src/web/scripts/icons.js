@@ -34,6 +34,18 @@ function fill(paths) {
   );
 }
 
+// Tunnel forwarding-type glyphs (Feature 110): a 16×16 viewBox with a lighter 1.5
+// stroke, tuned to sit beside 13 px row text and to grow with it — the SVG is sized
+// in `em`, so it tracks the surrounding font. A filled "local anchor" dot plus
+// directional arrows encode the type; monochrome via currentColor like the rest.
+function stroke16(paths) {
+  return (
+    `<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" ` +
+    `viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" ` +
+    `stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths}</svg>`
+  );
+}
+
 export const icons = {
   add: () =>
     stroke(
@@ -79,5 +91,29 @@ export const icons = {
         '<line x1="3" y1="6" x2="3.01" y2="6"/>' +
         '<line x1="3" y1="12" x2="3.01" y2="12"/>' +
         '<line x1="3" y1="18" x2="3.01" y2="18"/>',
+    ),
+
+  // Forwarding-type glyphs — one per tunnel type, a consistent family (see stroke16).
+  // Local: anchor dot + arrow out to the remote. Remote: far-side anchor + arrow back
+  // in. Dynamic (SOCKS): local anchor fanning out to many destinations.
+  tunnelLocal: () =>
+    stroke16(
+      '<circle cx="3.2" cy="8" r="1.5" fill="currentColor" stroke="none"/>' +
+        '<path d="M4.9 8H11.9"/>' +
+        '<path d="M9.5 5.4 12.3 8 9.5 10.6"/>',
+    ),
+  tunnelRemote: () =>
+    stroke16(
+      '<circle cx="12.8" cy="8" r="1.5" fill="currentColor" stroke="none"/>' +
+        '<path d="M11.1 8H4.1"/>' +
+        '<path d="M6.5 5.4 3.7 8 6.5 10.6"/>',
+    ),
+  tunnelDynamic: () =>
+    stroke16(
+      '<circle cx="3" cy="8" r="1.5" fill="currentColor" stroke="none"/>' +
+        '<path d="M4.5 8H6"/>' +
+        '<path d="M6 5.5V10.5"/>' +
+        '<path d="M6 5.5H10.8"/><path d="M9.3 4.4 11.1 5.5 9.3 6.6"/>' +
+        '<path d="M6 10.5H10.8"/><path d="M9.3 9.4 11.1 10.5 9.3 11.6"/>',
     ),
 };

@@ -33,8 +33,6 @@
   "editor.type.remote.desc": "SSH サーバー上のポートをバインドし、このマシン上のターゲットへ転送し返します（ssh -R）。",
   "editor.type.dynamic": "ダイナミック（SOCKS）",
   "editor.type.dynamic.desc": "各リクエストを SSH サーバー経由で転送するローカル SOCKS5 プロキシを実行します（ssh -D）。",
-  "type.badge.remote": "R",
-  "type.badge.dynamic": "SOCKS",
   "editor.remoteBind": "リモートバインド",
   "editor.remoteBind.hint": "サーバー上のポート（または address:port）",
   "editor.remoteBind.placeholder": "8080  または  0.0.0.0:8080",

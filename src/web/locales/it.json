@@ -33,8 +33,6 @@
   "editor.type.remote.desc": "Associa una porta sul server SSH e la inoltra a un target su questa macchina (ssh -R).",
   "editor.type.dynamic": "Dinamico (SOCKS)",
   "editor.type.dynamic.desc": "Avvia un proxy SOCKS5 locale che inoltra ogni richiesta attraverso il server SSH (ssh -D).",
-  "type.badge.remote": "R",
-  "type.badge.dynamic": "SOCKS",
   "editor.remoteBind": "Bind remoto",
   "editor.remoteBind.hint": "porta sul server (o indirizzo:porta)",
   "editor.remoteBind.placeholder": "8080  o  0.0.0.0:8080",

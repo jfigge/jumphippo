@@ -1559,19 +1559,24 @@
   color: var(--color-text);
 }
 
-/* Compact forwarding-type badge (Feature 110): remote / dynamic rows + breadcrumb. */
-.tunnel-type-badge {
+/* Forwarding-type glyph (Feature 110 redesign): one monochrome icon per tunnel type,
+   in every row + the detail breadcrumb, replacing the old text badges. Sized in `em`
+   (the SVG is 1em) so it grows with the row font; subtext by default, brightening to
+   full text on hover / selection. */
+.tunnel-type-icon {
   flex: 0 0 auto;
-  padding: 0 var(--space-1);
-  border: 1px solid var(--color-overlay);
-  border-radius: var(--radius-sm);
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 600;
-  line-height: 16px;
-  letter-spacing: 0.04em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   color: var(--color-subtext);
-  text-transform: uppercase;
+  font-size: 1.15em;
+}
+
+.tunnel-row:hover .tunnel-type-icon,
+.tunnel-row--selected .tunnel-type-icon,
+.tt-row:hover .tunnel-type-icon,
+.tt-row--selected .tunnel-type-icon {
+  color: var(--color-text);
 }
 
 .tunnel-row-tools {

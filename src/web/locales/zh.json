@@ -33,8 +33,6 @@
   "editor.type.remote.desc": "在 SSH 服务器上绑定一个端口，并将其转发回本机的目标地址（ssh -R）。",
   "editor.type.dynamic": "动态（SOCKS）",
   "editor.type.dynamic.desc": "运行一个本地 SOCKS5 代理，将每个请求通过 SSH 服务器转发（ssh -D）。",
-  "type.badge.remote": "R",
-  "type.badge.dynamic": "SOCKS",
   "editor.remoteBind": "远程绑定",
   "editor.remoteBind.hint": "服务器上的端口（或 地址:端口）",
   "editor.remoteBind.placeholder": "8080  或  0.0.0.0:8080",
