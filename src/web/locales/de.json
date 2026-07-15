@@ -23,6 +23,8 @@
   "def.unnamed": "Unbenannter Tunnel",
   "def.delete.title": "Tunnel löschen?",
   "def.delete.message": "„{name}“ löschen? Das kann nicht rückgängig gemacht werden.",
+  "def.delete.confirmWord": "löschen",
+  "def.delete.confirmPrompt": "Geben Sie zum Bestätigen „{word}“ ein.",
   "editor.newTitle": "Neuer Tunnel",
   "editor.editTitle": "Tunnel bearbeiten",
   "editor.name": "Name",

@@ -41,7 +41,7 @@ function mount(opts = {}) {
     onToggleArm: (id) => calls.arm.push(id),
     onTogglePause: (id) => calls.pause.push(id),
     onCardsChange: (order) => calls.change.push(order),
-    onLayoutChange: (id, positions) => calls.layout.push({ id, positions }),
+    onLayoutChange: (positions) => calls.layout.push({ positions }),
     ...opts,
   });
   document.body.appendChild(detail.element);
@@ -363,7 +363,6 @@ test("dragging a card onto a free cell snaps it there and persists the layout", 
   });
   assert.ok(calls.layout.length >= 1, "layout change reported");
   const last = calls.layout.at(-1);
-  assert.equal(last.id, "t1");
   assert.deepEqual(last.positions.download, { col: 2, row: 0 });
 });
 

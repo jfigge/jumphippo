@@ -29,9 +29,12 @@
  *     buckets, so the displayed value is stable and decays to zero shortly after
  *     traffic stops (rather than being an instantaneous spike).
  *   - **`openedAt`** = ms epoch the *current* SSH session connected (null when
- *     not connected); it resets on every teardown/reconnect. **`armedAt`** = ms
- *     epoch the listener was (re)armed. **`lastActiveAt`** = ms epoch of the last
- *     byte in either direction.
+ *     not connected); it resets on every teardown/reconnect. **`lastConnectedAt`**
+ *     = ms epoch the *most recent* SSH session connected — like `openedAt` but it
+ *     survives the teardown (it does NOT clear on disconnect), so "Last connection"
+ *     keeps reading the real time rather than reverting to "never". **`armedAt`** =
+ *     ms epoch the listener was (re)armed. **`lastActiveAt`** = ms epoch of the
+ *     last byte in either direction.
  *
  * Pure and unit-testable: all time comes from an injected `now()` clock, so the
  * rolling-rate math can be exercised with a fake clock and no real timers.
@@ -67,6 +70,7 @@ class Stats {
   lastActiveAt = null;
   openedAt = null; // ms epoch the CURRENT SSH session connected (null if not connected)
   firstConnectedAt = null; // ms epoch the FIRST SSH session connected since the arm
+  lastConnectedAt = null; // ms epoch the MOST RECENT SSH session connected (survives teardown)
   lastDisconnectedAt = null; // ms epoch the last SSH session was torn down
   armedAt = null;
 
@@ -168,22 +172,24 @@ class Stats {
     this.lastActiveAt = null;
     this.openedAt = null;
     this.firstConnectedAt = null;
+    this.lastConnectedAt = null;
     this.lastDisconnectedAt = null;
     this.armedAt = this.#now();
     this.#buckets = [];
     this.#events = []; // the log resets with errorCount for a fresh session
   }
 
-  /** The SSH session connected — stamp the current open time (and the first). */
+  /** The SSH session connected — stamp the open times (current, most-recent, first). */
   onConnected() {
     const now = this.#now();
     this.openedAt = now;
+    this.lastConnectedAt = now; // persists past the next teardown (see onDisconnected)
     if (this.firstConnectedAt === null) this.firstConnectedAt = now;
   }
 
   /** The SSH session was torn down (idle linger, drop, or reconnect boundary). */
   onDisconnected() {
-    this.openedAt = null;
+    this.openedAt = null; // no live session; lastConnectedAt is left intact
     this.lastDisconnectedAt = this.#now();
     this.#buckets = []; // no live session → rates read zero immediately
   }
@@ -228,6 +234,7 @@ class Stats {
       peakRateDown: this.peakRateDown,
       openedAt: this.openedAt,
       firstConnectedAt: this.firstConnectedAt,
+      lastConnectedAt: this.lastConnectedAt,
       lastDisconnectedAt: this.lastDisconnectedAt,
       armedAt: this.armedAt,
       lastActiveAt: this.lastActiveAt,

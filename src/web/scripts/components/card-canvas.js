@@ -18,9 +18,10 @@
 // detail's stat cards. It owns none of the card content (TunnelDetail builds the
 // nodes and updates their values); it owns only *where* each card sits. Cards are
 // absolutely positioned on a scrolling surface whose extent tracks the placed
-// cards, so the canvas grows and scrolls in both axes. Positions are a per-tunnel
-// {col,row} map: adopted on a tunnel switch, kept while only the visible set
-// changes, and reported back via `onLayoutChange` so the owner can persist them.
+// cards, so the canvas grows and scrolls in both axes. Positions are a {col,row}
+// map: the owner hands in one layout shared by every tunnel, adopted on a tunnel
+// switch (keyed by the id below), kept while only the visible set changes, and
+// reported back via `onLayoutChange` so the owner can persist it.
 //
 // Dragging is pointer-based (not native DnD) so the card can be lifted and kept
 // under the cursor: on drag it scales up, casts a shadow, reveals a faint dashed

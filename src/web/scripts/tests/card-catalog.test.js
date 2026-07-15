@@ -179,6 +179,28 @@ test("duration cards sort by elapsed time", () => {
   assert.equal(card("openFor").sortValue(ctx), 5000);
 });
 
+test("Last connection reads lastConnectedAt and survives a disconnect", () => {
+  const value = (snap, state) =>
+    card("lastConnection").value({ snap, now: NOW, state });
+
+  // Connected: the current session's connect time.
+  assert.equal(
+    value({ openedAt: NOW - 5000, lastConnectedAt: NOW - 5000 }, "connected"),
+    "5s ago",
+  );
+  // Disconnected: openedAt is cleared, but lastConnectedAt persists — so it keeps
+  // reporting the real time rather than reverting to "never".
+  assert.equal(
+    value({ openedAt: null, lastConnectedAt: NOW - 5000 }, "listening"),
+    "5s ago",
+  );
+  // Never connected this arm: "never".
+  assert.equal(
+    value({ openedAt: null, lastConnectedAt: null }, "listening"),
+    "never",
+  );
+});
+
 test("the State card sorts by a quiet→busy rank", () => {
   const rank = (state) => card("state").sortValue({ state, now: NOW });
   assert.ok(rank("connected") > rank("paused"));

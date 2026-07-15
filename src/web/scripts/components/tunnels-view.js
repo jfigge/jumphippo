@@ -67,7 +67,7 @@ export class TunnelsView {
   #jumpsById = new Map();
   #selectedId = null;
   #cardOrder = null;
-  #cardLayouts = {}; // { [tunnelId]: { [cardKey]: {col,row} } } — per-tunnel
+  #cardLayout = null; // { [cardKey]: {col,row} } — ONE layout shared by every tunnel
 
   #onStats;
   #onTunnelState;
@@ -96,7 +96,7 @@ export class TunnelsView {
       onToggleArm: (id) => this.#toggleArm(id),
       onTogglePause: (id) => this.#togglePause(id),
       onCardsChange: (order) => this.#persistCardOrder(order),
-      onLayoutChange: (id, positions) => this.#persistCardLayout(id, positions),
+      onLayoutChange: (positions) => this.#persistCardLayout(positions),
       onShowError: (id) => this.#showError(id),
       onShowErrors: (id) => this.#showErrorHistory(id),
     });
@@ -192,14 +192,9 @@ export class TunnelsView {
     // Always apply the (possibly null) order so both views default to all cards.
     this.#cardOrder =
       settings && Array.isArray(settings.cardOrder) ? settings.cardOrder : null;
-    // Per-tunnel card positions for the detail canvas (see #persistCardLayout).
-    this.#cardLayouts =
-      settings &&
-      settings.cardLayouts &&
-      typeof settings.cardLayouts === "object" &&
-      !Array.isArray(settings.cardLayouts)
-        ? settings.cardLayouts
-        : {};
+    // The single shared card layout for the detail canvas (see #persistCardLayout),
+    // migrating a legacy per-tunnel map if that's all that's stored.
+    this.#cardLayout = this.#loadCardLayout(settings);
     this.#detail.setCardOrder(this.#cardOrder);
     this.#table.setCardOrder(this.#cardOrder);
     // Restore the persisted splitter position (falls back to the default width).
@@ -364,7 +359,7 @@ export class TunnelsView {
       state: this.#states.get(def.id) || "disarmed",
       snap: this.#snaps.get(def.id) || null,
       jumpsById: this.#jumpsById,
-      layout: this.#cardLayouts[def.id] || null,
+      layout: this.#cardLayout, // one layout shared by every tunnel
     });
   }
 
@@ -515,14 +510,45 @@ export class TunnelsView {
     this.#porthippo?.settings?.set?.({ cardOrder: order })?.catch?.(() => {});
   }
 
-  /** Persist one tunnel's card positions ({col,row} map) without disturbing the
-   *  others — the detail canvas reports these as the user drags/adds/removes. */
-  #persistCardLayout(id, positions) {
-    if (!id) return;
-    this.#cardLayouts = { ...this.#cardLayouts, [id]: positions };
+  /** Persist the shared card layout ({col,row} map) that every tunnel uses — the
+   *  detail canvas reports it as the user drags / adds / removes a card. */
+  #persistCardLayout(positions) {
+    this.#cardLayout = positions;
     this.#porthippo?.settings
-      ?.set?.({ cardLayouts: this.#cardLayouts })
+      ?.set?.({ cardLayout: positions })
       ?.catch?.(() => {});
+  }
+
+  /**
+   * Resolve the one shared card layout from settings. Prefers the new `cardLayout`
+   * (a single {col,row} map used by every tunnel). If only the legacy per-tunnel
+   * `cardLayouts` map is stored, migrate it by adopting the FIRST tunnel's layout
+   * — in tunnel-list order, falling back to the first stored entry — as the shared
+   * one, then persist that and drop the legacy key (a patch value of `undefined`
+   * is omitted by JSON.stringify on write). Returns the layout, or null when
+   * nothing is stored (first run).
+   */
+  #loadCardLayout(settings) {
+    const isLayout = (v) =>
+      Boolean(v) && typeof v === "object" && !Array.isArray(v);
+    if (isLayout(settings?.cardLayout)) return settings.cardLayout;
+
+    const legacy = settings?.cardLayouts;
+    if (!isLayout(legacy)) return null;
+
+    let migrated = null;
+    for (const def of this.#defs) {
+      if (def && isLayout(legacy[def.id])) {
+        migrated = legacy[def.id];
+        break;
+      }
+    }
+    if (!migrated) migrated = Object.values(legacy).find(isLayout) || null;
+
+    this.#porthippo?.settings
+      ?.set?.({ cardLayout: migrated, cardLayouts: undefined })
+      ?.catch?.(() => {});
+    return migrated;
   }
 
   #persistListSort(sort) {

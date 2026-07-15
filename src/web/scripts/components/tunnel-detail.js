@@ -21,8 +21,8 @@
 // arrive via updateSnap(), state via updateState(), and every action is reported
 // back through constructor callbacks. Which cards are visible is fed in / reported
 // out (the `cardOrder` setting, shared with the list view via card-catalog.js);
-// *where* each card sits is a per-tunnel {col,row} layout the canvas owns and
-// reports through onLayoutChange for the owner to persist per tunnel.
+// *where* each card sits is one {col,row} layout the canvas owns and reports
+// through onLayoutChange — a single layout the owner persists for every tunnel.
 
 import { el, clear } from "../dom.js";
 import { t } from "../i18n.js";
@@ -91,7 +91,7 @@ export class TunnelDetail {
     });
     this.#canvas = new CardCanvas({
       onLayoutChange: (positions) =>
-        this.#def && this.#onLayoutChange(this.#def.id, positions),
+        this.#def && this.#onLayoutChange(positions),
       // Dragging a card over the Data Fields selector arms it as a trash target;
       // dropping there removes the card and deselects the field.
       onDeleteHover: (active) => this.#cardMenu.setDeleteTarget(active),
@@ -166,8 +166,8 @@ export class TunnelDetail {
   }
 
   /** Show a tunnel's details. `ctx` carries the live state, latest snapshot, a
-   *  jumpHost-by-id map for the breadcrumb, and this tunnel's stored card layout
-   *  ({col,row} per card) for the canvas to restore. */
+   *  jumpHost-by-id map for the breadcrumb, and the shared card layout ({col,row}
+   *  per card, common to every tunnel) for the canvas to restore. */
   show(
     def,
     { state = "disarmed", snap = null, jumpsById, layout = null } = {},

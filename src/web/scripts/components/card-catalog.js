@@ -210,8 +210,10 @@ export const CARDS = [
     key: "lastConnection",
     labelKey: "card.lastConnection",
     category: "activity",
-    value: (c) => formatRelativeTime(c.snap?.openedAt, c.now),
-    sortValue: (c) => num(c.snap?.openedAt),
+    // lastConnectedAt (not openedAt): it survives teardown, so "Last connection"
+    // keeps showing the real time instead of reverting to "never" on disconnect.
+    value: (c) => formatRelativeTime(c.snap?.lastConnectedAt, c.now),
+    sortValue: (c) => num(c.snap?.lastConnectedAt),
   },
   {
     key: "lastDisconnect",

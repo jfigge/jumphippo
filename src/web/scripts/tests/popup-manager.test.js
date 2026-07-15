@@ -16,7 +16,9 @@
 
 // popup-manager.test.js — the shared modal host. Covers the top-layer mount and,
 // critically, that a second popup is QUEUED rather than dropped (so concurrent
-// host-key prompts can't strand a pending SSH connection).
+// host-key prompts can't strand a pending SSH connection). Also covers the
+// type-to-confirm gate on confirmDelete (the danger button stays disabled until
+// the delete word is typed).
 
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -79,4 +81,79 @@ test("Escape (native cancel) routes to onMaskClick", () => {
   dialog.dispatchEvent(new window.Event("cancel"));
   assert.equal(dismissed, true, "cancel invoked onMaskClick");
   assert.equal(document.querySelector(".popup-dialog"), null, "and it closed");
+});
+
+test("confirmDelete gates the danger button until the delete word is typed", () => {
+  resetDom();
+  let confirmed = false;
+  PopupManager.confirmDelete({
+    message: "Delete “X”?",
+    onConfirm: () => {
+      confirmed = true;
+    },
+  });
+  const danger = document.querySelector(".popup-confirm .btn--danger");
+  const field = document.querySelector(".popup-confirm-input");
+  assert.ok(danger && field, "the gated delete confirm mounted with a field");
+  assert.equal(danger.disabled, true, "the danger button starts disabled");
+
+  // A wrong entry keeps it disabled.
+  field.value = "nope";
+  field.dispatchEvent(new window.Event("input"));
+  assert.equal(danger.disabled, true, "a non-matching entry stays gated");
+
+  // The word — matched trimmed and case-insensitively — enables it.
+  field.value = "  DELETE ";
+  field.dispatchEvent(new window.Event("input"));
+  assert.equal(danger.disabled, false, "the word (any case) opens the gate");
+
+  danger.click();
+  assert.equal(confirmed, true, "confirm ran once the gate opened");
+  assert.equal(document.querySelector(".popup-dialog"), null, "and it closed");
+});
+
+test("Enter in the confirm field confirms only once the word matches", () => {
+  resetDom();
+  let confirmed = 0;
+  PopupManager.confirmDelete({
+    message: "Delete “X”?",
+    onConfirm: () => {
+      confirmed += 1;
+    },
+  });
+  const field = document.querySelector(".popup-confirm-input");
+  const enter = () =>
+    field.dispatchEvent(
+      new window.KeyboardEvent("keydown", { key: "Enter", cancelable: true }),
+    );
+
+  field.value = "wrong";
+  field.dispatchEvent(new window.Event("input"));
+  enter();
+  assert.equal(confirmed, 0, "Enter is inert while the word doesn't match");
+
+  field.value = "delete";
+  field.dispatchEvent(new window.Event("input"));
+  enter();
+  assert.equal(confirmed, 1, "Enter confirms once the word matches");
+});
+
+test("confirmDelete with an empty requireText is ungated", () => {
+  resetDom();
+  PopupManager.confirmDelete({
+    message: "Delete “X”?",
+    requireText: "",
+    onConfirm: () => {},
+  });
+  assert.equal(
+    document.querySelector(".popup-confirm-input"),
+    null,
+    "opting out drops the type-to-confirm field",
+  );
+  const danger = document.querySelector(".popup-confirm .btn--danger");
+  assert.equal(
+    danger.disabled,
+    false,
+    "the danger button is immediately usable",
+  );
 });

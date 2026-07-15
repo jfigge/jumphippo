@@ -23,6 +23,8 @@
   "def.unnamed": "Túnel sin título",
   "def.delete.title": "¿Eliminar túnel?",
   "def.delete.message": "¿Eliminar «{name}»? Esto no se puede deshacer.",
+  "def.delete.confirmWord": "eliminar",
+  "def.delete.confirmPrompt": "Escribe «{word}» para confirmar.",
   "editor.newTitle": "Nuevo túnel",
   "editor.editTitle": "Editar túnel",
   "editor.name": "Nombre",

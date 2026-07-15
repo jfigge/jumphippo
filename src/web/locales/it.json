@@ -23,6 +23,8 @@
   "def.unnamed": "Tunnel senza nome",
   "def.delete.title": "Eliminare il tunnel?",
   "def.delete.message": "Eliminare «{name}»? L’operazione non può essere annullata.",
+  "def.delete.confirmWord": "elimina",
+  "def.delete.confirmPrompt": "Digita «{word}» per confermare.",
   "editor.newTitle": "Nuovo tunnel",
   "editor.editTitle": "Modifica tunnel",
   "editor.name": "Nome",

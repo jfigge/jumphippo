@@ -23,6 +23,8 @@
   "def.unnamed": "未命名隧道",
   "def.delete.title": "删除隧道？",
   "def.delete.message": "删除“{name}”？此操作无法撤销。",
+  "def.delete.confirmWord": "删除",
+  "def.delete.confirmPrompt": "输入“{word}”以确认。",
   "editor.newTitle": "新建隧道",
   "editor.editTitle": "编辑隧道",
   "editor.name": "名称",

@@ -39,8 +39,9 @@ reposition it: it lifts under the cursor and snaps to the nearest cell on releas
 Drop it on an occupied cell to swap the two — and if you later move the intruder
 away, the card you displaced slides back to its original cell. The canvas scrolls
 in both directions as you spread cards out; double-click an empty area to re-centre
-on your cards. Each tunnel keeps its own arrangement, restored the next time you
-open it. Enabling a metric drops its card into the first free cell; disabling one
+on your cards. The arrangement is shared across every tunnel — position a card once
+and each tunnel shows it the same way. Enabling a metric drops its card into the
+first free cell; disabling one
 leaves the gap where it was. To remove a card quickly, drag it onto the **Data
 Fields** selector — it turns into a trash can, and dropping there hides that field.
 

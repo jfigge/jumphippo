@@ -214,6 +214,20 @@
   margin-top: var(--space-3);
 }
 
+/* Type-to-confirm gate on the delete dialog: a prompt line + full-width field the
+   user must type the delete word into before the danger button enables. */
+.popup-confirm-prompt {
+  margin-top: var(--space-3);
+  font-size: 13px;
+  color: var(--color-text);
+}
+
+.popup-confirm-input {
+  display: block;
+  width: 100%;
+  margin-top: var(--space-2);
+}
+
 .popup-error {
   margin-top: var(--space-2);
   font-size: 12px;

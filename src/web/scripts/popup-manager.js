@@ -108,6 +108,11 @@ export const PopupManager = {
   /**
    * A two-button confirmation dialog. `onConfirm` / `onCancel` fire after the
    * dialog closes. `confirmClass` styles the confirm button (e.g. "btn--danger").
+   *
+   * Pass `requireText` to gate the confirm button behind a typed word: it stays
+   * disabled until the user types that word into a field (matched trimmed and
+   * case-insensitively), so a destructive action takes a deliberate keystroke.
+   * `requireTextLabel` is the prompt shown above the field.
    * @param {object} opts
    */
   confirm({
@@ -117,6 +122,8 @@ export const PopupManager = {
     confirmLabel,
     cancelLabel,
     confirmClass = "btn--primary",
+    requireText,
+    requireTextLabel,
     onConfirm,
     onCancel,
   } = {}) {
@@ -125,12 +132,17 @@ export const PopupManager = {
       fn?.();
     };
 
+    const gate = typeof requireText === "string" && requireText.trim() !== "";
+
     const confirmBtn = el("button", {
       class: `btn popup-btn ${confirmClass}`,
       type: "button",
       text: confirmLabel || t("common.confirm"),
       onClick: done(onConfirm),
-      "data-autofocus": true,
+      // Gated: start disabled and let the field enable us. Ungated: take focus so
+      // Enter confirms immediately (the field takes focus in the gated case).
+      disabled: gate,
+      "data-autofocus": !gate,
     });
     const cancelBtn = el("button", {
       class: "btn popup-btn btn--secondary",
@@ -138,6 +150,30 @@ export const PopupManager = {
       text: cancelLabel || t("common.cancel"),
       onClick: done(onCancel),
     });
+
+    let confirmField = null;
+    if (gate) {
+      const target = requireText.trim().toLowerCase();
+      const matches = (v) => v.trim().toLowerCase() === target;
+      confirmField = el("input", {
+        type: "text",
+        class: "settings-input popup-confirm-input",
+        autocomplete: "off",
+        spellcheck: false,
+        placeholder: requireText,
+        "aria-label": requireTextLabel || requireText,
+        "data-autofocus": true,
+        onInput: (e) => {
+          confirmBtn.disabled = !matches(e.target.value);
+        },
+        onKeydown: (e) => {
+          if (e.key === "Enter" && matches(e.target.value)) {
+            e.preventDefault();
+            done(onConfirm)();
+          }
+        },
+      });
+    }
 
     const element = el(
       "div",
@@ -158,6 +194,13 @@ export const PopupManager = {
           [
             message && el("p", { class: "popup-message", text: message }),
             note && el("p", { class: "popup-note", text: note }),
+            gate &&
+              requireTextLabel &&
+              el("p", {
+                class: "popup-confirm-prompt",
+                text: requireTextLabel,
+              }),
+            confirmField,
           ].filter(Boolean),
         ),
         el("div", { class: "popup-footer" }, [cancelBtn, confirmBtn]),
@@ -167,13 +210,29 @@ export const PopupManager = {
     this.open({ element, onMaskClick: done(onCancel) });
   },
 
-  /** A destructive-action confirm preset (danger button, Delete label). */
-  confirmDelete({ title, message, onConfirm, onCancel } = {}) {
+  /**
+   * A destructive-action confirm preset (danger button, Delete label). Gated by
+   * default: the user must type the localized delete word before confirming. Pass
+   * a falsey `requireText` to opt out of the gate for a lower-stakes delete.
+   */
+  confirmDelete({
+    title,
+    message,
+    requireText,
+    requireTextLabel,
+    onConfirm,
+    onCancel,
+  } = {}) {
+    const word =
+      requireText === undefined ? t("def.delete.confirmWord") : requireText;
     this.confirm({
       title: title || t("def.delete.title"),
       message,
       confirmLabel: t("common.delete"),
       confirmClass: "btn--danger",
+      requireText: word,
+      requireTextLabel:
+        requireTextLabel || t("def.delete.confirmPrompt", { word }),
       onConfirm,
       onCancel,
     });

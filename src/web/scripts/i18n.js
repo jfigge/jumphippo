@@ -63,6 +63,8 @@ export const EN = {
 
   "def.delete.title": "Delete tunnel?",
   "def.delete.message": "Delete “{name}”? This can’t be undone.",
+  "def.delete.confirmWord": "delete",
+  "def.delete.confirmPrompt": "Type “{word}” to confirm.",
 
   // ── Tunnel editor (modal) ───────────────────────────────────────────────
   "editor.newTitle": "New tunnel",

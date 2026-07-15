@@ -244,7 +244,7 @@ test("the error dialog surfaces an error reported by status on load", async () =
   PopupManager.close();
 });
 
-test("dragging a detail card persists a per-tunnel cardLayouts map", async () => {
+test("dragging a detail card persists the single shared cardLayout", async () => {
   const calls = {};
   const { view } = await mount({ calls });
   const download = view.element.querySelector(
@@ -268,26 +268,55 @@ test("dragging a detail card persists a per-tunnel cardLayouts map", async () =>
   );
   await tick();
 
-  // The initial placement also persists a layout, so take the drag's write (last).
-  const writes = (calls.set || []).filter((p) => p.cardLayouts);
-  assert.ok(writes.length >= 1, "settings.set persisted a cardLayouts map");
+  // A flat, id-less cardLayout is persisted (not a per-tunnel map). The initial
+  // placement also persists one, so take the drag's write (last).
+  const writes = (calls.set || []).filter((p) => p.cardLayout);
+  assert.ok(writes.length >= 1, "settings.set persisted a shared cardLayout");
   assert.deepEqual(
-    writes.at(-1).cardLayouts.a.download,
+    writes.at(-1).cardLayout.download,
     { col: 3, row: 1 },
-    "the auto-selected tunnel 'a' recorded the new cell",
+    "the shared layout recorded the new cell",
   );
   PopupManager.close();
 });
 
-test("a persisted per-tunnel layout is restored to the detail canvas", async () => {
+test("a persisted shared cardLayout is restored to the detail canvas", async () => {
   const { view } = await mount({
-    settings: { cardLayouts: { a: { download: { col: 2, row: 1 } } } },
+    settings: { cardLayout: { download: { col: 2, row: 1 } } },
   });
   const download = view.element.querySelector(
     '.detail-card[data-card="download"]',
   );
   // 2×166=332, 1×106=106.
   assert.match(download.style.transform, /translate\(332px,\s*106px\)/);
+});
+
+test("a legacy per-tunnel cardLayouts migrates to the first tunnel's layout", async () => {
+  const calls = {};
+  // DEFS order is [a, b]. 'b' is listed first in the stored map, but the FIRST
+  // TUNNEL 'a' is the one whose layout must win.
+  const { view } = await mount({
+    calls,
+    settings: {
+      cardLayouts: {
+        b: { download: { col: 1, row: 0 } },
+        a: { download: { col: 4, row: 2 } },
+      },
+    },
+  });
+
+  // 'a' (auto-selected) restores from the migrated layout: 4×166=664, 2×106=212.
+  const download = view.element.querySelector(
+    '.detail-card[data-card="download"]',
+  );
+  assert.match(download.style.transform, /translate\(664px,\s*212px\)/);
+
+  // The migration persists the first tunnel's layout as the shared cardLayout and
+  // drops the legacy per-tunnel key (undefined → omitted on write).
+  const migration = (calls.set || []).find((p) => "cardLayouts" in p);
+  assert.ok(migration, "the legacy map was migrated on load");
+  assert.deepEqual(migration.cardLayout.download, { col: 4, row: 2 });
+  assert.equal(migration.cardLayouts, undefined, "legacy key cleared");
 });
 
 test("a persisted cardOrder still governs which detail cards show", async () => {
@@ -425,6 +454,20 @@ test("choosing Delete from the row menu confirms then deletes", async () => {
   await settle();
   const danger = document.querySelector(".popup-confirm .btn--danger");
   assert.ok(danger, "the shared delete confirm opened");
+
+  // The delete is gated: the danger button stays disabled until the confirm word
+  // is typed into the field.
+  assert.equal(
+    danger.disabled,
+    true,
+    "delete is gated until the word is typed",
+  );
+  const field = document.querySelector(".popup-confirm .popup-confirm-input");
+  assert.ok(field, "a type-to-confirm field is shown");
+  field.value = "delete";
+  field.dispatchEvent(new window.Event("input"));
+  assert.equal(danger.disabled, false, "typing the word enables delete");
+
   danger.click();
   await tick();
   assert.deepEqual(calls.delete, ["b"]);

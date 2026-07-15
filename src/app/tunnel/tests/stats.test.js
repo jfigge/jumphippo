@@ -226,18 +226,32 @@ test("firstConnectedAt is stamped once; lastDisconnectedAt tracks teardown", () 
   stats.onConnected();
   assert.equal(stats.snapshot().firstConnectedAt, 9_001_000);
   assert.equal(stats.snapshot().openedAt, 9_001_000);
+  assert.equal(stats.snapshot().lastConnectedAt, 9_001_000);
 
   clock.advance(500);
   stats.onDisconnected();
   assert.equal(stats.snapshot().lastDisconnectedAt, 9_001_500);
   assert.equal(stats.snapshot().openedAt, null);
+  // lastConnectedAt survives the teardown (openedAt clears, this one persists) so
+  // "Last connection" reports the real time rather than "never".
+  assert.equal(
+    stats.snapshot().lastConnectedAt,
+    9_001_000,
+    "lastConnectedAt persists past disconnect",
+  );
 
-  // A later reconnect keeps firstConnectedAt (the FIRST), moves openedAt.
+  // A later reconnect keeps firstConnectedAt (the FIRST), moves openedAt AND
+  // lastConnectedAt to the new session.
   clock.advance(2000);
   stats.onConnected();
   const s = stats.snapshot();
   assert.equal(s.firstConnectedAt, 9_001_000, "first connect is sticky");
   assert.equal(s.openedAt, 9_003_500, "openedAt is the current session");
+  assert.equal(
+    s.lastConnectedAt,
+    9_003_500,
+    "lastConnectedAt tracks the latest",
+  );
 });
 
 test("re-arming zeroes the new cumulative counters and session timestamps", () => {
@@ -255,6 +269,7 @@ test("re-arming zeroes the new cumulative counters and session timestamps", () =
   assert.equal(s.connectionCount, 0);
   assert.equal(s.errorCount, 0);
   assert.equal(s.firstConnectedAt, null);
+  assert.equal(s.lastConnectedAt, null);
   assert.equal(s.lastDisconnectedAt, null);
 });
 
