@@ -144,6 +144,39 @@ test("a valid save submits the payload and fires onSaved, then closes", async ()
   assert.ok(!dlg.element.open, "closed on success");
 });
 
+test("a double-submit only fires the save once while it is in flight", async () => {
+  // Regression: nothing guarded reentrant submits, so pressing Enter/clicking Save
+  // twice before the async create resolved persisted the record twice.
+  let calls = 0;
+  let resolveSave;
+  const dlg = mount({
+    onSubmit: () => {
+      calls += 1;
+      return new Promise((r) => {
+        resolveSave = () => r({ id: "t1" });
+      });
+    },
+    onSaved: () => {},
+  });
+  await dlg.openCreate();
+  fillValid(dlg);
+
+  const form = dlg.element.querySelector("form");
+  form.dispatchEvent(new Event("submit", { cancelable: true }));
+  form.dispatchEvent(new Event("submit", { cancelable: true })); // second, while in flight
+  await flush();
+
+  assert.equal(calls, 1, "the second submit is ignored while the first is in flight");
+  assert.ok(
+    dlg.element.querySelector(".dialog-save").disabled,
+    "Save is disabled for the duration",
+  );
+
+  resolveSave();
+  await flush();
+  assert.ok(!dlg.element.open, "closes once the save resolves");
+});
+
 test("an invalid save flags each empty field inline and does not submit", async () => {
   const calls = [];
   const dlg = mount({ onSubmit: () => (calls.push(1), {}) });

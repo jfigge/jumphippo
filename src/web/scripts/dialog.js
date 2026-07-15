@@ -34,8 +34,10 @@ export class Dialog {
   #titleEl;
   #bodyEl;
   #bannerEl;
+  #saveBtn;
   #onSubmit;
   #onCancel;
+  #submitting = false;
 
   /**
    * @param {object} opts
@@ -63,13 +65,19 @@ export class Dialog {
       role: "alert",
     });
 
+    this.#saveBtn = el("button", {
+      class: "btn btn--primary dialog-save",
+      type: "submit",
+      text: saveLabel || t("common.save"),
+    });
+
     const form = el(
       "form",
       {
         class: "dialog-form",
         onSubmit: (e) => {
           e.preventDefault();
-          this.#onSubmit?.();
+          this.#submit();
         },
       },
       [
@@ -82,11 +90,7 @@ export class Dialog {
             text: t("common.cancel"),
             onClick: () => this.#cancel(),
           }),
-          el("button", {
-            class: "btn btn--primary dialog-save",
-            type: "submit",
-            text: saveLabel || t("common.save"),
-          }),
+          this.#saveBtn,
         ]),
       ],
     );
@@ -134,6 +138,22 @@ export class Dialog {
   close() {
     if (this.#el.open) this.#el.close();
     this.clearError();
+  }
+
+  // Run the caller's onSubmit, guarding against double-submit: a second Enter or
+  // Save-click while the first (async) save is still in flight is ignored, and the
+  // Save button is disabled for the duration. Without this, a rapid double-submit
+  // fires the store create/update twice and can persist duplicate records.
+  async #submit() {
+    if (this.#submitting || !this.#onSubmit) return;
+    this.#submitting = true;
+    this.#saveBtn.disabled = true;
+    try {
+      await this.#onSubmit();
+    } finally {
+      this.#submitting = false;
+      this.#saveBtn.disabled = false;
+    }
   }
 
   #cancel() {
