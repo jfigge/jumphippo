@@ -254,10 +254,20 @@ export class CredentialEditorDialog {
         status.hidden = !(retainable && this.#form.secretValue.length === 0);
       },
     });
+    // An existing password credential loaded WITHOUT a secret (e.g. imported from a
+    // stripped bundle / SSH config, Feature 120) needs its password re-entered
+    // before it can authenticate — surface that inline.
+    const needsSecret =
+      this.#editingId &&
+      secretField === "password" &&
+      this.#form.authType === this.#loadedType &&
+      !this.#hadSecret;
+
     return field({
       label: t(`auth.${secretField}`),
       control: el("div", { class: "auth-secret-row" }, [input, status]),
       labelFor: id,
+      hint: needsSecret ? t("cred.needsSecret.hint") : undefined,
     });
   }
 

@@ -178,6 +178,12 @@ function initShell() {
     tunnelsView?.createNew(),
   );
 
+  // A bundle / SSH-config import (Feature 120) can add or replace many tunnels at
+  // once from the Settings → Data dialog; reload the master list so they appear.
+  window.addEventListener("porthippo:data-imported", () => {
+    tunnelsView?.load()?.catch?.(() => {});
+  });
+
   // "Edit" affordances (e.g. from the tray) select the tunnel in the detail view.
   window.addEventListener("porthippo:edit-tunnel", (event) => {
     const id = event.detail && event.detail.id;

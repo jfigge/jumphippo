@@ -52,6 +52,7 @@ const { registerDialogIPC } = require("./ipc/dialog");
 const { registerContextMenuIPC } = require("./ipc/context-menu");
 const { registerShellIPC } = require("./ipc/shell");
 const { registerSecretStorageIPC } = require("./ipc/secret-storage");
+const { registerPortableIPC } = require("./ipc/portable");
 const { TunnelEngine } = require("./tunnel/engine");
 const {
   listOsKnownHosts,
@@ -498,6 +499,17 @@ function registerIpc() {
     safeCall,
     // A successful unlock resumes any startup arming deferred while locked.
     onUnlock: resumeDeferredArm,
+  });
+
+  // Import / export (Feature 120): the `.porthippo` bundle round-trip and the
+  // read-only ~/.ssh/config importer. Native file dialogs are opened in main; a
+  // successful import reconciles the engine so affected tunnels re-read.
+  registerPortableIPC({
+    ipcMain,
+    getStores,
+    getEngine,
+    dialog,
+    getMainWindow: () => mainWindow,
   });
 
   // Auto-update (Feature 70) intents. `check` runs a manual (noisy) check; the

@@ -187,6 +187,23 @@ contextBridge.exposeInMainWorld("porthippo", {
     lock: () => ipcRenderer.invoke("secret-storage:lock"),
   },
 
+  // ── Import / export (Feature 120) ─────────────────────────────────────────
+  // The renderer only picks files (via the native dialogs main opens) and reviews
+  // the proposed diff; all bundle building, crypto, SSH-config parsing and store
+  // writes stay in main. `export` builds a `.porthippo` bundle (secrets stripped,
+  // or sealed under a passphrase). `previewBundle` parses a chosen bundle and
+  // returns its add/update/conflict diff; `importBundle` applies it (merge/replace).
+  // `scanSshConfig` parses a chosen ~/.ssh/config into proposed drafts;
+  // `importSshConfig` commits the selected ones. A decrypted secret never crosses
+  // here — only, write-only inbound, a bundle passphrase.
+  io: {
+    export: (opts) => ipcRenderer.invoke("portable:export", opts),
+    previewBundle: () => ipcRenderer.invoke("portable:preview"),
+    importBundle: (opts) => ipcRenderer.invoke("portable:import", opts),
+    scanSshConfig: () => ipcRenderer.invoke("sshconfig:scan"),
+    importSshConfig: (opts) => ipcRenderer.invoke("sshconfig:import", opts),
+  },
+
   // ── Auto-update (Feature 70) ──────────────────────────────────────────────
   // The renderer only sends intents; lifecycle events arrive one-way over the
   // `porthippo:update-*` events (re-dispatched below). `check` runs a manual

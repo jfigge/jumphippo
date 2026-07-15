@@ -2385,3 +2385,170 @@
 .tunnel-table-empty[hidden] {
   display: none;
 }
+
+/* ── Import / export (Feature 120) ──────────────────────────────────────────── */
+
+/* Settings → Data: an action button with its explanatory hint beneath. */
+.settings-data-action {
+  margin-bottom: var(--space-4);
+}
+
+.settings-data-btn {
+  margin-bottom: var(--space-1);
+}
+
+/* The import/export dialog is a touch wider than the editor dialogs (it carries
+   a diff summary / host list) but shares the .editor-dialog chrome. */
+.impexp-dialog {
+  width: min(560px, calc(100vw - 2 * var(--space-4)));
+  max-width: 560px;
+}
+
+.impexp-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.impexp-desc {
+  margin: 0;
+  font-size: 12px;
+  color: var(--color-subtext);
+  line-height: 1.5;
+}
+
+.impexp-section-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-top: var(--space-1);
+}
+
+.impexp-file {
+  margin: 0;
+  font-size: 13px;
+  color: var(--color-text);
+}
+
+.impexp-warn {
+  color: var(--color-warning);
+}
+
+/* Radio group (secret mode / import mode) — mirrors the security-mode cards. */
+.impexp-radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.impexp-radio {
+  display: flex;
+  gap: var(--space-2);
+  align-items: flex-start;
+  padding: var(--space-3);
+  background: var(--color-surface-0);
+  border: 1px solid var(--color-overlay);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+
+.impexp-radio-input {
+  margin-top: 2px;
+  accent-color: var(--color-accent);
+}
+
+.impexp-radio-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.impexp-radio-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.impexp-radio-desc {
+  font-size: 11px;
+  color: var(--color-muted);
+  line-height: 1.45;
+}
+
+.impexp-passphrase {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+/* The add/update/conflict diff summary. */
+.impexp-diff {
+  list-style: none;
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-crust);
+  border: 1px solid var(--color-overlay);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.impexp-diff-row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  font-size: 13px;
+}
+
+.impexp-diff-label {
+  color: var(--color-text);
+  font-weight: 500;
+}
+
+.impexp-diff-counts {
+  color: var(--color-subtext);
+}
+
+/* The SSH-config host picker: a scrollable checkbox list. */
+.impexp-host-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 40vh;
+  overflow: auto;
+  border: 1px solid var(--color-overlay);
+  border-radius: var(--radius-md);
+}
+
+.impexp-host-item {
+  border-bottom: 1px solid var(--color-surface-1);
+}
+
+.impexp-host-item:last-child {
+  border-bottom: none;
+}
+
+.impexp-host-label {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  cursor: pointer;
+}
+
+.impexp-host-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.impexp-host-sub {
+  font-size: 12px;
+  color: var(--color-subtext);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

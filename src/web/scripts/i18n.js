@@ -173,6 +173,10 @@ export const EN = {
   "cred.user.placeholder": "username",
   "cred.new": "New…",
   "cred.choose": "Choose a credential…",
+  // Feature 120: a password credential imported without its secret.
+  "cred.needsSecret": "needs password",
+  "cred.needsSecret.hint":
+    "This credential was imported without its password. Enter it to connect.",
 
   // ── Jump-host editor / picker ───────────────────────────────────────────
   "jump.newTitle": "New jump host",
@@ -368,6 +372,7 @@ export const EN = {
   "settings.nav.behaviour": "Behaviour",
   "settings.nav.security": "Security",
   "settings.nav.hostkeys": "Host Keys",
+  "settings.nav.data": "Data",
 
   "settings.appearance.theme": "Theme",
   "settings.appearance.theme.system": "System",
@@ -463,6 +468,79 @@ export const EN = {
   // ── Unlock-on-launch prompt (master-password mode boots locked) ─────────
   "unlock.title": "Unlock secrets",
   "unlock.later": "Not now",
+
+  // ── Import / export (Settings → Data, Feature 120) ──────────────────────
+  "io.data.help":
+    "Back up your tunnels, credentials and jump hosts to a portable file, restore them on another machine, or seed Port Hippo from your SSH config.",
+  "io.data.export": "Export bundle…",
+  "io.data.exportDesc":
+    "Save your tunnels, credentials and jump hosts to a .porthippo file.",
+  "io.data.importBundle": "Import bundle…",
+  "io.data.importBundleDesc":
+    "Restore tunnels, credentials and jump hosts from a .porthippo file.",
+  "io.data.importSsh": "Import from SSH config…",
+  "io.data.importSshDesc":
+    "Propose tunnels, credentials and jump hosts from your ~/.ssh/config.",
+
+  // Export dialog.
+  "io.export.title": "Export bundle",
+  "io.export.includeSettings": "Include app settings",
+  "io.export.secrets": "Secrets",
+  "io.export.secrets.stripped": "Don’t include passwords",
+  "io.export.secrets.strippedDesc":
+    "The safest option. Imported credentials will need their passwords re-entered.",
+  "io.export.secrets.encp": "Protect with a passphrase",
+  "io.export.secrets.encpDesc":
+    "Encrypt secrets with a passphrase you choose. You’ll need it to import them.",
+  "io.export.passphrase": "Passphrase",
+  "io.export.passphraseConfirm": "Confirm passphrase",
+  "io.export.passphraseWarn":
+    "If you forget this passphrase, the secrets in this bundle can’t be recovered.",
+  "io.export.submit": "Export…",
+  "io.export.done": "Bundle exported.",
+  "io.export.error.passphraseRequired": "Enter a passphrase.",
+  "io.export.error.passphraseMismatch": "The passphrases don’t match.",
+
+  // Import bundle dialog.
+  "io.import.title": "Import bundle",
+  "io.import.file": "From {name}",
+  "io.import.nothing": "This bundle has no records to import.",
+  "io.import.section.tunnels": "Tunnels",
+  "io.import.section.credentials": "Credentials",
+  "io.import.section.jumpHosts": "Jump hosts",
+  "io.import.status.add": "{n} new",
+  "io.import.status.update": "{n} update",
+  "io.import.status.conflict": "{n} conflict",
+  "io.import.mode": "How to import",
+  "io.import.mode.merge": "Merge",
+  "io.import.mode.mergeDesc":
+    "Add new records and keep what you already have. Existing secrets are never overwritten.",
+  "io.import.mode.replace": "Replace everything",
+  "io.import.mode.replaceDesc":
+    "Delete all current tunnels, credentials and jump hosts, then load the bundle.",
+  "io.import.replaceWarn":
+    "This permanently deletes your current tunnels, credentials and jump hosts.",
+  "io.import.passphrase": "Bundle passphrase",
+  "io.import.submit": "Import",
+  "io.import.done": "Import complete.",
+  "io.import.error.invalid": "That file isn’t a valid Port Hippo bundle.",
+  "io.import.error.badPassphrase": "Incorrect passphrase.",
+  "io.import.error.passphraseRequired": "Enter the bundle’s passphrase.",
+  "io.import.error.dangling":
+    "The bundle is inconsistent (a broken reference) and wasn’t imported.",
+  "io.import.error.generic": "The import failed. Nothing was changed.",
+
+  // SSH-config import dialog.
+  "io.ssh.title": "Import from SSH config",
+  "io.ssh.desc":
+    "Choose which hosts to add as tunnels. Nothing is written until you import.",
+  "io.ssh.note":
+    "Each selected host also imports the credential and jump hosts it needs. Review the drafted tunnels afterwards — the forwarded ports are placeholders.",
+  "io.ssh.empty": "No usable hosts were found in that SSH config.",
+  "io.ssh.error": "That SSH config couldn’t be read.",
+  "io.ssh.host.via": "{host} · via {jumps}",
+  "io.ssh.submit": "Import {count}",
+  "io.ssh.done": "Imported {count} tunnel(s).",
 
   // ── Native menu (rendered by the MAIN process via its own i18n) ─────────
   "menu.file": "File",

@@ -25,6 +25,7 @@ import { el, clear } from "../dom.js";
 import { field } from "../field.js";
 import { t } from "../i18n.js";
 import { CredentialEditorDialog } from "./credential-editor-dialog.js";
+import { credentialNeedsSecret } from "./credential-status.js";
 
 export class CredentialPickerField {
   #el;
@@ -137,9 +138,15 @@ export class CredentialPickerField {
     clear(this.#select);
     this.#select.append(
       el("option", { value: "", text: t("cred.choose") }),
-      ...this.#credentials.map((c) =>
-        el("option", { value: c.id, text: c.label || c.id }),
-      ),
+      ...this.#credentials.map((c) => {
+        // A password credential imported without its secret (Feature 120) can't
+        // authenticate until the password is re-entered — flag it in the list.
+        const label = c.label || c.id;
+        const text = credentialNeedsSecret(c)
+          ? `${label} — ${t("cred.needsSecret")}`
+          : label;
+        return el("option", { value: c.id, text });
+      }),
     );
     this.#select.value = this.#value;
   }

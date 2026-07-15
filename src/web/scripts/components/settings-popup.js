@@ -32,8 +32,16 @@ import { PopupManager } from "../popup-manager.js";
 import { t, LOCALE_OPTIONS } from "../i18n.js";
 import { SecuritySettings } from "./settings-security.js";
 import { HostKeysPanel } from "./host-keys-panel.js";
+import { ImportExportDialog } from "./import-export-dialog.js";
 
-const PANELS = ["appearance", "defaults", "behaviour", "security", "hostkeys"];
+const PANELS = [
+  "appearance",
+  "defaults",
+  "behaviour",
+  "security",
+  "hostkeys",
+  "data",
+];
 
 export class SettingsPopup {
   #porthippo;
@@ -42,6 +50,7 @@ export class SettingsPopup {
   #loadedLanguage = null;
   #security; // the Settings → Security panel (selectable secret storage)
   #hostKeys; // the Settings → Host Keys panel (accepted TOFU fingerprints)
+  #impexp = null; // the Settings → Data import/export dialog (lazy)
 
   constructor({ porthippo } = {}) {
     this.#porthippo = porthippo || window.porthippo;
@@ -50,6 +59,14 @@ export class SettingsPopup {
     this.#security = new SecuritySettings({ porthippo: this.#porthippo });
     // Likewise owns the Host Keys tab: mounted here, reloaded on reveal.
     this.#hostKeys = new HostKeysPanel({ porthippo: this.#porthippo });
+  }
+
+  /** The import/export dialog, built on first use (it stacks over this popup). */
+  #importExport() {
+    if (!this.#impexp) {
+      this.#impexp = new ImportExportDialog({ porthippo: this.#porthippo });
+    }
+    return this.#impexp;
   }
 
   /** Load current settings and open the popup. */
@@ -114,6 +131,7 @@ export class SettingsPopup {
       this.#behaviourPanel(),
       this.#security.element,
       this.#hostKeys.element,
+      this.#dataPanel(),
     ]);
 
     const closeBtn = el("button", {
@@ -266,6 +284,35 @@ export class SettingsPopup {
         "setting-confirmOnQuit",
         "settings.behaviour.confirmOnQuit",
         "settings.behaviour.confirmOnQuit.hint",
+      ),
+    ]);
+  }
+
+  // Import / export (Feature 120). Each action opens the ImportExportDialog, which
+  // stacks over this popup as a native modal; the file pickers themselves open in
+  // main. All the work happens there — this panel is just the three entry points.
+  #dataPanel() {
+    const action = (labelKey, descKey, onClick) =>
+      el("div", { class: "settings-data-action" }, [
+        el("button", {
+          class: "btn btn--secondary settings-data-btn",
+          type: "button",
+          text: t(labelKey),
+          onClick,
+        }),
+        el("p", { class: "field-hint", text: t(descKey) }),
+      ]);
+
+    return this.#panel("data", [
+      el("p", { class: "settings-help", text: t("io.data.help") }),
+      action("io.data.export", "io.data.exportDesc", () =>
+        this.#importExport().openExport(),
+      ),
+      action("io.data.importBundle", "io.data.importBundleDesc", () =>
+        this.#importExport().startImport(),
+      ),
+      action("io.data.importSsh", "io.data.importSshDesc", () =>
+        this.#importExport().startSshImport(),
       ),
     ]);
   }

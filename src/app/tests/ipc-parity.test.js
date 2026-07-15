@@ -66,6 +66,7 @@ const mainProcessSource = [
   "ipc/context-menu.js",
   "ipc/shell.js",
   "ipc/secret-storage.js",
+  "ipc/portable.js",
 ]
   .map(read)
   .join("\n");
