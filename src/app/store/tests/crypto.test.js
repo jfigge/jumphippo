@@ -65,9 +65,16 @@ test("sealString always encrypts, even when the plaintext looks like ciphertext"
   // must encrypt it regardless and round-trip cleanly.
   for (const plain of ["enc:v1:hunter2", "enck:v1:pw", "encm:v1:secret"]) {
     const sealed = crypto.sealString(plain);
-    assert.ok(sealed.startsWith("enck:v1:"), "sealed under the active app-key mode");
+    assert.ok(
+      sealed.startsWith("enck:v1:"),
+      "sealed under the active app-key mode",
+    );
     assert.notEqual(sealed, plain, "not written through verbatim");
-    assert.equal(crypto.decryptString(sealed), plain, "round-trips to the original");
+    assert.equal(
+      crypto.decryptString(sealed),
+      plain,
+      "round-trips to the original",
+    );
   }
   assert.equal(crypto.sealString(""), "", "empty stays empty");
 });

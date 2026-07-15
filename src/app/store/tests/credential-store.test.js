@@ -76,7 +76,10 @@ test("a secret that looks like ciphertext is still sealed, not stored verbatim",
       !raw.includes("enc:v1:hunter2"),
       "the prefix-shaped secret is not written to disk verbatim",
     );
-    assert.ok(raw.includes("enck:v1:"), "it is sealed under the app-key backend");
+    assert.ok(
+      raw.includes("enck:v1:"),
+      "it is sealed under the app-key backend",
+    );
     assert.equal(
       cs.getDecrypted(created.id).password,
       "enc:v1:hunter2",

@@ -166,7 +166,11 @@ test("a double-submit only fires the save once while it is in flight", async () 
   form.dispatchEvent(new Event("submit", { cancelable: true })); // second, while in flight
   await flush();
 
-  assert.equal(calls, 1, "the second submit is ignored while the first is in flight");
+  assert.equal(
+    calls,
+    1,
+    "the second submit is ignored while the first is in flight",
+  );
   assert.ok(
     dlg.element.querySelector(".dialog-save").disabled,
     "Save is disabled for the duration",
