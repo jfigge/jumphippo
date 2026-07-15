@@ -172,7 +172,7 @@ test("a stats snapshot updates the selected tunnel's cards and its dot", async (
 test("the detail arm control routes to tunnels.arm for the selected tunnel", async () => {
   const calls = {};
   const { view } = await mount({ calls });
-  view.element.querySelector(".detail-arm-btn").click();
+  view.element.querySelector(".detail-arm-switch").click();
   await tick();
   assert.deepEqual(calls.arm, ["a"]);
 });
@@ -323,7 +323,7 @@ test("in list mode, the table toolbar arm control routes to tunnels.arm", async 
   const calls = {};
   const { view } = await mount({ calls, settings: { detailMode: "list" } });
   // 'a' is auto-selected; the table toolbar's arm button acts on it.
-  view.element.querySelector(".tunnel-table-view .detail-arm-btn").click();
+  view.element.querySelector(".tunnel-table-view .detail-arm-switch").click();
   await tick();
   assert.deepEqual(calls.arm, ["a"]);
 });

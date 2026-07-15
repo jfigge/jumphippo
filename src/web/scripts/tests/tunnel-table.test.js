@@ -342,16 +342,13 @@ test("the toolbar arm/pause controls reflect and drive the selected tunnel", () 
   const { table, calls } = mount();
   table.setCardOrder([]);
   table.setData(DEFS, STATES, SNAPS, "a"); // 'a' is connected
-  const armBtn = table.element.querySelector(".detail-arm-btn");
+  const armSwitch = table.element.querySelector(".detail-arm-switch");
   const pauseBtn = table.element.querySelector(".detail-pause-btn");
-  assert.ok(
-    armBtn.classList.contains("detail-arm-btn--armed"),
-    "connected → armed",
-  );
+  assert.equal(armSwitch.checked, true, "connected → armed");
   assert.equal(pauseBtn.disabled, false, "connected → can pause");
 
   pauseBtn.click();
-  armBtn.click();
+  armSwitch.click();
   assert.deepEqual(calls.pause, ["a"]);
   assert.deepEqual(calls.arm, ["a"]);
 });
@@ -360,7 +357,10 @@ test("the arm/pause controls are disabled when no row is selected", () => {
   const { table } = mount();
   table.setCardOrder([]);
   table.setData(DEFS, STATES, SNAPS, null);
-  assert.equal(table.element.querySelector(".detail-arm-btn").disabled, true);
+  assert.equal(
+    table.element.querySelector(".detail-arm-switch").disabled,
+    true,
+  );
   assert.equal(table.element.querySelector(".detail-pause-btn").disabled, true);
 });
 
@@ -368,10 +368,9 @@ test("pause is disabled for a selected tunnel that isn't connected/paused", () =
   const { table } = mount();
   table.setCardOrder([]);
   table.setData(DEFS, STATES, SNAPS, "b"); // 'b' is listening
-  assert.ok(
-    table.element
-      .querySelector(".detail-arm-btn")
-      .classList.contains("detail-arm-btn--armed"),
+  assert.equal(
+    table.element.querySelector(".detail-arm-switch").checked,
+    true,
     "listening → armed",
   );
   assert.equal(

@@ -117,11 +117,13 @@ export class TunnelDetail {
       "aria-label": t("detail.route.target"),
     });
 
-    this.#armBtn = el("button", {
-      class: "btn--icon detail-ctrl detail-arm-btn",
-      type: "button",
-      html: icons.power(),
-      onClick: () => this.#def && this.#onToggleArm(this.#def.id),
+    // Arm/disarm is a checkbox styled as a slider switch (see .detail-arm-switch):
+    // checked = armed (green track), unchecked = disarmed (red track).
+    this.#armBtn = el("input", {
+      class: "detail-arm-switch",
+      type: "checkbox",
+      role: "switch",
+      onChange: () => this.#def && this.#onToggleArm(this.#def.id),
     });
     this.#pauseBtn = el("button", {
       class: "btn--icon detail-ctrl detail-pause-btn",
@@ -380,8 +382,7 @@ export class TunnelDetail {
 
   #updateControls() {
     const armed = isArmed(this.#state);
-    this.#armBtn.classList.toggle("detail-arm-btn--armed", armed);
-    this.#armBtn.innerHTML = armed ? icons.power() : icons.powerOff();
+    this.#armBtn.checked = armed;
     const armLabel = armed ? t("detail.disarm") : t("detail.arm");
     this.#armBtn.title = armLabel;
     this.#armBtn.setAttribute("aria-label", armLabel);

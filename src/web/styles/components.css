@@ -1688,6 +1688,7 @@
 .detail-controls {
   flex: 0 0 auto;
   display: flex;
+  align-items: center;
   gap: var(--space-1);
 }
 
@@ -1705,8 +1706,55 @@
   cursor: default;
 }
 
-.detail-arm-btn--armed {
-  color: var(--color-success);
+/* Arm/disarm slider switch — a checkbox with its native box replaced by a track
+   + sliding thumb. The track's inner background carries the state colour: green
+   when checked (armed), red when unchecked (disarmed). The thumb uses a surface
+   token so it contrasts with either track colour in both light and dark themes. */
+.detail-arm-switch {
+  appearance: none;
+  -webkit-appearance: none;
+  box-sizing: border-box;
+  flex: 0 0 auto;
+  position: relative;
+  width: 30px;
+  height: 16.5px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: var(--color-muted);
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+
+.detail-arm-switch::before {
+  content: "";
+  position: absolute;
+  top: 1.5px;
+  left: 1.5px;
+  width: 13.5px;
+  height: 13.5px;
+  border-radius: 50%;
+  background: var(--color-surface-0);
+  transition: transform 120ms ease;
+}
+
+.detail-arm-switch:checked {
+  background: var(--color-success);
+}
+
+.detail-arm-switch:checked::before {
+  transform: translateX(13.5px);
+}
+
+.detail-arm-switch:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.detail-arm-switch:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
 }
 
 /* ── Stat cards: snap-to-grid infinite canvas ──────────────────────────────────

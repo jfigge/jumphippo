@@ -174,16 +174,13 @@ test("arm control reflects state and fires the intent", () => {
     { id: "t1", localPort: 1, destination: { host: "h", port: 2 } },
     { state: "disarmed" },
   );
-  const armBtn = detail.element.querySelector(".detail-arm-btn");
-  assert.ok(!armBtn.classList.contains("detail-arm-btn--armed"));
+  const armSwitch = detail.element.querySelector(".detail-arm-switch");
+  assert.equal(armSwitch.checked, false, "disarmed → unchecked");
 
   detail.updateState("connected");
-  assert.ok(
-    armBtn.classList.contains("detail-arm-btn--armed"),
-    "armed when connected",
-  );
+  assert.equal(armSwitch.checked, true, "armed when connected");
 
-  armBtn.click();
+  armSwitch.click();
   assert.deepEqual(calls.arm, ["t1"]);
 });
 

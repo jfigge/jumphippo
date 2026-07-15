@@ -126,11 +126,13 @@ export class TunnelTable {
 
     // Arm / pause controls for the SELECTED row — the list-view equivalent of
     // the detail header's controls (they're empty/disabled until a row is picked).
-    this.#armBtn = el("button", {
-      class: "btn--icon detail-ctrl detail-arm-btn",
-      type: "button",
-      html: icons.power(),
-      onClick: () => this.#selectedId && this.#onToggleArm(this.#selectedId),
+    // Arm/disarm is a checkbox styled as a slider switch (see .detail-arm-switch):
+    // checked = armed (green track), unchecked = disarmed (red track).
+    this.#armBtn = el("input", {
+      class: "detail-arm-switch",
+      type: "checkbox",
+      role: "switch",
+      onChange: () => this.#selectedId && this.#onToggleArm(this.#selectedId),
     });
     this.#pauseBtn = el("button", {
       class: "btn--icon detail-ctrl detail-pause-btn",
@@ -421,8 +423,7 @@ export class TunnelTable {
 
     const armed = hasSel && isArmed(state);
     this.#armBtn.disabled = !hasSel;
-    this.#armBtn.classList.toggle("detail-arm-btn--armed", armed);
-    this.#armBtn.innerHTML = armed ? icons.power() : icons.powerOff();
+    this.#armBtn.checked = armed;
     const armLabel = armed ? t("detail.disarm") : t("detail.arm");
     this.#armBtn.title = armLabel;
     this.#armBtn.setAttribute("aria-label", armLabel);
