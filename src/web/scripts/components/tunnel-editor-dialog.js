@@ -50,88 +50,21 @@ import {
 } from "../address.js";
 import { CredentialPickerField } from "./credential-picker-field.js";
 import { JumpHostPickerField } from "./jump-host-picker-field.js";
+import {
+  LOOPBACKS,
+  TYPE_ORDER,
+  addressFieldConfig,
+  looksLikeIp,
+  toInt,
+  addressErrorMessage,
+  str,
+  reconstructEntryField,
+  reconstructExitField,
+  reconstructTarget,
+  blankForm,
+} from "./tunnel-editor-fields.js";
 
-/** Hosts that always mean "this machine's loopback" — no bind/resolve warning. */
-const LOOPBACKS = new Set(["", "127.0.0.1", "localhost", "::1"]);
 const RESOLVE_DEBOUNCE_MS = 300;
-
-/** The forwarding types offered by the segmented control, in display order. */
-const TYPE_ORDER = ["local", "remote", "dynamic"];
-
-/**
- * The label / hint / placeholder / tooltip for the two repurposed address fields
- * per forwarding type (Feature 110). The Target-server field is identical across
- * types, so it's not listed here. `showExit` hides the second field for dynamic,
- * which has no fixed destination.
- */
-function addressFieldConfig(type) {
-  if (type === "remote") {
-    return {
-      entry: {
-        label: t("editor.remoteBind"),
-        placeholder: t("editor.remoteBind.placeholder"),
-        hint: t("editor.remoteBind.hint"),
-        description: t("editor.remoteBind.desc"),
-      },
-      exit: {
-        label: t("editor.localTarget"),
-        placeholder: t("editor.localTarget.placeholder"),
-        hint: t("editor.localTarget.hint"),
-        description: t("editor.localTarget.desc"),
-      },
-      showExit: true,
-    };
-  }
-  if (type === "dynamic") {
-    return {
-      entry: {
-        label: t("editor.socksPort"),
-        placeholder: t("editor.socksPort.placeholder"),
-        hint: t("editor.socksPort.hint"),
-        description: t("editor.socksPort.desc"),
-      },
-      showExit: false,
-    };
-  }
-  return {
-    entry: {
-      label: t("editor.entryPort"),
-      placeholder: t("editor.entryPort.placeholder"),
-      hint: t("editor.entryPort.hint"),
-      description: t("editor.entryPort.desc"),
-    },
-    exit: {
-      label: t("editor.exitPort"),
-      placeholder: t("editor.exitPort.placeholder"),
-      hint: t("editor.exitPort.hint"),
-      description: t("editor.exitPort.desc"),
-    },
-    showExit: true,
-  };
-}
-
-/** A cheap "already an IP literal" guard so the editor skips a pointless lookup. */
-function looksLikeIp(host) {
-  return /^\d{1,3}(\.\d{1,3}){3}$/.test(host) || host.includes(":");
-}
-
-function toInt(str) {
-  const s = String(str).trim();
-  if (s === "") return undefined;
-  return Number(s);
-}
-
-/** Map an address.js parse-error code to an inline field message. */
-function addressErrorMessage(fieldName, code) {
-  if (code === "port_range") return t("editor.address.portRange");
-  if (fieldName === "entry") {
-    return code === "no_port"
-      ? t("editor.address.entryNoPort")
-      : t("editor.address.entryRequired");
-  }
-  if (fieldName === "target") return t("editor.address.targetRequired");
-  return t("editor.address.portRange");
-}
 
 export class TunnelEditorDialog {
   #dialog;
@@ -959,90 +892,4 @@ export class TunnelEditorDialog {
       (k) => k === "lingerMs" || k.startsWith("jumpHostIds"),
     );
   }
-}
-
-// ── Blank-state helpers ───────────────────────────────────────────────────────
-
-function str(v) {
-  return typeof v === "string" ? v : "";
-}
-
-/** Rebuild the Entry-slot text for the given type from a stored def. */
-function reconstructEntryField(d, type) {
-  if (type === "remote") return str(d.entryAddress) || reconstructRemoteBind(d);
-  return str(d.entryAddress) || reconstructEntry(d);
-}
-
-/** Rebuild the Exit-slot text for the given type (dynamic has no Exit field). */
-function reconstructExitField(d, type) {
-  if (type === "dynamic") return "";
-  if (type === "remote") return str(d.exitAddress) || reconstructLocalTarget(d);
-  return str(d.exitAddress) || reconstructExit(d);
-}
-
-/** Rebuild the Remote-bind field: "port" or "host:port" (loopback host elided). */
-function reconstructRemoteBind(d) {
-  const port = d.remoteBind?.port;
-  if (port === undefined || port === null) return "";
-  const host = str(d.remoteBind?.host).trim();
-  return host === "" || LOOPBACKS.has(host) ? String(port) : `${host}:${port}`;
-}
-
-/** Rebuild the Local-target field (remote's destination): "port" or "host:port". */
-function reconstructLocalTarget(d) {
-  const port = d.destination?.port;
-  if (port === undefined || port === null) return "";
-  const host = str(d.destination?.host).trim();
-  return host === "" || LOOPBACKS.has(host) ? String(port) : `${host}:${port}`;
-}
-
-/** Rebuild the Entry field from a stored def: "port" or "host:port". */
-function reconstructEntry(d) {
-  const port = d.localPort;
-  if (port === undefined || port === null) return "";
-  const host = str(d.bindHost).trim();
-  return host === "" || LOOPBACKS.has(host) ? String(port) : `${host}:${port}`;
-}
-
-/** Rebuild the Target field: "host" or "host:port" (22 elided). */
-function reconstructTarget(d) {
-  const host = str(d.sshHost).trim();
-  if (host === "") {
-    // Legacy blank sshHost: the box SSH'd into was the destination host itself.
-    return str(d.destination?.host).trim();
-  }
-  const port = d.sshPort;
-  return port === undefined || port === null || port === 22
-    ? host
-    : `${host}:${port}`;
-}
-
-/** Rebuild the Exit field, collapsing the loopback + entry-port default to "". */
-function reconstructExit(d) {
-  const port = d.destination?.port;
-  if (port === undefined || port === null) return "";
-  // Legacy blank sshHost forwarded to loopback:destPort on the destination box.
-  if (str(d.sshHost).trim() === "") {
-    return port === d.localPort ? "" : String(port);
-  }
-  const host = str(d.destination?.host).trim();
-  const loopback = host === "" || LOOPBACKS.has(host);
-  if (loopback) return port === d.localPort ? "" : String(port);
-  return `${host}:${port}`;
-}
-
-function blankForm() {
-  return {
-    name: "",
-    type: "local",
-    entryAddress: "",
-    targetServer: "",
-    exitAddress: "",
-    credentialId: "",
-    jumpHostIds: [],
-    lingerMs: "",
-    keepAlive: false,
-    enabled: true,
-    autoReconnect: false,
-  };
 }
