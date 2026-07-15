@@ -42,6 +42,23 @@ have landed; each names its prerequisites in **Context**.
 | 90 | [Selectable secret storage](90-selectable-secret-storage.md) | Rest Hippo's three at-rest backends made user-selectable — device key (no prompt, default), OS keychain, master password — with re-encrypt-all migration and a Security tab in the Settings dialog | 60 |
 | 100 | [Hostname resolution validation](100-hostname-resolution-validation.md) | Live soft warnings when a bind host / first hop won't resolve locally, plus a **Test resolution** button that walks the real jump-host chain (reusing the engine + host-key TOFU) to validate each downstream hop and the destination from its correct vantage point — protocol-only, no secret leaves main | 20, 45 |
 
+## Priority backlog (planned, in priority order)
+
+Eight new stages, written after 00–100 landed. Listed most-valuable first; numbered on the
+by-tens convention. Each names its prerequisites in **Context** and is independent of the
+others except where noted.
+
+| #  | Plan | What it delivers | Depends on |
+|----|------|------------------|------------|
+| 110 | [Reverse & dynamic forwarding](110-forwarding-types.md) | A `type` on each tunnel — **local** (today), **remote** (`ssh -R`, bind a port on the far end), **dynamic** (`ssh -D`, a local SOCKS5 proxy) — reusing the host-key TOFU + stats paths; closes the biggest capability gap. No new dependency (we own the SOCKS5 handshake) | 20, 30, 45 |
+| 120 | [Import & export](120-import-export.md) | A round-trippable `.porthippo` bundle (tunnels + credentials + jump hosts) with secrets stripped or sealed under a portable passphrase (`encp:v1:`), reviewed merge/replace import, and a read-only `~/.ssh/config` importer that proposes drafts | 10, 45, 90 |
+| 130 | [Failure notifications & health](130-failure-notifications-and-health.md) | Desktop notifications on drop/recover/give-up (coalesced, opt-out), ssh2 keepalive probing, a configurable reconnect policy (per-tunnel override), a reconnect countdown in Monitoring, and a tray health rollup — surfacing the engine's existing backoff, not rewriting it | 20, 30, 50, 60 |
+| 140 | [Tunnel groups & bulk actions](140-tunnel-groups.md) | A reusable `group` (label + colour + order) with optional single membership, collapsible grouped lists with arm/pause-all headers, multi-select bulk actions, and per-group tray submenus; the engine stays group-unaware (bulk = id-set calls) | 45, 50, 60 |
+| 150 | [Scheduling & auto-arm](150-scheduling-and-auto-arm.md) | Optional per-tunnel/group **rules** — a time window and/or a network trigger (SSID allow-list / reachability probe) — evaluated by a main-side, edge-triggered scheduler that respects manual override; all detection local, read-only, fail-safe | 20, 30, 60, 140 |
+| 160 | [Activity history & trends](160-activity-history-and-trends.md) | Promote the ephemeral per-tunnel event log to a persistent, capped, redacted on-disk activity log (typed events), plus bounded downsampled metrics history driving hand-rolled SVG sparklines/trends in Monitoring — no chart library, secret-free | 30, 50, 60 |
+| 170 | [Per-hop status in the route breadcrumb](170-hop-status-breadcrumbs.md) | The detail-panel route breadcrumb shows each hop's live state — up / down / connecting / idle — encoded by **shape** (tick / cross / pulse) as well as colour, with a failed node's reason on hover and to assistive tech; the engine reports secret-free per-hop facts on the existing `tunnel-state` broadcast and the renderer maps them onto its display nodes | 20, 30, 45, 100 |
+| 180 | [Multi-language support](180-multi-language-support.md) | Ship six translated catalogs — French, German, Spanish, Simplified Chinese, Japanese, Italian — over Feature 60's already-complete i18n seam: additive `locales/*.json` + picker rows + a system CJK font fallback + a parity test that forbids a translation drifting from `EN`; no seam, schema, or IPC change | 60 |
+
 ## Cross-cutting conventions (apply in every stage)
 - **No UI framework.** Plain DOM + class-based ES modules; CSS via design tokens in
   `src/web/styles/theme.css`. Follow Rest Hippo's class-naming rule: `prefix-name`
