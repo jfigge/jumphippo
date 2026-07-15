@@ -59,6 +59,19 @@ test("encryptString is idempotent and a no-op on empty/plaintext", () => {
   assert.equal(crypto.decryptString("not-encrypted"), "not-encrypted");
 });
 
+test("sealString always encrypts, even when the plaintext looks like ciphertext", () => {
+  // Regression: encryptString short-circuits on an at-rest prefix, so a user secret
+  // that literally begins with `enc:v1:` would be written through as plaintext. seal
+  // must encrypt it regardless and round-trip cleanly.
+  for (const plain of ["enc:v1:hunter2", "enck:v1:pw", "encm:v1:secret"]) {
+    const sealed = crypto.sealString(plain);
+    assert.ok(sealed.startsWith("enck:v1:"), "sealed under the active app-key mode");
+    assert.notEqual(sealed, plain, "not written through verbatim");
+    assert.equal(crypto.decryptString(sealed), plain, "round-trips to the original");
+  }
+  assert.equal(crypto.sealString(""), "", "empty stays empty");
+});
+
 test("isEncrypted only recognises the at-rest prefixes", () => {
   assert.equal(crypto.isEncrypted("plain"), false);
   assert.equal(crypto.isEncrypted(""), false);

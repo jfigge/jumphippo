@@ -72,7 +72,7 @@ function sealCredential(incoming, existing) {
 
   const val = incoming[field];
   if (typeof val === "string" && val.length > 0) {
-    out[field] = { enc: crypto.encryptString(val) }; // new secret → seal it
+    out[field] = { enc: crypto.sealString(val) }; // new secret → always seal it
   } else if (isSealed(val)) {
     out[field] = val; // already sealed (idempotent re-write)
   } else if (incoming.hasSecret === true && isSealed(existing?.[field])) {

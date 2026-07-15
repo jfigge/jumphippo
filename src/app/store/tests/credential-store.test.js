@@ -57,6 +57,36 @@ test("create seals the secret; reads expose only hasSecret", () => {
   }
 });
 
+test("a secret that looks like ciphertext is still sealed, not stored verbatim", () => {
+  // Regression: sealCredential routed the plaintext through crypto.encryptString,
+  // which short-circuits on an at-rest prefix — so a password literally beginning
+  // with `enc:v1:` was written to disk in cleartext (and broke on read-back).
+  const dir = freshDir();
+  try {
+    const cs = new Stores(dir).credentialStore();
+    const created = cs.create({
+      label: "trap",
+      user: "u",
+      authType: "password",
+      password: "enc:v1:hunter2",
+    });
+
+    const raw = readRaw(dir);
+    assert.ok(
+      !raw.includes("enc:v1:hunter2"),
+      "the prefix-shaped secret is not written to disk verbatim",
+    );
+    assert.ok(raw.includes("enck:v1:"), "it is sealed under the app-key backend");
+    assert.equal(
+      cs.getDecrypted(created.id).password,
+      "enc:v1:hunter2",
+      "and round-trips back to the original",
+    );
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 test("a key passphrase seals and round-trips; the key path is not secret", () => {
   const dir = freshDir();
   try {

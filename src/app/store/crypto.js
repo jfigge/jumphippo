@@ -298,6 +298,22 @@ function encryptString(plaintext) {
 }
 
 /**
+ * Seal a RAW plaintext secret under the ACTIVE backend. Unlike {@link encryptString},
+ * this deliberately does NOT short-circuit when the plaintext happens to look like
+ * at-rest ciphertext (`enc:v1:`/`enck:v1:`/`encm:v1:`…): a user secret that literally
+ * begins with a backend prefix must still be encrypted, never written through verbatim
+ * (which would leave it as plaintext-at-rest AND make it undecryptable on read-back).
+ * Empty input returns "" — there is nothing to seal. Callers pass only genuine plaintext.
+ *
+ * @param {string} plaintext
+ * @returns {string}
+ */
+function sealString(plaintext) {
+  if (!plaintext) return plaintext;
+  return _rawEncryptTo(plaintext, _activeMode);
+}
+
+/**
  * Re-seal a value to a DIFFERENT backend (the mode-switch migration primitive).
  * Decrypts by dispatching on the value's own prefix (so the source key must be
  * loaded) then re-encrypts to `targetBackend`. Unlike {@link encryptString},
@@ -385,6 +401,7 @@ module.exports = {
   isAvailable,
   isEncrypted,
   encryptString,
+  sealString,
   reencryptValue,
   decryptString,
   _aesGcmEncrypt,
