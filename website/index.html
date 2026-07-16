@@ -4,8 +4,11 @@
   <meta charset="UTF-8" />
   <!-- GitHub Pages can't set response headers, so the CSP rides in a meta tag.
        No inline/executable scripts on this page (downloads.js is the only script,
-       same-origin); inline styles need 'unsafe-inline' for style-src only. -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-ancestors 'none'" />
+       same-origin); inline styles need 'unsafe-inline' for style-src only.
+       frame-ancestors is omitted: it is ignored in a <meta> CSP (header-only), so
+       including it only logs a console warning. Anti-framing would need a response
+       header, which GitHub Pages can't send. -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#4785F0" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />

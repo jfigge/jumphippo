@@ -1,5 +1,26 @@
 # Feature 170 — Per-hop status in the route breadcrumb
 
+## Status: Deferred (2026-07-16) — superseded by existing surfaces
+
+Not planned for build. Per-hop status is largely redundant and mostly-idle:
+
+- **Lazy connect** means the SSH chain is down almost all the time for `local`/
+  `dynamic` tunnels, so a live per-hop breadcrumb shows nothing new in steady state
+  (an armed-but-idle tunnel sits in `listening` with no hop connected).
+- **The failing hop is already surfaced as text** — `hopError` (`ssh-chain.js`)
+  produces `SSH jump[N] (host:port) failed: …`, shown via the errored State card /
+  current-error popup and the error-history dialog.
+- **Full per-hop ok/fail/skipped + reason already exists on demand** via Feature 100
+  "Test resolution" (`probeChain` → the tunnel-editor probe rows), using the same
+  host-key TOFU as arming.
+- The plan **predates Feature 110** (remote/dynamic forwarding), so its node→status
+  mapping only covers the `local` breadcrumb shape and would need reworking for three.
+
+If per-hop-at-failure ever becomes desirable, the cheap paths are (B) cross only the
+failing node on `error`, or (C) surface the existing Test-resolution probe from the
+detail panel — not the full live wire protocol described below. The rest of this plan
+is kept as the record of what a full build would entail.
+
 ## Context
 
 Depends on: **20** (SSH tunnel engine — listener, `connectChain`, relay), **30** (stats +
