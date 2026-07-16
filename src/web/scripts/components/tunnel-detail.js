@@ -49,7 +49,6 @@ export class TunnelDetail {
   #breadcrumbEl;
   #armBtn;
   #pauseBtn;
-  #retryBtn;
   #cardsEmptyEl;
   #canvas;
   #cardMenu;
@@ -132,17 +131,6 @@ export class TunnelDetail {
       html: icons.pause(),
       onClick: () => this.#def && this.#onTogglePause(this.#def.id),
     });
-    // Retry now (Feature 130): re-arm a tunnel that gave up reconnecting (state
-    // `error`). Hidden except in that state; re-arming disposes + rebinds and lets
-    // the next access re-establish the chain (the list view's context-menu "Arm"
-    // is the parity affordance).
-    this.#retryBtn = el("button", {
-      class: "btn--icon detail-ctrl detail-retry-btn",
-      type: "button",
-      hidden: true,
-      html: icons.power(),
-      onClick: () => this.#def && this.#onToggleArm(this.#def.id),
-    });
 
     this.#cardsEmptyEl = el("p", {
       class: "detail-cards-empty",
@@ -155,7 +143,6 @@ export class TunnelDetail {
         this.#breadcrumbEl,
         el("div", { class: "detail-controls" }, [
           this.#cardMenu.element,
-          this.#retryBtn,
           this.#pauseBtn,
           this.#armBtn,
         ]),
@@ -399,12 +386,6 @@ export class TunnelDetail {
     const armLabel = armed ? t("detail.disarm") : t("detail.arm");
     this.#armBtn.title = armLabel;
     this.#armBtn.setAttribute("aria-label", armLabel);
-
-    // Retry now is offered only for a tunnel that gave up / errored.
-    const canRetry = this.#state === "error";
-    this.#retryBtn.hidden = !canRetry;
-    this.#retryBtn.title = t("detail.retryNow");
-    this.#retryBtn.setAttribute("aria-label", t("detail.retryNow"));
 
     const paused = this.#state === "paused";
     const canPause = this.#state === "connected" || paused;

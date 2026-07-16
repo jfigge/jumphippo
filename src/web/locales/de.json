@@ -417,7 +417,6 @@
   "card.reconnect": "Reconnect",
   "card.reconnect.retrying": "Versuch {attempt} · erneut in {seconds} s",
   "card.reconnect.attempt": "Versuch {attempt}…",
-  "detail.retryNow": "Jetzt erneut versuchen",
   "editor.retry": "Reconnect-Richtlinie (Überschreibung)",
   "editor.retry.hint": "Überschreibt die globale Reconnect-Richtlinie für diesen Tunnel. Ein leeres Feld übernimmt den Wert aus den Einstellungen.",
   "editor.retry.inherit": "erben",

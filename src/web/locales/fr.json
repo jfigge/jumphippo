@@ -417,7 +417,6 @@
   "card.reconnect": "Reconnexion",
   "card.reconnect.retrying": "tentative {attempt} · nouvel essai dans {seconds} s",
   "card.reconnect.attempt": "tentative {attempt}…",
-  "detail.retryNow": "Réessayer",
   "editor.retry": "Politique de reconnexion (personnalisée)",
   "editor.retry.hint": "Remplace la politique de reconnexion globale pour ce tunnel. Laissez un champ vide pour hériter de la valeur des réglages.",
   "editor.retry.inherit": "hériter",

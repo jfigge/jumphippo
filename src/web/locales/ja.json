@@ -417,7 +417,6 @@
   "card.reconnect": "再接続",
   "card.reconnect.retrying": "{attempt} 回目 · {seconds} 秒後に再試行",
   "card.reconnect.attempt": "{attempt} 回目…",
-  "detail.retryNow": "今すぐ再試行",
   "editor.retry": "再接続ポリシー（上書き）",
   "editor.retry.hint": "このトンネルのグローバル再接続ポリシーを上書きします。空欄にすると設定の値を引き継ぎます。",
   "editor.retry.inherit": "継承",

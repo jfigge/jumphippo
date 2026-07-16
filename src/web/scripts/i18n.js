@@ -280,7 +280,6 @@ export const EN = {
   "detail.disarm": "Disarm tunnel",
   "detail.pause": "Pause traffic",
   "detail.resume": "Resume traffic",
-  "detail.retryNow": "Retry now", // re-arm a tunnel that gave up (Feature 130)
   "detail.reorderHint": "Drag to rearrange",
   "detail.route.local": "Local",
   "detail.route.target": "Target",

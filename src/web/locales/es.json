@@ -417,7 +417,6 @@
   "card.reconnect": "Reconexión",
   "card.reconnect.retrying": "intento {attempt} · reintento en {seconds} s",
   "card.reconnect.attempt": "intento {attempt}…",
-  "detail.retryNow": "Reintentar ahora",
   "editor.retry": "Política de reconexión (anular)",
   "editor.retry.hint": "Anula la política de reconexión global para este túnel. Deja un campo en blanco para heredar el valor de Ajustes.",
   "editor.retry.inherit": "heredar",

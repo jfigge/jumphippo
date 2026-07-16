@@ -187,7 +187,6 @@
   "detail.disarm": "Disarm tunnel",
   "detail.pause": "Pause traffic",
   "detail.resume": "Resume traffic",
-  "detail.retryNow": "Retry now",
   "detail.reorderHint": "Drag to rearrange",
   "detail.route.local": "Local",
   "detail.route.target": "Target",

@@ -878,7 +878,7 @@
 .popup-settings .popup-footer {
   flex-shrink: 0;
   padding: var(--space-3) var(--space-4);
-  background: var(--color-mantle);
+  background: var(--color-base);
 }
 
 .popup-settings .popup-header {
@@ -908,7 +908,7 @@
   flex-direction: column;
   gap: var(--space-1);
   padding: var(--space-3) var(--space-2);
-  background: var(--color-mantle);
+  background: var(--color-base);
   border-right: 1px solid var(--color-overlay);
   overflow-y: auto;
 }

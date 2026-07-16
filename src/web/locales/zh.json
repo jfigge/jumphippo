@@ -417,7 +417,6 @@
   "card.reconnect": "重连",
   "card.reconnect.retrying": "第 {attempt} 次 · {seconds} 秒后重试",
   "card.reconnect.attempt": "第 {attempt} 次…",
-  "detail.retryNow": "立即重试",
   "editor.retry": "重连策略（覆盖）",
   "editor.retry.hint": "为此隧道覆盖全局重连策略。留空以沿用设置中的值。",
   "editor.retry.inherit": "沿用",

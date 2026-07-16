@@ -67,7 +67,8 @@ While a tunnel is backing off, the **Reconnect** field (add it from **Data
 Fields**, or read it in the list view) shows the current attempt and a live
 countdown to the next try; the tray icon and its menu summarise the overall health
 (reconnecting, or a bang badge when a tunnel needs attention). A tunnel that
-exhausts its attempts stops in **Error** with a **Retry now** button.
+exhausts its attempts stops in **Error**; flip its arm toggle (or the row's **Arm**
+menu item) to retry.
 
 Repeated drops usually point at an unstable network path or an idle-timeout on the
 server; consider **Keep SSH connected while armed** for a destination you use

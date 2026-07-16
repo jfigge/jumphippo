@@ -417,7 +417,6 @@
   "card.reconnect": "Riconnessione",
   "card.reconnect.retrying": "tentativo {attempt} · nuovo tentativo tra {seconds} s",
   "card.reconnect.attempt": "tentativo {attempt}…",
-  "detail.retryNow": "Riprova ora",
   "editor.retry": "Criterio di riconnessione (override)",
   "editor.retry.hint": "Sostituisce il criterio di riconnessione globale per questo tunnel. Lascia un campo vuoto per ereditare il valore dalle impostazioni.",
   "editor.retry.inherit": "eredita",
