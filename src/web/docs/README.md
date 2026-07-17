@@ -19,6 +19,8 @@ encrypted at rest, and **never phones home**.
                bound and waiting)           chain)                        server)            destination)
 ```
 
+![The Jump Hippo window: the grouped tunnel list on the left and the selected tunnel's live detail on the right](images/overview.png)
+
 1. **Armed** — the tunnel's local **entry port** is bound and listening. No SSH
    connection exists yet.
 2. **First access** — an app connects to the entry port. Jump Hippo opens the SSH

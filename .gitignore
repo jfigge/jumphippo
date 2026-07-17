@@ -3,6 +3,12 @@ build/
 dist/
 data/
 
+# ── Documentation screenshots (see .docs-build/) ──────────────────────────────
+# The seeded demo data dir and the full-res capture originals stay local; only the
+# downscaled 50% copies under src/web/docs/images are committed.
+data-docs/
+docs-originals/
+
 # ── Node / npm ────────────────────────────────────────────────────────────────
 src/node_modules/
 src/npm-debug.log*

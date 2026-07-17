@@ -30,6 +30,10 @@ Toggle between two presentations from the header:
   selected tunnel's metric cards.
 - **List** — every tunnel as a row in one sortable table, each metric a column.
 
+![Cards view: the tunnel list and the selected tunnel's metric cards](images/overview.png)
+
+![List view: every tunnel as a row, each metric a sortable column](images/list-view.png)
+
 Both views share the same set of metrics, so the **Cards** checklist doubles as the
 List view's column chooser. Drag the divider (or a column header in List view) to
 resize the tunnel-name area; the position is shared between the two views.

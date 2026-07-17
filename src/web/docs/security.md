@@ -32,6 +32,8 @@ the interface only ever knows whether a secret is *set*.
 
 You choose the at-rest backend in **Settings → Security**:
 
+![Settings → Security: the at-rest secret-storage chooser — This device, OS keychain, or Master password](images/settings-security.png)
+
 - **This device (no prompt)** — encrypt with a random key kept in a protected file
   on this machine. No system prompt. This is the default, so a fresh install
   raises no keychain dialog. Anyone who can read this computer's files could read

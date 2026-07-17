@@ -50,7 +50,11 @@ Jump Hippo routes traffic through three points:
 | **Exit port** | *(optional)* Where the SSH server forwards your traffic. | `db.internal:5432` |
 
 Read a tunnel as **entry port → (SSH through the target server) → exit port**. If
-you leave the exit port blank, traffic is delivered to the target server itself.
+you leave the exit port blank, traffic is delivered to the target server itself
+(`127.0.0.1`) on the **same port as the entry port**. A bare host reuses the entry
+port; a bare port targets `127.0.0.1`.
+
+![The editor's General tab, showing the Entry port, Target server, and Exit port fields](images/tunnel-editor.png)
 
 ### Entry port and binding scope
 
@@ -77,7 +81,10 @@ reaching the target. Jump hosts are reusable records; see
 
 ## Connection behaviour
 
-Three options control the SSH connection's lifecycle:
+Three options control the SSH connection's lifecycle, on the editor's **Config**
+tab:
+
+![The editor's Config tab: idle linger, arm-on-startup, keep-alive, auto-reconnect, and the reconnect-policy override](images/tunnel-editor-config.png)
 
 ### Idle linger (ms)
 
@@ -100,7 +107,7 @@ for zero first-byte latency. Use it for a destination you hit constantly.
 
 ### Reconnect automatically if the connection drops
 
-Off by default. When **off**, if a live SSH connection drops unexpectedly, Port
+Off by default. When **off**, if a live SSH connection drops unexpectedly, Jump
 Hippo returns the tunnel to **Listening** and re-establishes it on the next access
 — no wasted reconnects to a destination you're done with. When **on**, it
 re-establishes the connection immediately (with backoff) so a long-lived client

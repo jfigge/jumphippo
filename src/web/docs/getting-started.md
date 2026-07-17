@@ -28,10 +28,13 @@ Click **+** (Add tunnel) to open the editor.
 3. **Target server** — the SSH server to route through, e.g.
    `bastion.example.com` (or `bastion.example.com:22` for a non-standard SSH port).
 4. **Exit port** *(optional)* — where the SSH server should forward your traffic,
-   e.g. `db.internal:5432`. Leave it blank to reach the target server itself.
+   e.g. `db.internal:5432`. Leave it blank to reach the target server itself on the
+   same port as the entry port.
 5. **Authentication** — pick how to log in (SSH agent, a private key, or a
    password). See [Authentication](authentication.md).
 6. Optionally add **[jump hosts](jump-hosts.md)** for a multi-hop route.
+
+![The tunnel editor: Name, Forwarding type, and the Entry port, Target server, and Exit port address fields](images/tunnel-editor.png)
 
 Save. The tunnel appears in the list, **disarmed** — defined but not yet bound.
 
@@ -48,6 +51,8 @@ lamp for **Listening**.
 
 By default, enabled tunnels arm automatically when Jump Hippo starts. You can turn
 that off in **Settings → Behaviour**.
+
+![The Settings dialog — appearance, defaults, behaviour, notifications, security, host keys, and import/export](images/settings.png)
 
 ## Use it
 
