@@ -73,13 +73,13 @@ tunnel { …existing…, groupId? }        # optional, single membership
    broadcast; unit-test that N tunnels toggle with a single broadcast.
 3. **IPC + preload.** `groups:list|create|update|delete|reorder` and
    `tunnels:apply-many` (or reuse `engine:*`), registered in `ipc/store.js` + `ipc/engine.js`,
-   exposed under `window.porthippo.groups.*` / `window.porthippo.tunnels.applyMany`, preload
+   exposed under `window.jumphippo.groups.*` / `window.jumphippo.tunnels.applyMany`, preload
    in lockstep; the `ipc-parity` test stays green (no new file needed if folded into existing
    handlers — otherwise add it to the scan list). A group write triggers no engine reconcile
    (groups don't change routing).
 4. **Group editor.** A small `group-editor-dialog.js` (label + colour-token picker), reachable
    from a "New group…" affordance and from a group header's context menu, following the
-   credential/jump-host editor pattern; emits `porthippo:groups-changed`.
+   credential/jump-host editor pattern; emits `jumphippo:groups-changed`.
 5. **Definition list.** `tunnel-list.js` renders collapsible group sections with header
    arm/disarm-all + counts; drag-assign a tunnel to a group and drag-reorder groups; persist
    expand/collapse in settings.

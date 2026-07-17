@@ -26,7 +26,7 @@ const { Paths } = require("../paths");
 const { SettingsStore, DEFAULTS } = require("../settings-store");
 
 function freshStore() {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "porthippo-settings-"));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "jumphippo-settings-"));
   return { dir, store: new SettingsStore(new Paths(dir)) };
 }
 

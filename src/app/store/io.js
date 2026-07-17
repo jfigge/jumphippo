@@ -48,13 +48,13 @@ function ensureDir(dir) {
  * Distinctive infix marking write temp files. Real data files never contain it,
  * so the startup GC can match orphans with no risk of deleting real documents.
  */
-const TEMP_INFIX = ".porthippotmp-";
+const TEMP_INFIX = ".jumphippotmp-";
 
 /** Suffix appended after the unique counter. */
 const TEMP_SUFFIX = ".tmp";
 
 /** Matches a temp file name produced by {@link tempPathFor}. */
-const TEMP_FILE_RE = /\.porthippotmp-\d+\.tmp$/;
+const TEMP_FILE_RE = /\.jumphippotmp-\d+\.tmp$/;
 
 /** Process-local monotonic counter keeping concurrent temp names unique. */
 let tempCounter = 0;

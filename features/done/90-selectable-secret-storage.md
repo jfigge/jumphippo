@@ -1,7 +1,7 @@
 # Feature 90 — Selectable secret storage (device key / OS keychain / master password)
 
 ## Context
-Port Hippo encrypts SSH passwords and key passphrases at rest, and already ships **two** of
+Jump Hippo encrypts SSH passwords and key passphrases at rest, and already ships **two** of
 Rest Hippo's three at-rest backends: an **app key** (`enck:v1:` — a random 256-bit key in a
 `0600` file, the promptless default) and the **OS keychain** (`enc:v1:` — Electron
 `safeStorage`). What's missing is the **user's ability to choose**, and the third backend, a
@@ -10,7 +10,7 @@ Rest Hippo's three at-rest backends: an **app key** (`enck:v1:` — a random 256
 the product needs the same escape hatch Rest Hippo settled on: a promptless device-key
 default plus an explicit, informed choice in Settings.
 
-This stage ports Rest Hippo's complete three-mode selectable secret storage into Port Hippo
+This stage ports Rest Hippo's complete three-mode selectable secret storage into Jump Hippo
 and surfaces it as a **Security tab** in the Settings dialog.
 
 **Prerequisite: Feature 60**, which introduces the `SettingsPopup` (renderer settings dialog
@@ -41,7 +41,7 @@ password is clearly warned as unrecoverable.
   **in memory for the session only**; the mode **boots locked** (key not loaded) and the
   renderer prompts to unlock. A fixed **verifier** constant sealed under the key proves a
   password (the GCM tag does the check). Rename Rest Hippo's verifier string to
-  `porthippo:secret-storage:verifier:v1`. The KDF salt, iteration count, and verifier live in
+  `jumphippo:secret-storage:verifier:v1`. The KDF salt, iteration count, and verifier live in
   the existing unencrypted `secret-storage.json` config — **no new file/path** is needed.
 - **A mode switch re-encrypts every secret, crash-safely.** Two passes: (1) **validate** —
   decrypt every secret under the current backend; any failure aborts having written nothing
@@ -51,17 +51,17 @@ password is clearly warned as unrecoverable.
   between them is auto-finished on next launch by `resumeMigration()`. Use
   `crypto.reencryptValue(value, target)` (decrypt-by-prefix then reseal) — **never**
   `encryptString()`, which short-circuits on a foreign prefix.
-- **The migration surface is one file.** Port Hippo's only secret-bearing file is
+- **The migration surface is one file.** Jump Hippo's only secret-bearing file is
   `tunnels.json`; the sealed `{ enc }` values live at `sshServer.auth[].{password|passphrase}`
   and `jumps[].auth[].{password|passphrase}` (only `password`-type and `key`-type auth carry a
   secret; `agent` carries none). `reencryptAll` rewrites each `entry.<field>.enc` string in
-  place. (Compare Rest Hippo's many collection/request/environment files — Port Hippo's scope
+  place. (Compare Rest Hippo's many collection/request/environment files — Jump Hippo's scope
   is far smaller.)
 - **Engine interaction is already benign; make unlock proactive.** Auto-arm-on-launch still
   binds listeners when locked (no secret needed); a connection that needs a locked secret
   fails cleanly until unlock. On a successful **unlock** or **mode switch**, the main process
   tells the `TunnelEngine` to **reconcile** enabled tunnels so they can (re)connect, and
-  broadcasts `porthippo:secret-storage-changed`. Never block arming on the lock state.
+  broadcasts `jumphippo:secret-storage-changed`. Never block arming on the lock state.
 - **UI is a tab in Feature 60's `SettingsPopup`, all inline.** A `data-panel="security"`
   section mirroring Rest Hippo: a three-option `radiogroup` with help text, inline
   master-password set/confirm fields under that option, a "locked" row with an unlock input,
@@ -83,7 +83,7 @@ password is clearly warned as unrecoverable.
    `_aesGcmEncrypt`/`_aesGcmDecrypt`, `deriveKey`, `PBKDF2_ITERATIONS`, `reencryptValue`,
    `setMasterKey`, `lock`, `isLocked`.
 2. **`secret-storage.js` — master-mode + migration.** Add `"master-password"` to `MODES`;
-   `VERIFIER_PLAINTEXT = "porthippo:secret-storage:verifier:v1"`, `MASTER_SALT_LEN = 16`;
+   `VERIFIER_PLAINTEXT = "jumphippo:secret-storage:verifier:v1"`, `MASTER_SALT_LEN = 16`;
    `prepareMasterPassword(password)` → `{ key, kdf:{salt,iterations}, verifier }` and
    `verifyMasterPassword(password, config)` → key|null; the migration marker set
    (`markMigration` / `clearMigration` / `pendingMigration` / `resumeMigration`); and
@@ -99,9 +99,9 @@ password is clearly warned as unrecoverable.
    (`{ mode, password? }` → `{ ok, reason?, failures? }`), `secret-storage:unlock`
    (`{ password }` → `{ ok, reason? }`), `secret-storage:lock` (`{ ok }`). On unlock/set-mode
    success: `resumeMigration`/flip as needed, then `getEngine().reconcileAll?.()` and
-   broadcast `porthippo:secret-storage-changed`. Register in `main.js`; **add
+   broadcast `jumphippo:secret-storage-changed`. Register in `main.js`; **add
    `ipc/secret-storage.js` to the `ipc-parity.test.js` scan list.**
-5. **`preload.js`.** Add `window.porthippo.secretStorage.{ getMode, setMode, unlock(password),
+5. **`preload.js`.** Add `window.jumphippo.secretStorage.{ getMode, setMode, unlock(password),
    lock }` (mirror the channels; `unlock` wraps the bare password into `{ password }`).
 6. **Renderer Security tab** in Feature 60's `settings-popup.js`: the `data-panel="security"`
    section + `#loadSecurityState`/`#onSecurityModeChange`/`#applyMode`/`#applyMasterPassword`/
@@ -135,7 +135,7 @@ password is clearly warned as unrecoverable.
 
 ## Constraints
 - All crypto, keychain, and migration in **main**; the renderer only sends mode/unlock intents
-  over `window.porthippo.secretStorage.*` and reacts to `porthippo:secret-storage-changed`.
+  over `window.jumphippo.secretStorage.*` and reacts to `jumphippo:secret-storage-changed`.
 - The renderer **never** receives a decrypted secret or key material — only mode/lock status.
 - `reencryptAll` is all-or-nothing per switch; the mode flip is the atomicity anchor; delete
   the app-key file only after a completed switch away from it.

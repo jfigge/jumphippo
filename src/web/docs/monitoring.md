@@ -1,6 +1,6 @@
 # Monitoring & Pause
 
-Port Hippo shows each tunnel's live state and traffic as it happens. Watch a
+Jump Hippo shows each tunnel's live state and traffic as it happens. Watch a
 connection open on first access, see bytes flow, and pause or resume without losing
 the tunnel.
 
@@ -14,7 +14,7 @@ the live state:
 | --- | --- | --- |
 | **Disarmed** | *(all off)* | Defined but not bound. No local port, no SSH. |
 | **Listening** | Amber | Armed — the entry port is bound and waiting. No SSH connection yet. |
-| **Connecting** | Amber | A client connected; Port Hippo is opening the SSH chain. |
+| **Connecting** | Amber | A client connected; Jump Hippo is opening the SSH chain. |
 | **Connected** | Green | The SSH connection is live and relaying traffic. |
 | **Paused** | Amber | Live but frozen — traffic is held; the connection is not torn down. |
 | **Error** | Red | The last connection attempt failed. Hover / open the tunnel for the reason. |

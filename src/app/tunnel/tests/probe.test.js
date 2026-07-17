@@ -46,7 +46,7 @@ function makeEngine() {
   engine = new TunnelEngine({
     getStores: () => fakeStores([]),
     broadcast: (channel, payload) => {
-      if (channel === "porthippo:hostkey-unknown") {
+      if (channel === "jumphippo:hostkey-unknown") {
         engine.trustHostKey(payload.promptId);
       }
     },

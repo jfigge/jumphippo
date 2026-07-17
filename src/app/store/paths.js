@@ -22,7 +22,7 @@
  *
  *   tunnels.json           ← ordered list of tunnel definitions (secrets sealed)
  *   settings.json          ← app-wide preferences (theme, defaults, launch-at-login)
- *   known-hosts.json       ← Port-Hippo-accepted SSH host-key fingerprints (TOFU)
+ *   known-hosts.json       ← Jump-Hippo-accepted SSH host-key fingerprints (TOFU)
  *   secret-storage.json    ← UNENCRYPTED secret-storage mode config (read pre-decrypt)
  *   secret.key             ← 0600 random app key for "app-key" storage mode
  */
@@ -48,7 +48,7 @@ class Paths {
     return path.join(this.dataDir, "settings.json");
   }
 
-  /** Port-Hippo-accepted SSH host-key fingerprints (trust-on-first-use). */
+  /** Jump-Hippo-accepted SSH host-key fingerprints (trust-on-first-use). */
   knownHostsPath() {
     return path.join(this.dataDir, "known-hosts.json");
   }

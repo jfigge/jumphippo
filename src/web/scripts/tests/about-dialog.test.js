@@ -26,7 +26,7 @@ resetDom();
 const tick = () => new Promise((r) => setTimeout(r, 0));
 
 function stubBridge() {
-  window.porthippo = {
+  window.jumphippo = {
     getVersion: async () => "1.2.3",
     platform: "darwin",
     arch: "arm64",
@@ -41,7 +41,7 @@ test("open() mounts a branded card with name, subtitle and Close", async () => {
 
   const root = document.querySelector(".about-dialog");
   assert.ok(root, "about dialog mounted");
-  assert.equal(root.querySelector(".about-name").textContent, "Port Hippo");
+  assert.equal(root.querySelector(".about-name").textContent, "Jump Hippo");
   assert.ok(root.querySelector(".about-subtitle").textContent.length > 0);
   assert.ok(root.querySelector(".about-logo"), "logo present");
   assert.ok(root.querySelector(".about-close"), "close button present");
@@ -73,7 +73,7 @@ test("the (i) button toggles the version/build details from the bridge", async (
 });
 
 test("falls back to a dev-build label when no version is available", async () => {
-  window.porthippo = { getVersion: async () => null };
+  window.jumphippo = { getVersion: async () => null };
   AboutDialog.open();
   await tick();
 

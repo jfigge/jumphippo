@@ -24,7 +24,7 @@ is kept as the record of what a full build would entail.
 ## Context
 
 Depends on: **20** (SSH tunnel engine — listener, `connectChain`, relay), **30** (stats +
-`porthippo:tunnel-state` broadcast), **45** (the detail-panel breadcrumb), **100** (the
+`jumphippo:tunnel-state` broadcast), **45** (the detail-panel breadcrumb), **100** (the
 `probeChain` per-hop `{status, reason}` model it mirrors). No data-model change.
 
 The `TunnelDetail` panel titles the selected tunnel with a **route breadcrumb** — the local
@@ -86,9 +86,9 @@ node goes red + cross and hovering it shows the connection error.
   //   idle    → not (yet) attempted / disarmed  (neutral; no icon)
   ```
 
-  `route` rides the **existing `porthippo:tunnel-state` broadcast only** — that event already
+  `route` rides the **existing `jumphippo:tunnel-state` broadcast only** — that event already
   fires at every point a node changes (listener bind, each hop, each forward), so no new
-  channel and no bloat on the 1 s `porthippo:stats` heartbeat. `reason` strings are host/port-
+  channel and no bloat on the 1 s `jumphippo:stats` heartbeat. `reason` strings are host/port-
   level (exactly what the breadcrumb already prints) and **never** a password, passphrase, or
   key — the same redaction posture as everywhere else.
 
@@ -186,7 +186,7 @@ node goes red + cross and hovering it shows the connection error.
   node exposes an `aria-label`; a failed node is keyboard-focusable and reveals its reason.
 - The chevron between two nodes reflects the link and marks where a break occurred.
 - No `reason`, log, or diagnostic gains a secret (host/port only). No new IPC channel; the
-  `porthippo:stats` heartbeat is unchanged. `make fmt && make lint && make test` green.
+  `jumphippo:stats` heartbeat is unchanged. `make fmt && make lint && make test` green.
 
 ## Constraints
 

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <!--
-  Hardened-runtime entitlements for the Port Hippo Electron app.
+  Hardened-runtime entitlements for the Jump Hippo Electron app.
 
   Applied to the main app bundle AND inherited by the nested helper
   executables (electron-builder `mac.entitlements` + `mac.entitlementsInherit`,

@@ -17,7 +17,7 @@
 // jsdom-setup.js — a fresh DOM per test. The renderer components reference the
 // bare globals `window`/`document`/`CustomEvent`, so `resetDom()` installs a new
 // jsdom window onto Node's globals (isolating window-level listeners between
-// tests) and returns it so the test can attach `window.porthippo` stubs.
+// tests) and returns it so the test can attach `window.jumphippo` stubs.
 
 import { JSDOM } from "jsdom";
 

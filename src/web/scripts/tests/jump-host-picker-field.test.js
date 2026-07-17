@@ -32,16 +32,16 @@ function stub(jumps) {
 
 async function mount(jumps, onChange) {
   resetDom();
-  const porthippo = stub(
+  const jumphippo = stub(
     jumps || [
       { id: "j1", label: "relay1", host: "r1", port: 22 },
       { id: "j2", label: "relay2", host: "r2", port: 22 },
     ],
   );
-  const picker = new JumpHostPickerField({ porthippo, onChange });
+  const picker = new JumpHostPickerField({ jumphippo, onChange });
   document.body.appendChild(picker.element);
   await picker.load();
-  return { picker, porthippo };
+  return { picker, jumphippo };
 }
 
 const addSelect = (p) => p.element.querySelector(".jumps-add-select");
@@ -86,12 +86,12 @@ test("reorder + remove keep the chain in sync", async () => {
 
 test("refresh prunes a chain entry whose jump host was deleted", async () => {
   const emitted = [];
-  const { picker, porthippo } = await mount(undefined, (ids) =>
+  const { picker, jumphippo } = await mount(undefined, (ids) =>
     emitted.push(ids),
   );
   picker.setValue(["j1", "j2"]);
-  porthippo._list.splice(0, 1); // delete j1
-  window.dispatchEvent(new CustomEvent("porthippo:jumphosts-changed"));
+  jumphippo._list.splice(0, 1); // delete j1
+  window.dispatchEvent(new CustomEvent("jumphippo:jumphosts-changed"));
   await flush();
   assert.deepEqual(picker.value, ["j2"]);
 });

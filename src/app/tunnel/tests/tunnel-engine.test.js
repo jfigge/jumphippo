@@ -617,7 +617,7 @@ test("re-arming a tunnel stuck in error (transient bind conflict) recovers it", 
   engine = new TunnelEngine({
     getStores: () => fakeStores([def]),
     broadcast: (channel, payload) => {
-      if (channel === "porthippo:hostkey-unknown") {
+      if (channel === "jumphippo:hostkey-unknown") {
         engine.trustHostKey(payload.promptId);
       }
     },
@@ -677,10 +677,10 @@ test("an unknown host key holds the connection pending until the user trusts it"
     const client = await connectLocal(localPort); // triggers the lazy connect + prompt
 
     await waitFor(() =>
-      events.some((e) => e.channel === "porthippo:hostkey-unknown"),
+      events.some((e) => e.channel === "jumphippo:hostkey-unknown"),
     );
     const prompt = events.find(
-      (e) => e.channel === "porthippo:hostkey-unknown",
+      (e) => e.channel === "jumphippo:hostkey-unknown",
     ).payload;
     assert.ok(prompt.promptId);
     assert.match(prompt.fingerprint, /^SHA256:/);

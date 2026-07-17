@@ -1,13 +1,13 @@
 # Feature 80 — Docs, user guide & project hygiene
 
 ## Context
-Port Hippo is shippable (Feature 70) but under-documented. Rest Hippo keeps a single
+Jump Hippo is shippable (Feature 70) but under-documented. Rest Hippo keeps a single
 Markdown source (`src/web/docs/*.md`) that feeds **both** an in-app user guide (a
 `DocsViewer` window) **and** the hosted guide on the website (`scripts/build-docs.mjs`
 renders the same Markdown into `website/docs/*.html`, auto-published by `deploy-site.yml`),
 so the two can never drift. It also carries the open-source project hygiene files
 (`README`, `CONTRIBUTING`, `SECURITY`, `NOTICE`, `DCO`, export-compliance notes). This
-final stage brings that documentation layer to Port Hippo, tuned to a security-sensitive
+final stage brings that documentation layer to Jump Hippo, tuned to a security-sensitive
 tunnelling tool.
 
 ## Goal
@@ -28,7 +28,7 @@ release.
 - **Security guidance is a first-class page.** Because this app holds SSH credentials and
   forwards ports, the guide must explicitly cover: loopback-vs-LAN binding, host-key
   trust/TOFU and what a "changed key" warning means, where secrets are stored and how
-  they're encrypted, agent vs key vs password trade-offs, and that Port Hippo never phones
+  they're encrypted, agent vs key vs password trade-offs, and that Jump Hippo never phones
   home.
 - **Guide pages (initial set):** `getting-started.md`, `defining-tunnels.md` (local port,
   destination, SSH server), `jump-hosts.md` (multi-hop chains), `authentication.md`
@@ -61,7 +61,7 @@ release.
    already runs `build-docs.mjs`); add a "Docs" link in the website nav; confirm the hosted
    guide renders.
 5. **README + hygiene files.** Write `README.md` (positioning, screenshot/gif, download
-   badges/links to porthippo.com, build-from-source via `make`, security summary),
+   badges/links to jumphippo.com, build-from-source via `make`, security summary),
    `CONTRIBUTING.md`, `SECURITY.md`, `NOTICE`, `DCO`, and
    `packaging/export-compliance.md`. Cross-link the DCO requirement enforced by
    `dco.yml` (Feature 70).

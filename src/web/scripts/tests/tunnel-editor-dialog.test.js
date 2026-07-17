@@ -34,7 +34,7 @@ function stub(existing = []) {
 function mount({ existing = [], onSubmit, onSaved } = {}) {
   resetDom();
   return new TunnelEditorDialog({
-    porthippo: stub(existing),
+    jumphippo: stub(existing),
     onSubmit,
     onSaved,
   });
@@ -538,7 +538,7 @@ const waitUntil = async (pred, timeout = 2000) => {
 function mountResolve({ lookup, bindcheck, test: testFn, existing = [] } = {}) {
   resetDom();
   const calls = { lookup: [], bindcheck: [], test: [], cancel: 0 };
-  const porthippo = {
+  const jumphippo = {
     ...stub(existing),
     resolve: {
       lookup: async (host) => {
@@ -561,7 +561,7 @@ function mountResolve({ lookup, bindcheck, test: testFn, existing = [] } = {}) {
       },
     },
   };
-  const dlg = new TunnelEditorDialog({ porthippo });
+  const dlg = new TunnelEditorDialog({ jumphippo });
   return { dlg, calls };
 }
 
@@ -673,7 +673,7 @@ test("a failing resolution never blocks the save", async () => {
   const calls = [];
   resetDom();
   const dlg = new TunnelEditorDialog({
-    porthippo: {
+    jumphippo: {
       ...stub(),
       resolve: {
         lookup: async () => ({ resolved: false }),

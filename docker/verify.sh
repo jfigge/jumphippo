@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Prove the sandbox topology end-to-end WITHOUT Port Hippo: reach the jump host's
+# Prove the sandbox topology end-to-end WITHOUT Jump Hippo: reach the jump host's
 # echo directly, then the dest host's echo through the jump (ProxyJump). Exits
 # non-zero if either hop fails. Requires the containers to be running + the key.
 set -euo pipefail
@@ -7,7 +7,7 @@ set -euo pipefail
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck disable=SC1091
 set -a; . "${DIR}/.env"; set +a
-KEY="${DIR}/keys/id_porthippo"
+KEY="${DIR}/keys/id_jumphippo"
 
 # Host-key checks are disabled because host keys change on every recreate; this is
 # a throwaway local rig. NB: these options must be repeated for the jump hop too —
@@ -62,7 +62,7 @@ echo "${out}" | grep -q ping && ok "dynamic reach OK (jump → sealed dest)" || 
 
 # E) REMOTE (reverse) forwarding: bind a port ON the jump and forward it back to a
 # host-side echo, then trigger it from the jump — a self-contained `ssh -R` mirror
-# of Port Hippo's remote tunnel. Uses this repo's node host-echo.js as the target.
+# of Jump Hippo's remote tunnel. Uses this repo's node host-echo.js as the target.
 echo "E) reverse forward (jump binds :${REMOTE_BIND_PORT} → host echo :${HOST_ECHO_PORT})..."
 node "${DIR}/host-echo.js" "${HOST_ECHO_PORT}" >/dev/null 2>&1 &
 HOST_ECHO_PID=$!

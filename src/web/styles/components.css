@@ -1374,7 +1374,7 @@
   color: var(--color-warning);
 }
 
-/* Sub-tabs inside the Host Keys panel: "Port Hippo" (managed) vs "Operating
+/* Sub-tabs inside the Host Keys panel: "Jump Hippo" (managed) vs "Operating
    System" (~/.ssh/known_hosts, read-only). Underline tabs, like .settings-nav. */
 .hostkeys-tabs {
   display: flex;

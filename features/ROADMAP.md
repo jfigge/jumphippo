@@ -1,6 +1,6 @@
-# Port Hippo — Implementation Roadmap
+# Jump Hippo — Implementation Roadmap
 
-**Port Hippo** is a cross-platform desktop app that manages SSH tunnels. It binds a
+**Jump Hippo** is a cross-platform desktop app that manages SSH tunnels. It binds a
 local port, and **on first access to that port it automatically opens an SSH tunnel**
 to a destination host/port (optionally through a chain of jump hosts), holds the
 tunnel open while any connection is live, and **tears the SSH connection down once the
@@ -30,7 +30,7 @@ have landed; each names its prerequisites in **Context**.
 
 | #  | Plan | What it delivers | Depends on |
 |----|------|------------------|------------|
-| 00 | [Project scaffold & build system](00-project-scaffold.md) | Repo layout, Makefile, `src/app`+`src/web` Electron shell, two-view skeleton, `window.porthippo` IPC bridge, lint/format/test/build/`make debug`, Apache-2.0 + license-header guard | — |
+| 00 | [Project scaffold & build system](00-project-scaffold.md) | Repo layout, Makefile, `src/app`+`src/web` Electron shell, two-view skeleton, `window.jumphippo` IPC bridge, lint/format/test/build/`make debug`, Apache-2.0 + license-header guard | — |
 | 10 | [Tunnel data model & store](10-tunnel-data-model.md) | Tunnel-definition schema (local port, destination, SSH server, jump-host chain, auth), encrypted-at-rest file store, CRUD IPC, migrations, tests | 00 |
 | 20 | [SSH tunnel engine](20-ssh-tunnel-engine.md) | The core: per-tunnel local listener, lazy on-demand SSH connect via `ssh2`, `forwardOut` relay with byte counting, connection ref-counting + linger teardown, multi-hop jump-host chaining, host-key verification, arm/disarm lifecycle | 10 |
 | 30 | [Monitoring & stats](30-monitoring-and-stats.md) | Per-tunnel metrics (rates, totals, last-active, open time, connection count, state), throttled main→renderer stats stream, pause/resume without teardown | 20 |
@@ -51,7 +51,7 @@ others except where noted.
 | #  | Plan | What it delivers | Depends on |
 |----|------|------------------|------------|
 | 110 | [Reverse & dynamic forwarding](110-forwarding-types.md) | A `type` on each tunnel — **local** (today), **remote** (`ssh -R`, bind a port on the far end), **dynamic** (`ssh -D`, a local SOCKS5 proxy) — reusing the host-key TOFU + stats paths; closes the biggest capability gap. No new dependency (we own the SOCKS5 handshake) | 20, 30, 45 |
-| 120 | [Import & export](120-import-export.md) | A round-trippable `.porthippo` bundle (tunnels + credentials + jump hosts) with secrets stripped or sealed under a portable passphrase (`encp:v1:`), reviewed merge/replace import, and a read-only `~/.ssh/config` importer that proposes drafts | 10, 45, 90 |
+| 120 | [Import & export](120-import-export.md) | A round-trippable `.jumphippo` bundle (tunnels + credentials + jump hosts) with secrets stripped or sealed under a portable passphrase (`encp:v1:`), reviewed merge/replace import, and a read-only `~/.ssh/config` importer that proposes drafts | 10, 45, 90 |
 | 130 | [Failure notifications & health](130-failure-notifications-and-health.md) | Desktop notifications on drop/recover/give-up (coalesced, opt-out), ssh2 keepalive probing, a configurable reconnect policy (per-tunnel override), a reconnect countdown in Monitoring, and a tray health rollup — surfacing the engine's existing backoff, not rewriting it | 20, 30, 50, 60 |
 | 140 | [Tunnel groups & bulk actions](140-tunnel-groups.md) | A reusable `group` (label + colour + order) with optional single membership, collapsible grouped lists with arm/pause-all headers, multi-select bulk actions, and per-group tray submenus; the engine stays group-unaware (bulk = id-set calls) | 45, 50, 60 |
 | 150 | [Scheduling & auto-arm](150-scheduling-and-auto-arm.md) | Optional per-tunnel/group **rules** — a time window and/or a network trigger (SSID allow-list / reachability probe) — evaluated by a main-side, edge-triggered scheduler that respects manual override; all detection local, read-only, fail-safe | 20, 30, 60, 140 |
@@ -65,11 +65,11 @@ others except where noted.
   elements, `block--modifier` state — never bare `.selected`.
 - **Process split.** All native I/O — sockets, SSH, filesystem, keychain — lives in the
   **main** process (`src/app`). The sandboxed renderer talks only over the
-  `window.porthippo.*` IPC bridge; keep `main.js` handlers and `preload.js` exports in
+  `window.jumphippo.*` IPC bridge; keep `main.js` handlers and `preload.js` exports in
   lockstep.
 - **Events vs callbacks.** Parent-owned widget reporting to its creator → constructor
   callback; app-wide state change any number of panels may react to → a global
-  `porthippo:*` `CustomEvent`. No event-bus library.
+  `jumphippo:*` `CustomEvent`. No event-bus library.
 - **Security first.** Bind local listeners to `127.0.0.1` by default (LAN exposure is an
   explicit, warned opt-in). Encrypt stored passwords/passphrases at rest. Verify SSH
   host keys against `known_hosts` (trust-on-first-use with an explicit prompt); never
@@ -80,10 +80,10 @@ others except where noted.
   each plan's Verify section also drives the real app via `make debug`.
 
 ## Naming & identity (use consistently across all stages)
-- Product name **Port Hippo**; npm package `porthippo`; Electron `appId`
-  `com.porthippo.app`; repo `github.com/jfigge/porthippo`.
-- IPC bridge object **`window.porthippo`**; global renderer events prefixed
-  **`porthippo:`**.
-- App icon source `src/web/porthippo-icon.svg`; download site domain **porthippo.com**
+- Product name **Jump Hippo**; npm package `jumphippo`; Electron `appId`
+  `com.jumphippo.app`; repo `github.com/jfigge/jumphippo`.
+- IPC bridge object **`window.jumphippo`**; global renderer events prefixed
+  **`jumphippo:`**.
+- App icon source `src/web/jumphippo-icon.svg`; download site domain **jumphippo.com**
   (via `website/CNAME`), falling back to the `*.github.io` Pages URL until the domain is
   configured.

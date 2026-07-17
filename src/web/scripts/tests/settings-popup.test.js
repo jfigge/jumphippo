@@ -51,7 +51,7 @@ function stubBridge(overrides = {}) {
     hasPassword: false,
     ...secState,
   };
-  const porthippo = {
+  const jumphippo = {
     settings: {
       get: async () => ({ ...settings }),
       set: (patch) => {
@@ -85,13 +85,13 @@ function stubBridge(overrides = {}) {
       },
     },
   };
-  return { porthippo, calls };
+  return { jumphippo, calls };
 }
 
 // Open the popup and reveal its Security tab, returning the mounted root once the
 // async state load has settled.
-async function openSecurity(porthippo) {
-  const popup = new SettingsPopup({ porthippo });
+async function openSecurity(jumphippo) {
+  const popup = new SettingsPopup({ jumphippo });
   await popup.open();
   const root = document.querySelector(".popup-settings");
   root
@@ -106,8 +106,8 @@ const changeEvent = () => new window.Event("change", { bubbles: true });
 
 test("open populates controls from the loaded settings", async () => {
   PopupManager.close(); // start from an idle host (popups now queue, not replace)
-  const { porthippo } = stubBridge({ theme: "dark", defaultLingerMs: 2500 });
-  const popup = new SettingsPopup({ porthippo });
+  const { jumphippo } = stubBridge({ theme: "dark", defaultLingerMs: 2500 });
+  const popup = new SettingsPopup({ jumphippo });
   await popup.open();
 
   const el = document.querySelector(".popup-settings");
@@ -119,12 +119,12 @@ test("open populates controls from the loaded settings", async () => {
 
 test("changing a control persists the full settings and broadcasts", async () => {
   PopupManager.close();
-  const { porthippo, calls } = stubBridge();
-  const popup = new SettingsPopup({ porthippo });
+  const { jumphippo, calls } = stubBridge();
+  const popup = new SettingsPopup({ jumphippo });
   await popup.open();
 
   const events = [];
-  window.addEventListener("porthippo:settings-changed", (e) =>
+  window.addEventListener("jumphippo:settings-changed", (e) =>
     events.push(e.detail),
   );
 
@@ -140,7 +140,7 @@ test("changing a control persists the full settings and broadcasts", async () =>
 
 test("the reliability panel round-trips notification + reconnect settings (Feature 130)", async () => {
   PopupManager.close();
-  const { porthippo, calls } = stubBridge({
+  const { jumphippo, calls } = stubBridge({
     notificationsEnabled: true,
     notifyOnDrop: true,
     notifyCooldownMs: 60000,
@@ -149,7 +149,7 @@ test("the reliability panel round-trips notification + reconnect settings (Featu
     reconnectMaxMs: 30000,
     reconnectMaxAttempts: 6,
   });
-  const popup = new SettingsPopup({ porthippo });
+  const popup = new SettingsPopup({ jumphippo });
   await popup.open();
   const el = document.querySelector(".popup-settings");
 
@@ -170,8 +170,8 @@ test("the reliability panel round-trips notification + reconnect settings (Featu
 
 test("switching tabs shows the matching panel", async () => {
   PopupManager.close(); // start from an idle host (popups now queue, not replace)
-  const { porthippo } = stubBridge();
-  const popup = new SettingsPopup({ porthippo });
+  const { jumphippo } = stubBridge();
+  const popup = new SettingsPopup({ jumphippo });
   await popup.open();
 
   const el = document.querySelector(".popup-settings");
@@ -196,8 +196,8 @@ test("switching tabs shows the matching panel", async () => {
 
 test("the copy-diagnostics button calls the bridge", async () => {
   PopupManager.close();
-  const { porthippo, calls } = stubBridge();
-  const popup = new SettingsPopup({ porthippo });
+  const { jumphippo, calls } = stubBridge();
+  const popup = new SettingsPopup({ jumphippo });
   await popup.open();
 
   const btn = [...document.querySelectorAll(".settings-footer .btn")].find(
@@ -211,8 +211,8 @@ test("the copy-diagnostics button calls the bridge", async () => {
 
 test("the Security tab loads the current mode and reflects it", async () => {
   PopupManager.close();
-  const { porthippo } = stubBridge();
-  const root = await openSecurity(porthippo);
+  const { jumphippo } = stubBridge();
+  const root = await openSecurity(jumphippo);
 
   assert.equal(
     root.querySelector('.settings-panel[data-panel="security"]').hidden,
@@ -231,8 +231,8 @@ test("the Security tab loads the current mode and reflects it", async () => {
 
 test("OS keychain is disabled when safeStorage is unavailable", async () => {
   PopupManager.close();
-  const { porthippo } = stubBridge({ secretStorage: { available: false } });
-  const root = await openSecurity(porthippo);
+  const { jumphippo } = stubBridge({ secretStorage: { available: false } });
+  const root = await openSecurity(jumphippo);
   assert.equal(
     root.querySelector('.security-mode-radio[value="os-keychain"]').disabled,
     true,
@@ -241,8 +241,8 @@ test("OS keychain is disabled when safeStorage is unavailable", async () => {
 
 test("picking a no-password mode shows an inline confirm; confirming calls setMode", async () => {
   PopupManager.close();
-  const { porthippo, calls } = stubBridge();
-  const root = await openSecurity(porthippo);
+  const { jumphippo, calls } = stubBridge();
+  const root = await openSecurity(jumphippo);
 
   const keychain = root.querySelector(
     '.security-mode-radio[value="os-keychain"]',
@@ -261,8 +261,8 @@ test("picking a no-password mode shows an inline confirm; confirming calls setMo
 
 test("setting a master password validates the match before switching", async () => {
   PopupManager.close();
-  const { porthippo, calls } = stubBridge();
-  const root = await openSecurity(porthippo);
+  const { jumphippo, calls } = stubBridge();
+  const root = await openSecurity(jumphippo);
 
   const master = root.querySelector(
     '.security-mode-radio[value="master-password"]',
@@ -296,10 +296,10 @@ test("setting a master password validates the match before switching", async () 
 
 test("a locked session shows the unlock row and sends the password to unlock", async () => {
   PopupManager.close();
-  const { porthippo, calls } = stubBridge({
+  const { jumphippo, calls } = stubBridge({
     secretStorage: { mode: "master-password", locked: true, hasPassword: true },
   });
-  const root = await openSecurity(porthippo);
+  const root = await openSecurity(jumphippo);
 
   assert.equal(root.querySelector(".security-locked-row").hidden, false);
 

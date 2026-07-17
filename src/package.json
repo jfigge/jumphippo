@@ -1,11 +1,11 @@
 {
-  "name": "porthippo",
+  "name": "jumphippo",
   "version": "0.6.0",
   "description": "On-demand SSH tunnel manager",
-  "homepage": "https://github.com/jfigge/porthippo",
+  "homepage": "https://github.com/jfigge/jumphippo",
   "repository": {
     "type": "git",
-    "url": "https://github.com/jfigge/porthippo.git"
+    "url": "https://github.com/jfigge/jumphippo.git"
   },
   "author": {
     "name": "Jason Figge",
@@ -45,14 +45,14 @@
     "node": ">=20.0.0"
   },
   "build": {
-    "appId": "com.porthippo.app",
-    "productName": "Port Hippo",
+    "appId": "com.jumphippo.app",
+    "productName": "Jump Hippo",
     "copyright": "Copyright © 2026 Jason Figge",
-    "artifactName": "Port-Hippo-${version}-${arch}.${ext}",
+    "artifactName": "Jump-Hippo-${version}-${arch}.${ext}",
     "publish": {
       "provider": "github",
       "owner": "jfigge",
-      "repo": "porthippo"
+      "repo": "jumphippo"
     },
     "directories": {
       "output": "dist"
@@ -91,6 +91,52 @@
         }
       ]
     },
+    "mas": {
+      "type": "distribution",
+      "extendInfo": {
+        "ITSAppUsesNonExemptEncryption": false
+      },
+      "category": "public.app-category.developer-tools",
+      "icon": "web/icons/1024x1024.png",
+      "notarize": false,
+      "hardenedRuntime": false,
+      "gatekeeperAssess": false,
+      "entitlements": "packaging/entitlements.mas.plist",
+      "entitlementsInherit": "packaging/entitlements.mas.inherit.plist",
+      "provisioningProfile": "packaging/embedded.provisionprofile",
+      "target": [
+        {
+          "target": "pkg",
+          "arch": [
+            "universal"
+          ]
+        }
+      ]
+    },
+    "masDev": {
+      "type": "development",
+      "notarize": false,
+      "entitlements": "packaging/entitlements.mas.plist",
+      "entitlementsInherit": "packaging/entitlements.mas.inherit.plist",
+      "provisioningProfile": "packaging/development.provisionprofile"
+    },
+    "appx": {
+      "identityName": "FILL-LATER-PartnerCenter-IdentityName",
+      "publisher": "CN=FILL-LATER-PartnerCenter-Publisher",
+      "publisherDisplayName": "Jason Figge",
+      "applicationId": "JumpHippo",
+      "backgroundColor": "#1c1c1c",
+      "showNameOnTiles": true,
+      "languages": [
+        "en-US",
+        "de-DE",
+        "es-ES",
+        "fr-FR",
+        "it-IT",
+        "ja-JP",
+        "zh-CN"
+      ]
+    },
     "win": {
       "icon": "web/icons/256x256.png",
       "signtoolOptions": {
@@ -117,7 +163,7 @@
       ]
     },
     "nsis": {
-      "artifactName": "Port-Hippo-Setup-${version}-${arch}.${ext}"
+      "artifactName": "Jump-Hippo-Setup-${version}-${arch}.${ext}"
     },
     "linux": {
       "category": "Network",

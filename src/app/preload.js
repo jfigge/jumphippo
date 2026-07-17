@@ -15,7 +15,7 @@
  */
 
 // preload.js — runs in the renderer before page content loads and exposes the
-// single, narrow window.porthippo bridge. Every later feature extends THIS
+// single, narrow window.jumphippo bridge. Every later feature extends THIS
 // object (tunnels.*, settings.*, stats, …) and must keep it in lockstep with the
 // ipcMain handlers in main.js.
 //
@@ -27,7 +27,7 @@
 
 const { contextBridge, ipcRenderer, webFrame } = require("electron");
 
-contextBridge.exposeInMainWorld("porthippo", {
+contextBridge.exposeInMainWorld("jumphippo", {
   // Static platform info — available synchronously from the sandboxed preload's
   // process shim, so no IPC round-trip is needed.
   platform: process.platform,
@@ -64,7 +64,7 @@ contextBridge.exposeInMainWorld("porthippo", {
 
     // ── Engine intents (Feature 20) ─────────────────────────────────────────
     // The renderer only sends intents; live state arrives via the
-    // `porthippo:tunnel-state` / `porthippo:stats` events below. Arm binds the
+    // `jumphippo:tunnel-state` / `jumphippo:stats` events below. Arm binds the
     // local listener (SSH is opened lazily on first access); `pause`/`resume`
     // freeze and restore traffic without tearing SSH down or altering the stored
     // definition.
@@ -168,7 +168,7 @@ contextBridge.exposeInMainWorld("porthippo", {
   // resolving to a per-hop `{ hopLabel, host, port, status, reason? }` result;
   // credential decryption and every socket stay in main, so nothing here carries a
   // secret. Host-key prompts raised during a test arrive over the existing
-  // porthippo:hostkey-unknown event. `cancel` aborts an in-flight test.
+  // jumphippo:hostkey-unknown event. `cancel` aborts an in-flight test.
   resolve: {
     lookup: (host) => ipcRenderer.invoke("resolve:lookup", { host }),
     bindcheck: (host) => ipcRenderer.invoke("resolve:bindcheck", { host }),
@@ -192,7 +192,7 @@ contextBridge.exposeInMainWorld("porthippo", {
   // ── Scheduling & auto-arm (Feature 150) ───────────────────────────────────
   // `status` returns which tunnels the scheduler currently manages, each one's
   // next time-window transition, and whether the user has overridden it until
-  // then. Live changes arrive one-way over the porthippo:schedule event (below).
+  // then. Live changes arrive one-way over the jumphippo:schedule event (below).
   // No SSID / network name / probe result ever crosses — only ids + timings.
   schedule: {
     status: () => ipcRenderer.invoke("schedule:status"),
@@ -206,7 +206,7 @@ contextBridge.exposeInMainWorld("porthippo", {
   // re-encryption happen in main. Nothing here ever carries a decrypted secret or
   // key material — only the mode/lock status, and (write-only, inbound) a master
   // password to set or verify. A mode/unlock change is announced back via the
-  // one-way porthippo:secret-storage-changed event (wired below).
+  // one-way jumphippo:secret-storage-changed event (wired below).
   secretStorage: {
     getMode: () => ipcRenderer.invoke("secret-storage:get-mode"),
     // payload: { mode, password? }  →  { ok, reason?, failures? }
@@ -221,7 +221,7 @@ contextBridge.exposeInMainWorld("porthippo", {
   // ── Import / export (Feature 120) ─────────────────────────────────────────
   // The renderer only picks files (via the native dialogs main opens) and reviews
   // the proposed diff; all bundle building, crypto, SSH-config parsing and store
-  // writes stay in main. `export` builds a `.porthippo` bundle (secrets stripped,
+  // writes stay in main. `export` builds a `.jumphippo` bundle (secrets stripped,
   // or sealed under a passphrase). `previewBundle` parses a chosen bundle and
   // returns its add/update/conflict diff; `importBundle` applies it (merge/replace).
   // `scanSshConfig` parses a chosen ~/.ssh/config into proposed drafts;
@@ -237,7 +237,7 @@ contextBridge.exposeInMainWorld("porthippo", {
 
   // ── Auto-update (Feature 70) ──────────────────────────────────────────────
   // The renderer only sends intents; lifecycle events arrive one-way over the
-  // `porthippo:update-*` events (re-dispatched below). `check` runs a manual
+  // `jumphippo:update-*` events (re-dispatched below). `check` runs a manual
   // update check; `install` restarts to apply a downloaded update (user-confirmed
   // from the "update ready" prompt). Neither carries any secret.
   updater: {
@@ -248,22 +248,22 @@ contextBridge.exposeInMainWorld("porthippo", {
 
 // ── Main → renderer push events ───────────────────────────────────────────────
 // The engine pushes live state one-way over these channels. We re-dispatch each as
-// a global `porthippo:*` CustomEvent (matching the renderer's app-wide event
+// a global `jumphippo:*` CustomEvent (matching the renderer's app-wide event
 // convention) so any panel can `window.addEventListener(...)`. Only the serializable
 // payload crosses; the raw Electron event is stripped. Payloads carry fingerprints
 // only — never secrets or key material.
 for (const channel of [
-  "porthippo:tunnel-state",
-  "porthippo:stats",
-  "porthippo:hostkey-unknown",
-  "porthippo:hostkey-changed",
+  "jumphippo:tunnel-state",
+  "jumphippo:stats",
+  "jumphippo:hostkey-unknown",
+  "jumphippo:hostkey-changed",
   // Feature 90: the at-rest secret-storage mode / lock status changed. Carries
   // { mode, locked, available, hasPassword } — never a secret or key material.
-  "porthippo:secret-storage-changed",
+  "jumphippo:secret-storage-changed",
   // Feature 150: the scheduler re-evaluated. Carries { enabled, tunnels: [{ id,
   // wanted, overridden, nextTransitionAt, nextTransitionKind }] } — ids + timings
   // only, never an SSID / network name / probe result.
-  "porthippo:schedule",
+  "jumphippo:schedule",
 ]) {
   ipcRenderer.on(channel, (_event, detail) => {
     window.dispatchEvent(new CustomEvent(channel, { detail }));
@@ -272,16 +272,16 @@ for (const channel of [
 
 // ── App-menu / tray commands (Feature 60) ─────────────────────────────────────
 // Native chrome the main process owns (the app menu + tray) drives the renderer
-// by sending a `menu:*` command, which we re-dispatch as a global `porthippo:*`
+// by sending a `menu:*` command, which we re-dispatch as a global `jumphippo:*`
 // CustomEvent that app.js binds — the same one-way convention as above. Engine
 // intents (arm-all / disarm-all) are handled directly in main and don't appear
 // here; these are the commands only the renderer can carry out.
 const MENU_EVENT_MAP = {
-  "menu:open-settings": "porthippo:open-settings",
-  "menu:new-tunnel": "porthippo:new-tunnel",
-  "menu:show-about": "porthippo:show-about",
+  "menu:open-settings": "jumphippo:open-settings",
+  "menu:new-tunnel": "jumphippo:new-tunnel",
+  "menu:show-about": "jumphippo:show-about",
   // View ▸ Increase/Decrease/Reset Font Size — payload is "in" | "out" | "reset".
-  "menu:font-change": "porthippo:ui-font-change",
+  "menu:font-change": "jumphippo:ui-font-change",
 };
 for (const [channel, domEvent] of Object.entries(MENU_EVENT_MAP)) {
   ipcRenderer.on(channel, (_event, payload) => {
@@ -291,16 +291,16 @@ for (const [channel, domEvent] of Object.entries(MENU_EVENT_MAP)) {
 
 // ── Auto-update lifecycle (Feature 70) ────────────────────────────────────────
 // updater.js pushes each electron-updater event over an `updater:*` channel; we
-// re-dispatch as a `porthippo:update-*` CustomEvent (same one-way convention) so
+// re-dispatch as a `jumphippo:update-*` CustomEvent (same one-way convention) so
 // the renderer's UpdateNotifier can surface toasts + the "restart to install"
 // prompt. Payloads carry only version / progress / message — never a secret.
 const UPDATE_EVENT_MAP = {
-  "updater:checking": "porthippo:update-checking",
-  "updater:available": "porthippo:update-available",
-  "updater:not-available": "porthippo:update-not-available",
-  "updater:progress": "porthippo:update-progress",
-  "updater:downloaded": "porthippo:update-downloaded",
-  "updater:error": "porthippo:update-error",
+  "updater:checking": "jumphippo:update-checking",
+  "updater:available": "jumphippo:update-available",
+  "updater:not-available": "jumphippo:update-not-available",
+  "updater:progress": "jumphippo:update-progress",
+  "updater:downloaded": "jumphippo:update-downloaded",
+  "updater:error": "jumphippo:update-error",
 };
 for (const [channel, domEvent] of Object.entries(UPDATE_EVENT_MAP)) {
   ipcRenderer.on(channel, (_event, payload) => {

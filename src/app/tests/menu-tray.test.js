@@ -69,7 +69,7 @@ test("installAppMenu builds and installs a menu and wires custom items", () => {
   };
 
   const menu = installAppMenu({
-    app: { name: "Port Hippo" },
+    app: { name: "Jump Hippo" },
     Menu,
     label,
     actions,
@@ -87,7 +87,7 @@ test("installAppMenu adds a per-group arm-all/disarm-all submenu (Feature 140)",
   const Menu = fakeMenu();
   const fired = [];
   const menu = installAppMenu({
-    app: { name: "Port Hippo" },
+    app: { name: "Jump Hippo" },
     Menu,
     label,
     groups: [{ id: "g1", name: "Work" }],
@@ -108,7 +108,7 @@ test("installAppMenu adds a per-group arm-all/disarm-all submenu (Feature 140)",
 test("installAppMenu omits the Groups submenu when there are no groups", () => {
   const Menu = fakeMenu();
   const menu = installAppMenu({
-    app: { name: "Port Hippo" },
+    app: { name: "Jump Hippo" },
     Menu,
     label,
     actions: {},
@@ -120,12 +120,12 @@ test("the About item routes to the about action (in-app dialog)", () => {
   const Menu = fakeMenu();
   const fired = [];
   const menu = installAppMenu({
-    app: { name: "Port Hippo" },
+    app: { name: "Jump Hippo" },
     Menu,
     label,
     actions: { about: () => fired.push("about") },
   });
-  const about = findItem(menu.template, "About Port Hippo");
+  const about = findItem(menu.template, "About Jump Hippo");
   assert.ok(about, "About item present");
   assert.equal(typeof about.click, "function", "About uses a click handler");
   assert.ok(!about.role, "About is not the native about role");

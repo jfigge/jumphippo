@@ -32,7 +32,7 @@ function stub({ locked = true, unlockResults = [] } = {}) {
   const calls = { unlock: [], getMode: 0 };
   return {
     calls,
-    porthippo: {
+    jumphippo: {
       secretStorage: {
         getMode: async () => {
           calls.getMode += 1;
@@ -55,13 +55,13 @@ function stub({ locked = true, unlockResults = [] } = {}) {
 const modal = () => document.querySelector(".popup-unlock");
 const changed = (detail) =>
   window.dispatchEvent(
-    new CustomEvent("porthippo:secret-storage-changed", { detail }),
+    new CustomEvent("jumphippo:secret-storage-changed", { detail }),
   );
 
 test("a locked store raises the unlock modal on install", async () => {
   resetDom();
-  const { porthippo } = stub({ locked: true });
-  const prompt = new UnlockPrompt({ porthippo }).install();
+  const { jumphippo } = stub({ locked: true });
+  const prompt = new UnlockPrompt({ jumphippo }).install();
   try {
     await tick();
     assert.ok(modal(), "the unlock modal is shown");
@@ -74,8 +74,8 @@ test("a locked store raises the unlock modal on install", async () => {
 
 test("an unlocked store shows no modal", async () => {
   resetDom();
-  const { porthippo } = stub({ locked: false });
-  const prompt = new UnlockPrompt({ porthippo }).install();
+  const { jumphippo } = stub({ locked: false });
+  const prompt = new UnlockPrompt({ jumphippo }).install();
   try {
     await tick();
     assert.equal(modal(), null, "nothing to unlock → no prompt");
@@ -87,8 +87,8 @@ test("an unlocked store shows no modal", async () => {
 
 test("an empty password shows a required error and never calls unlock", async () => {
   resetDom();
-  const { porthippo, calls } = stub({ locked: true });
-  const prompt = new UnlockPrompt({ porthippo }).install();
+  const { jumphippo, calls } = stub({ locked: true });
+  const prompt = new UnlockPrompt({ jumphippo }).install();
   try {
     await tick();
     modal().querySelector(".btn--primary").click();
@@ -105,11 +105,11 @@ test("an empty password shows a required error and never calls unlock", async ()
 
 test("a wrong password keeps the modal open with an error and clears the field", async () => {
   resetDom();
-  const { porthippo, calls } = stub({
+  const { jumphippo, calls } = stub({
     locked: true,
     unlockResults: [{ ok: false, reason: "bad-password" }],
   });
-  const prompt = new UnlockPrompt({ porthippo }).install();
+  const prompt = new UnlockPrompt({ jumphippo }).install();
   try {
     await tick();
     const input = modal().querySelector(".unlock-input");
@@ -134,11 +134,11 @@ test("a wrong password keeps the modal open with an error and clears the field",
 
 test("a correct password unlocks and dismisses the modal", async () => {
   resetDom();
-  const { porthippo, calls } = stub({
+  const { jumphippo, calls } = stub({
     locked: true,
     unlockResults: [{ ok: true }],
   });
-  const prompt = new UnlockPrompt({ porthippo }).install();
+  const prompt = new UnlockPrompt({ jumphippo }).install();
   try {
     await tick();
     modal().querySelector(".unlock-input").value = "hunter2";
@@ -155,8 +155,8 @@ test("a correct password unlocks and dismisses the modal", async () => {
 
 test("'Not now' dismisses without unlocking", async () => {
   resetDom();
-  const { porthippo, calls } = stub({ locked: true });
-  const prompt = new UnlockPrompt({ porthippo }).install();
+  const { jumphippo, calls } = stub({ locked: true });
+  const prompt = new UnlockPrompt({ jumphippo }).install();
   try {
     await tick();
     modal().querySelector(".btn--secondary").click();
@@ -171,8 +171,8 @@ test("'Not now' dismisses without unlocking", async () => {
 
 test("an unlock from elsewhere auto-closes the launch modal", async () => {
   resetDom();
-  const { porthippo } = stub({ locked: true });
-  const prompt = new UnlockPrompt({ porthippo }).install();
+  const { jumphippo } = stub({ locked: true });
+  const prompt = new UnlockPrompt({ jumphippo }).install();
   try {
     await tick();
     assert.ok(modal(), "modal open while locked");

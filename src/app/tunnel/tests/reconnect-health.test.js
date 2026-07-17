@@ -46,9 +46,9 @@ function trackingEngine(defs, { settings } = {}) {
   engine = new TunnelEngine({
     getStores: () => fakeStores(defs, { settings }),
     broadcast: (channel, payload) => {
-      if (channel === "porthippo:hostkey-unknown") {
+      if (channel === "jumphippo:hostkey-unknown") {
         engine.trustHostKey(payload.promptId);
-      } else if (channel === "porthippo:tunnel-state") {
+      } else if (channel === "jumphippo:tunnel-state") {
         snaps.push(payload);
         if (payload.transition) transitions.push(payload.transition);
       }

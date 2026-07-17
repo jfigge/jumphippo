@@ -98,8 +98,8 @@ can't drift. Examples: `:5432 → db.example.com:5432` · `… via bastion` · `
 - **`CredentialPickerField` / `CredentialEditorDialog`** and **`JumpHostPickerField` /
   `JumpHostEditorDialog`** (ordered chain builder). Each picker's inline "New…" opens the matching
   editor; native `<dialog>` STACKING lets a jump-host editor's credential picker open the credential
-  editor on top. On save each editor emits `porthippo:credentials-changed` /
-  `porthippo:jumphosts-changed`, and open pickers refresh (preserving/pruning selections).
+  editor on top. On save each editor emits `jumphippo:credentials-changed` /
+  `jumphippo:jumphosts-changed`, and open pickers refresh (preserving/pruning selections).
 - Validation: `validateDefinition` drives inline field errors; two soft, non-blocking warnings
   (privileged local port, a port already claimed by another tunnel); the store's `IN_USE` guard
   blocks deleting a referenced credential / jump host; empty states throughout.

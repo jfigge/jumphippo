@@ -82,7 +82,7 @@ class Stores {
     return this._groupStore;
   }
 
-  /** Port-Hippo-accepted SSH host-key fingerprints (TOFU). */
+  /** Jump-Hippo-accepted SSH host-key fingerprints (TOFU). */
   knownHostsStore() {
     return this._knownHostsStore;
   }

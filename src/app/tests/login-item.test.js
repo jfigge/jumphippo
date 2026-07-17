@@ -56,19 +56,19 @@ test("macOS/Windows delegate to Electron's setLoginItemSettings", () => {
 });
 
 test("Linux writes and removes a .desktop autostart entry", () => {
-  const home = fs.mkdtempSync(path.join(os.tmpdir(), "porthippo-home-"));
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), "jumphippo-home-"));
   try {
     const item = createLoginItem({
       platform: "linux",
       homedir: () => home,
-      exePath: "/opt/PortHippo/porthippo",
-      appName: "Port Hippo",
+      exePath: "/opt/JumpHippo/jumphippo",
+      appName: "Jump Hippo",
     });
     const desktop = path.join(
       home,
       ".config",
       "autostart",
-      "porthippo.desktop",
+      "jumphippo.desktop",
     );
 
     assert.equal(item.isEnabled(), false);
@@ -76,7 +76,7 @@ test("Linux writes and removes a .desktop autostart entry", () => {
     assert.equal(item.isEnabled(), true);
     const content = fs.readFileSync(desktop, "utf8");
     assert.match(content, /^\[Desktop Entry\]/);
-    assert.match(content, /Exec=\/opt\/PortHippo\/porthippo/);
+    assert.match(content, /Exec=\/opt\/JumpHippo\/jumphippo/);
     assert.match(content, /X-GNOME-Autostart-enabled=true/);
 
     item.set(false);

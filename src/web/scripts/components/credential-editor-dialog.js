@@ -21,7 +21,7 @@
 // Secrets are write-only: an edited credential arrives with `hasSecret` and no
 // value, the secret field shows "•••• set", and only a freshly-typed value is
 // sent (else `hasSecret: true` re-affirms the stored ciphertext). On a successful
-// store write it emits a global `porthippo:credentials-changed` so open pickers
+// store write it emits a global `jumphippo:credentials-changed` so open pickers
 // refresh, and calls back `onSaved(record)` for the opener that launched it.
 
 import { el, clear } from "../dom.js";
@@ -39,7 +39,7 @@ const nextId = () => `cred-secret-${++uid}`;
 
 export class CredentialEditorDialog {
   #dialog;
-  #porthippo;
+  #jumphippo;
   #openKeyFile;
   #onSaved;
 
@@ -55,14 +55,14 @@ export class CredentialEditorDialog {
 
   /**
    * @param {object} [opts]
-   * @param {object} [opts.porthippo]  IPC bridge (defaults to window.porthippo)
+   * @param {object} [opts.jumphippo]  IPC bridge (defaults to window.jumphippo)
    * @param {() => Promise<string|null>} [opts.openKeyFile]
    * @param {(record: object) => void} [opts.onSaved]  the created/updated record
    */
-  constructor({ porthippo, openKeyFile, onSaved } = {}) {
-    this.#porthippo = porthippo || window.porthippo;
+  constructor({ jumphippo, openKeyFile, onSaved } = {}) {
+    this.#jumphippo = jumphippo || window.jumphippo;
     this.#openKeyFile =
-      openKeyFile || (() => this.#porthippo?.dialog?.openKeyFile?.());
+      openKeyFile || (() => this.#jumphippo?.dialog?.openKeyFile?.());
     this.#onSaved = onSaved;
 
     this.#dialog = new Dialog({
@@ -296,8 +296,8 @@ export class CredentialEditorDialog {
     let result;
     try {
       result = this.#editingId
-        ? await this.#porthippo.credentials.update(this.#editingId, payload)
-        : await this.#porthippo.credentials.create(payload);
+        ? await this.#jumphippo.credentials.update(this.#editingId, payload)
+        : await this.#jumphippo.credentials.create(payload);
     } catch (err) {
       this.#dialog.showError(
         t("editor.saveError", { message: err?.message || String(err) }),
@@ -315,7 +315,7 @@ export class CredentialEditorDialog {
 
     this.#dialog.close();
     window.dispatchEvent(
-      new CustomEvent("porthippo:credentials-changed", {
+      new CustomEvent("jumphippo:credentials-changed", {
         detail: { id: result && result.id },
       }),
     );

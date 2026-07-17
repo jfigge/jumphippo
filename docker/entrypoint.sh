@@ -27,7 +27,7 @@ fi
 # ── Host keys ────────────────────────────────────────────────────────────────
 # Created on first boot and then persisted in the container FS, so they are
 # STABLE across stop/start but CHANGE on destroy/recreate (which is handy for
-# exercising Port Hippo's trust-on-first-use and changed-key flows).
+# exercising Jump Hippo's trust-on-first-use and changed-key flows).
 ssh-keygen -A
 
 # ── Loopback-only echo service ───────────────────────────────────────────────

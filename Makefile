@@ -1,5 +1,5 @@
 # ─────────────────────────────────────────────────────────────────────────────
-#  Port Hippo – On-demand SSH tunnel manager
+#  Jump Hippo – On-demand SSH tunnel manager
 #  Electron desktop app (Vanilla JS + Node.js)
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -48,6 +48,13 @@ RELEASE_ENV_VARS := CSC_LINK CSC_KEY_PASSWORD CSC_IDENTITY_AUTO_DISCOVERY \
                     APPLE_ID APPLE_APP_SPECIFIC_PASSWORD APPLE_TEAM_ID \
                     APPLE_API_KEY APPLE_API_KEY_ID APPLE_API_ISSUER \
                     WIN_CSC_LINK WIN_CSC_KEY_PASSWORD
+# Store-build identity (Microsoft Store appx publisher reserved in Partner
+# Center). Same export-if-set discipline as the signing vars: absent ⇒ the
+# `dist-appx` target graceful-skips, never fails. The Mac App Store provisioning
+# profiles are FILES (src/packaging/*.provisionprofile), not env vars; `dist-mas`
+# gates on their presence. See release.env.example / STORE-PUBLISHING.md.
+STORE_ENV_VARS := APPX_IDENTITY_NAME APPX_PUBLISHER APPX_PUBLISHER_DISPLAY_NAME
+RELEASE_ENV_VARS += $(STORE_ENV_VARS)
 -include $(WORKSPACE)/release.env
 $(foreach v,$(RELEASE_ENV_VARS),$(if $(strip $(value $(v))),$(eval export $(v)),$(eval unexport $(v))))
 
@@ -61,6 +68,32 @@ $(foreach v,$(RELEASE_ENV_VARS),$(if $(strip $(value $(v))),$(eval export $(v)),
 # `env $(UNSIGNED_ENV) npx electron-builder …`, paired per-recipe with
 # `-c.mac.notarize=false` to also force notarization off.
 UNSIGNED_ENV := $(foreach v,$(filter-out CSC_IDENTITY_AUTO_DISCOVERY,$(RELEASE_ENV_VARS)),-u $(v)) CSC_IDENTITY_AUTO_DISCOVERY=false
+
+# Mac App Store builds must sign with the Apple Distribution / Mac Installer
+# Distribution (and, for mas-dev, Apple Development) identities. LOCALLY those live
+# in the login keychain, but release.env exports CSC_LINK = the Developer ID .p12
+# (for the dmg / Developer-ID builds) — which is INVALID for MAS: electron-builder
+# would sign only with it and fall back to an UNLAUNCHABLE ad-hoc signature
+# (TeamIdentifier=not set → "Launchd job spawn failed"). So locally we strip that
+# CSC_LINK and let keychain auto-discovery pick the MAS certs. In CI the store-mas
+# job provides the real MAS certs via CSC_LINK / CSC_INSTALLER_LINK and sets
+# MAS_PROVISIONING_PROFILE_BASE64 — detect that marker and DON'T strip there.
+ifeq ($(strip $(MAS_PROVISIONING_PROFILE_BASE64)),)
+MAS_SIGN_ENV := env -u CSC_LINK -u CSC_KEY_PASSWORD CSC_IDENTITY_AUTO_DISCOVERY=true
+else
+MAS_SIGN_ENV :=
+endif
+
+# electron-builder applies ONE qualifier to BOTH the app AND the .pkg installer
+# identity searches (macPackager.sign passes mas.identity as the qualifier to the
+# installer's findIdentity too). So mas.identity="Apple Distribution" wrongly filters
+# the installer search — whose cert is "3rd Party Mac Developer Installer: …", which
+# does not contain that string → "Cannot find valid 3rd Party Mac Developer Installer".
+# The qualifier also feeds through process.env.CSC_NAME. With the login keychain
+# holding duplicate "Developer ID Application" entries that sort first, auto-pick
+# grabs the wrong app cert. Fix BOTH by pinning CSC_NAME to the team-qualified name
+# common to the Apple Distribution AND Mac Installer certs (override per-account).
+MAS_CSC_NAME ?= Jason Figge (2C564TQ2FY)
 
 # Sign macOS builds with Developer ID + hardened-runtime entitlements. app-builder
 # passes mac.entitlements straight to codesign without resolving it, and codesign
@@ -152,7 +185,7 @@ build-docs:
 # well under a second; the ssh2 integration tests are the slowest and still < 1s.
 TEST_TIMEOUT ?= 30000
 
-test: test-license-headers test-js test-tunnel test-renderer
+test: test-license-headers test-js test-tunnel test-renderer test-scripts
 
 # Guard: every first-party src/ JS+CSS file and build script must carry the
 # Apache 2.0 header. Fix any failure with `make license-headers`.
@@ -179,6 +212,13 @@ test-tunnel:
 test-renderer:
 	@echo "Running renderer component tests (jsdom)..."
 	@cd $(SRC_DIR) && node --test --test-timeout=$(TEST_TIMEOUT) "web/scripts/tests/**/*.test.js"
+	@echo "--------------------------------"
+
+# Build/release script tests (resign-update-metadata — the post-SignPath
+# electron-updater manifest refresh used by the Release workflow).
+test-scripts:
+	@echo "Running build/release script tests (resign-update-metadata)..."
+	@node --test --test-timeout=$(TEST_TIMEOUT) $(WORKSPACE)/scripts/tests/resign-update-metadata.test.mjs
 	@echo "--------------------------------"
 
 # ─── Build ────────────────────────────────────────────────────────────────────
@@ -233,7 +273,7 @@ build-install:
 # Regenerate the Windows .ico + Linux PNG icon set from the master
 # icons/1024x1024.png. macOS-only (uses sips); outputs are committed and consumed
 # at build time by the package.json `build` block. The macOS icon
-# (src/web/porthippo-mac-icon.png) needs custom safe-area padding and is NOT
+# (src/web/jumphippo-mac-icon.png) needs custom safe-area padding and is NOT
 # regenerated here — it is maintained separately.
 icons:
 	@echo "Regenerating app icons from icons/1024x1024.png..."
@@ -286,6 +326,61 @@ dist-win: build-setup build-install
 	@cd $(BUILD_DIR)/src; npx electron-builder --win --publish never
 	@echo "  → $(BUILD_DIR)/src/dist/"
 	@echo "--------------------------------"
+
+# ─── Store distributions (Mac App Store / Microsoft Store) ────────────────────
+# Each target graceful-skips (exit 0) when its gating artifact/identity is absent,
+# so `make dist-mas`/`dist-appx` run cleanly before the Apple/Microsoft accounts
+# exist (local dry-runs, CI without store creds). Real builds need:
+#   • dist-mas  — Apple Distribution + Mac Installer Distribution certs in the
+#                 keychain and a MAS distribution provisioning profile dropped at
+#                 src/packaging/embedded.provisionprofile.
+#   • mas-dev   — a MAS *development* profile at src/packaging/development.provisionprofile
+#                 (a locally-runnable sandbox smoke-test build; never submitted).
+#   • dist-appx — a Windows host and the reserved Partner Center identity
+#                 (APPX_IDENTITY_NAME / APPX_PUBLISHER).
+# Store packages are uploaded manually (Transporter / Partner Center); they are
+# NOT attached to the public GitHub Release. See STORE-PUBLISHING.md.
+
+# Gate BEFORE the build so a credential-less run skips instantly. The gate and the
+# build run as ONE shell line (`; \` after the `fi`, then `&&` between steps) so
+# that `exit 0` aborts the whole target — a separate `@`-line would get its own
+# shell and make would carry on to build-setup regardless (same single-shell idiom
+# as staple-dmg below).
+dist-mas:
+	@if [ ! -f "$(SRC_DIR)/packaging/embedded.provisionprofile" ]; then \
+		echo "No MAS provisioning profile (src/packaging/embedded.provisionprofile) — skipping Mac App Store build."; \
+		exit 0; \
+	fi; \
+	$(MAKE) build-setup build-install && \
+	echo "Building Mac App Store package (.pkg)..." && \
+	( cd $(BUILD_DIR)/src && $(MAS_SIGN_ENV) CSC_NAME="$(MAS_CSC_NAME)" npx electron-builder --mac mas --universal --publish never -c.mac.notarize=false ) && \
+	echo "  → $(BUILD_DIR)/src/dist/  (upload the .pkg via Transporter)" && \
+	echo "--------------------------------"
+
+mas-dev:
+	@if [ ! -f "$(SRC_DIR)/packaging/development.provisionprofile" ]; then \
+		echo "No MAS development profile (src/packaging/development.provisionprofile) — skipping MAS dev build."; \
+		exit 0; \
+	fi; \
+	$(MAKE) build-setup build-install && \
+	echo "Building Mac App Store DEV package (local sandbox smoke-test)..." && \
+	( cd $(BUILD_DIR)/src && $(MAS_SIGN_ENV) npx electron-builder --mac mas-dev --publish never -c.mac.notarize=false ) && \
+	echo "  → $(BUILD_DIR)/src/dist/" && \
+	echo "--------------------------------"
+
+dist-appx:
+	@if [ -z "$$APPX_IDENTITY_NAME" ] || [ -z "$$APPX_PUBLISHER" ]; then \
+		echo "APPX_IDENTITY_NAME / APPX_PUBLISHER unset — skipping Microsoft Store build."; \
+		exit 0; \
+	fi; \
+	$(MAKE) build-setup build-install && \
+	echo "Building Microsoft Store package (.appx — x64 + arm64)..." && \
+	( cd $(BUILD_DIR)/src && npx electron-builder --win appx --x64 --arm64 --publish never \
+		-c.appx.identityName="$$APPX_IDENTITY_NAME" \
+		-c.appx.publisher="$$APPX_PUBLISHER" \
+		$(if $(strip $(APPX_PUBLISHER_DISPLAY_NAME)),-c.appx.publisherDisplayName="$$APPX_PUBLISHER_DISPLAY_NAME",) ) && \
+	echo "  → $(BUILD_DIR)/src/dist/  (upload the .appx in Partner Center)" && \
+	echo "--------------------------------"
 
 # ─── Notarize & staple the DMGs ───────────────────────────────────────────────
 # electron-builder notarizes/staples the .app but leaves the .dmg wrapper unsigned
@@ -453,19 +548,19 @@ clean:
 	@echo "--------------------------------"
 
 # ─── Integration-test sandbox (Docker) ────────────────────────────────────────
-# Two containers modelling Port Hippo's jump-host scenario: a host-reachable jump
+# Two containers modelling Jump Hippo's jump-host scenario: a host-reachable jump
 # host and a destination reachable ONLY through it, each running an SSH server
 # (password + key auth) and a loopback-only echo service. See docker/README.md.
 SANDBOX_DIR ?= $(WORKSPACE)/docker
 COMPOSE     ?= docker compose
-SANDBOX_KEY  = $(SANDBOX_DIR)/keys/id_porthippo
+SANDBOX_KEY  = $(SANDBOX_DIR)/keys/id_jumphippo
 
 # Generate the throwaway SSH keypair the containers authorise (idempotent).
 sandbox-keys:
 	@mkdir -p $(SANDBOX_DIR)/keys
 	@if [ ! -f $(SANDBOX_KEY) ]; then \
 	  echo "Generating sandbox SSH keypair ($(SANDBOX_KEY))..."; \
-	  ssh-keygen -t ed25519 -N '' -C porthippo-sandbox -f $(SANDBOX_KEY) >/dev/null; \
+	  ssh-keygen -t ed25519 -N '' -C jumphippo-sandbox -f $(SANDBOX_KEY) >/dev/null; \
 	  cp $(SANDBOX_KEY).pub $(SANDBOX_DIR)/keys/authorized_keys; \
 	fi
 
@@ -489,18 +584,18 @@ sandbox-stop:
 sandbox-destroy:
 	@cd $(SANDBOX_DIR) && $(COMPOSE) down --remove-orphans
 
-# Seed Port Hippo's store (the `make debug` data dir) with definitions matching the
+# Seed Jump Hippo's store (the `make debug` data dir) with definitions matching the
 # sandbox: two credentials (key + password), the jump host, and both tunnels.
 # Idempotent — re-running only adds what's missing.
 sandbox-seed:
-	@node $(SANDBOX_DIR)/seed-porthippo.js $(DATA_DIR)
+	@node $(SANDBOX_DIR)/seed-jumphippo.js $(DATA_DIR)
 
 # Prove the topology end-to-end: local (direct + via jump), dynamic reachability
 # (jump → sealed dest), and reverse forwarding (jump → a host-side echo).
 sandbox-verify:
 	@bash $(SANDBOX_DIR)/verify.sh
 
-# Exercise Port Hippo's OWN tunnel engine over the sandbox — one real round-trip per
+# Exercise Jump Hippo's OWN tunnel engine over the sandbox — one real round-trip per
 # forwarding type (local direct, local via jump, dynamic/SOCKS, reverse). Where
 # sandbox-verify uses raw ssh to prove the topology, this drives the actual
 # listener → ssh-chain → relay/socks5 code. Requires the sandbox running
@@ -528,7 +623,7 @@ sandbox-logs:
 # ─── Help ─────────────────────────────────────────────────────────────────────
 help:
 	@echo ""
-	@echo "  Port Hippo — On-demand SSH tunnel manager"
+	@echo "  Jump Hippo — On-demand SSH tunnel manager"
 	@echo ""
 	@echo "  Targets:"
 	@echo "    install       Install Node.js dependencies"
@@ -555,6 +650,9 @@ help:
 	@echo "    dist-mac      Build macOS installers (dmg/zip, arm64 + x64)"
 	@echo "    dist-linux    Build Linux installers (AppImage/deb, arm64 + x64)"
 	@echo "    dist-win      Build Windows installers (nsis/portable, arm64 + x64)"
+	@echo "    dist-mas      Build Mac App Store package (.pkg; skips without provisioning profile)"
+	@echo "    mas-dev       Build a local MAS sandbox smoke-test (skips without dev profile)"
+	@echo "    dist-appx     Build Microsoft Store package (.appx; skips without APPX_* identity)"
 	@echo "    staple-dmg    Sign + notarize + staple the dmg(s) in dist/"
 	@echo "    release       Bump version, tag, push to trigger a release (VERSION=x.y.z)"
 	@echo "    sync-mac      Push macOS signing creds from release.env → GitHub secrets"
@@ -565,17 +663,19 @@ help:
 	@echo "    sandbox-start   Start the containers and print access details"
 	@echo "    sandbox-stop    Stop the containers (keep state)"
 	@echo "    sandbox-destroy Remove containers + networks (keeps image + keys)"
-	@echo "    sandbox-seed    Seed Port Hippo with the sandbox tunnels/credentials"
+	@echo "    sandbox-seed    Seed Jump Hippo with the sandbox tunnels/credentials"
 	@echo "    sandbox-verify  Prove local + dynamic + reverse forwarding all work (raw ssh)"
-	@echo "    sandbox-e2e     Exercise Port Hippo's engine over the sandbox (all 4 tunnel types)"
+	@echo "    sandbox-e2e     Exercise Jump Hippo's engine over the sandbox (all 4 tunnel types)"
 	@echo "    sandbox-host-echo  Run the host-side echo the reverse tunnel targets"
 	@echo "    sandbox-access  Re-print the access details"
 	@echo "    sandbox-status  docker compose ps  ·  sandbox-logs  Follow logs"
 
 .PHONY: version info install debug debug-inspect fmt fmt-check lint license-headers \
         vendor-markdown build-docs test \
-        test-license-headers test-js test-tunnel build build-mac build-linux build-win dmg \
+        test-license-headers test-js test-tunnel test-renderer test-scripts \
+        build build-mac build-linux build-win dmg \
         build-setup build-install icons sign-dmg sign-all dist dist-mac dist-linux dist-win \
+        dist-mas mas-dev dist-appx \
         staple-dmg release sync-mac sync-win clean help \
         sandbox-keys sandbox-create sandbox-start sandbox-stop sandbox-destroy \
         sandbox-seed sandbox-verify sandbox-e2e sandbox-host-echo sandbox-access sandbox-status sandbox-logs

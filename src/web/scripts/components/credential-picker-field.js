@@ -18,7 +18,7 @@
 // `.field` (so validation errors land against `credentialId`) wrapping a <select>
 // of credentials plus inline "New…" / "Edit" actions that open the
 // CredentialEditorDialog. It reloads whenever a credential changes anywhere
-// (`porthippo:credentials-changed`), preserving the current selection, and reports
+// (`jumphippo:credentials-changed`), preserving the current selection, and reports
 // the chosen id up via the `onChange` constructor callback.
 
 import { el, clear } from "../dom.js";
@@ -31,7 +31,7 @@ export class CredentialPickerField {
   #el;
   #select;
   #editBtn;
-  #porthippo;
+  #jumphippo;
   #openKeyFile;
   #onChange;
   #errorKey;
@@ -42,14 +42,14 @@ export class CredentialPickerField {
 
   /**
    * @param {object} [opts]
-   * @param {object} [opts.porthippo]  IPC bridge (defaults to window.porthippo)
+   * @param {object} [opts.jumphippo]  IPC bridge (defaults to window.jumphippo)
    * @param {(id: string) => void} [opts.onChange]
    * @param {() => Promise<string|null>} [opts.openKeyFile]
    * @param {string} [opts.label]
    * @param {string} [opts.errorKey]  dotted validation path (default "credentialId")
    */
-  constructor({ porthippo, onChange, openKeyFile, label, errorKey } = {}) {
-    this.#porthippo = porthippo || window.porthippo;
+  constructor({ jumphippo, onChange, openKeyFile, label, errorKey } = {}) {
+    this.#jumphippo = jumphippo || window.jumphippo;
     this.#openKeyFile = openKeyFile;
     this.#onChange = onChange;
     this.#errorKey = errorKey || "credentialId";
@@ -57,7 +57,7 @@ export class CredentialPickerField {
 
     this.#onCredsChanged = () => this.refresh();
     window.addEventListener(
-      "porthippo:credentials-changed",
+      "jumphippo:credentials-changed",
       this.#onCredsChanged,
     );
   }
@@ -87,7 +87,7 @@ export class CredentialPickerField {
 
   /** Reload credentials, preserving the current selection where still valid. */
   async refresh() {
-    const list = (await this.#porthippo?.credentials?.list?.()) || [];
+    const list = (await this.#jumphippo?.credentials?.list?.()) || [];
     this.#credentials = Array.isArray(list) ? list : [];
     this.#renderOptions();
     this.setValue(this.#value); // re-assert (drops a now-deleted selection)
@@ -95,7 +95,7 @@ export class CredentialPickerField {
 
   destroy() {
     window.removeEventListener(
-      "porthippo:credentials-changed",
+      "jumphippo:credentials-changed",
       this.#onCredsChanged,
     );
   }
@@ -158,7 +158,7 @@ export class CredentialPickerField {
   #ensureEditor() {
     if (this.#editor) return this.#editor;
     this.#editor = new CredentialEditorDialog({
-      porthippo: this.#porthippo,
+      jumphippo: this.#jumphippo,
       openKeyFile: this.#openKeyFile,
       onSaved: async (record) => {
         await this.refresh();
@@ -177,7 +177,7 @@ export class CredentialPickerField {
 
   async #openEdit() {
     if (!this.#value) return;
-    const cred = await this.#porthippo?.credentials?.get?.(this.#value);
+    const cred = await this.#jumphippo?.credentials?.get?.(this.#value);
     if (cred) this.#ensureEditor().openEdit(cred);
   }
 }

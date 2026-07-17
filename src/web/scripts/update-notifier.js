@@ -16,7 +16,7 @@
 
 // update-notifier.js — surface the auto-update lifecycle (Feature 70). The main
 // process runs the checks and download; it pushes each lifecycle event over the
-// `porthippo:update-*` events (preload re-dispatches the `updater:*` channels).
+// `jumphippo:update-*` events (preload re-dispatches the `updater:*` channels).
 // This module turns those into user-facing prompts: quiet toasts for a manual
 // check, and — whenever a build has downloaded — a "restart to install" confirm
 // that calls `updater.install()`. Silent startup checks stay silent (the `manual`
@@ -26,16 +26,16 @@ import { PopupManager } from "./popup-manager.js";
 import { t } from "./i18n.js";
 
 export class UpdateNotifier {
-  #porthippo;
+  #jumphippo;
   #handlers;
 
-  constructor({ porthippo } = {}) {
-    this.#porthippo = porthippo || window.porthippo;
+  constructor({ jumphippo } = {}) {
+    this.#jumphippo = jumphippo || window.jumphippo;
     this.#handlers = {
-      "porthippo:update-available": (e) => this.#onAvailable(e.detail),
-      "porthippo:update-not-available": (e) => this.#onNotAvailable(e.detail),
-      "porthippo:update-downloaded": (e) => this.#onDownloaded(e.detail),
-      "porthippo:update-error": (e) => this.#onError(e.detail),
+      "jumphippo:update-available": (e) => this.#onAvailable(e.detail),
+      "jumphippo:update-not-available": (e) => this.#onNotAvailable(e.detail),
+      "jumphippo:update-downloaded": (e) => this.#onDownloaded(e.detail),
+      "jumphippo:update-error": (e) => this.#onError(e.detail),
     };
   }
 
@@ -81,7 +81,7 @@ export class UpdateNotifier {
       message: t("update.ready.message", { version: info?.version || "" }),
       confirmLabel: t("update.ready.restart"),
       cancelLabel: t("update.ready.later"),
-      onConfirm: () => this.#porthippo?.updater?.install?.(),
+      onConfirm: () => this.#jumphippo?.updater?.install?.(),
     });
   }
 

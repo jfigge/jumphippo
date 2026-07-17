@@ -111,7 +111,7 @@ async function mount(opts = {}) {
   resetDom();
   const calls = opts.calls || {};
   const view = new TunnelsView({
-    porthippo: stub(opts.defs || DEFS, { ...opts, calls }),
+    jumphippo: stub(opts.defs || DEFS, { ...opts, calls }),
     now: () => NOW,
   });
   document.body.appendChild(view.element);
@@ -150,7 +150,7 @@ test("selecting another row updates the detail breadcrumb", async () => {
 test("a stats snapshot updates the selected tunnel's cards and its dot", async () => {
   const { view } = await mount();
   window.dispatchEvent(
-    new CustomEvent("porthippo:stats-updated", {
+    new CustomEvent("jumphippo:stats-updated", {
       detail: {
         stats: new Map([
           [
@@ -188,7 +188,7 @@ test("clicking the errored State card opens a dialog with the full error", async
   const { view } = await mount();
   // Tunnel 'a' (auto-selected) reports an error with details.
   window.dispatchEvent(
-    new CustomEvent("porthippo:tunnel-state", {
+    new CustomEvent("jumphippo:tunnel-state", {
       detail: { id: "a", state: "error", error: "SSH authentication failed" },
     }),
   );
@@ -215,7 +215,7 @@ test("clicking the Errors card opens the history dialog fetched on demand from m
   });
   // Tunnel 'a' (auto-selected) reports two errors via a stats snapshot.
   window.dispatchEvent(
-    new CustomEvent("porthippo:stats-updated", {
+    new CustomEvent("jumphippo:stats-updated", {
       detail: {
         stats: new Map([["a", { id: "a", state: "error", errorCount: 2 }]]),
       },
@@ -345,7 +345,7 @@ test("a set-detail-mode intent (from the header) toggles the split/table and per
   assert.equal(view.element.querySelector(".tunnel-table-view").hidden, true);
 
   window.dispatchEvent(
-    new CustomEvent("porthippo:set-detail-mode", { detail: { mode: "list" } }),
+    new CustomEvent("jumphippo:set-detail-mode", { detail: { mode: "list" } }),
   );
   assert.equal(view.element.querySelector(".tunnels-split").hidden, true);
   assert.equal(view.element.querySelector(".tunnel-table-view").hidden, false);
@@ -367,11 +367,11 @@ test("in list mode, the table toolbar arm control routes to tunnels.arm", async 
 test("the view echoes detail-mode-changed so the header selector can sync", async () => {
   const { view } = await mount();
   const seen = [];
-  window.addEventListener("porthippo:detail-mode-changed", (e) =>
+  window.addEventListener("jumphippo:detail-mode-changed", (e) =>
     seen.push(e.detail && e.detail.mode),
   );
   window.dispatchEvent(
-    new CustomEvent("porthippo:set-detail-mode", { detail: { mode: "list" } }),
+    new CustomEvent("jumphippo:set-detail-mode", { detail: { mode: "list" } }),
   );
   assert.equal(seen.at(-1), "list");
   assert.equal(view.element.querySelector(".tunnel-table-view").hidden, false);
@@ -443,7 +443,7 @@ test("the menu's Pause/Play + Arm/Disarm labels track the live state", async () 
   const { view } = await mount({ calls });
   const emit = (state) =>
     window.dispatchEvent(
-      new CustomEvent("porthippo:tunnel-state", { detail: { id: "a", state } }),
+      new CustomEvent("jumphippo:tunnel-state", { detail: { id: "a", state } }),
     );
 
   emit("connected");

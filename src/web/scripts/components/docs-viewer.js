@@ -15,14 +15,14 @@
  */
 
 /**
- * docs-viewer.js — the in-app user guide (Help → Port Hippo User Guide).
+ * docs-viewer.js — the in-app user guide (Help → Jump Hippo User Guide).
  *
  * A self-contained two-pane reader: a left contents list and a right pane that
  * renders one bundled help page (src/web/docs/*.md) at a time. It is mounted by
  * the standalone docs window (docs-window.js / docs.html) — NOT a modal popup —
  * so the guide can stay open beside the main window while the user works.
  *
- * Markdown is fetched from main over IPC (window.porthippo.docs.read) rather than
+ * Markdown is fetched from main over IPC (window.jumphippo.docs.read) rather than
  * fetch(), so it works under file:// (packaged / make debug). The bundled marked
  * + DOMPurify renderer (renderMarkdown) turns it into sanitized HTML; styling is
  * styles/docs.css.
@@ -189,7 +189,7 @@ export class DocsViewer {
     const token = ++this.#loadToken;
     let md;
     try {
-      md = await window.porthippo.docs.read(page.file ?? page.slug);
+      md = await window.jumphippo.docs.read(page.file ?? page.slug);
     } catch (err) {
       if (token !== this.#loadToken) return;
       this.#contentEl.innerHTML = "";

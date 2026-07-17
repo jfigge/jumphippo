@@ -1,12 +1,12 @@
 # Tray & Background
 
-Port Hippo is a **background utility**. It's designed to stay running quietly so
+Jump Hippo is a **background utility**. It's designed to stay running quietly so
 your armed tunnels keep working — you don't need its window open for tunnels to
 open on demand.
 
 ## The tray is home
 
-Port Hippo lives in your system tray (menu bar on macOS, notification area on
+Jump Hippo lives in your system tray (menu bar on macOS, notification area on
 Windows, status area on Linux). The tray icon reflects overall tunnel activity and
 gives you quick actions:
 
@@ -21,13 +21,13 @@ gives you quick actions:
 tunnels keep listening and continue to open on demand. Re-open the window from the
 tray (or the dock/taskbar) whenever you need it.
 
-The first time the window hides, Port Hippo shows a one-time notice so you know
+The first time the window hides, Jump Hippo shows a one-time notice so you know
 it's still running in the tray.
 
 ### Only Quit tears tunnels down
 
 Tunnels are torn down **only** when you explicitly **Quit** — from the tray menu,
-the application menu, or `Cmd/Ctrl+Q`. On quit, Port Hippo closes every live SSH
+the application menu, or `Cmd/Ctrl+Q`. On quit, Jump Hippo closes every live SSH
 connection cleanly (so remote servers see a graceful disconnect) and then exits.
 
 You can enable **Confirm before quitting** in **Settings → Behaviour** so an
@@ -35,7 +35,7 @@ accidental Quit that would drop live tunnels asks first.
 
 ## Launch at login
 
-Turn on **Launch at login** in **Settings → Behaviour** to have Port Hippo start
+Turn on **Launch at login** in **Settings → Behaviour** to have Jump Hippo start
 with your OS. Combined with *arm on launch* (below), your tunnels are ready the
 moment you sign in.
 
@@ -46,14 +46,14 @@ This is applied in packaged builds; it's a no-op when running from source.
 
 ## Start minimized
 
-With **Start minimized** on, Port Hippo starts hidden in the tray — no window
+With **Start minimized** on, Jump Hippo starts hidden in the tray — no window
 appears, but enabled tunnels still arm. Ideal alongside *launch at login* for a
 truly background setup.
 
 ## Arm on launch
 
 **Arm enabled tunnels on launch** (on by default) binds every enabled tunnel's
-entry port when Port Hippo starts, so they're listening immediately. Turn it off if
+entry port when Jump Hippo starts, so they're listening immediately. Turn it off if
 you'd rather arm tunnels by hand.
 
 > If you use a **master password** for secret storage, the app starts **locked**
@@ -66,7 +66,7 @@ The application menu carries the same actions plus standard fare:
 
 - **File** — New Tunnel, Arm All Tunnels, Disarm All Tunnels, and — once you have
   groups — a **Groups** submenu with per-group Arm All / Disarm All. On Windows and
-  Linux, Settings and Quit live here too; on macOS they sit in the **Port Hippo**
+  Linux, Settings and Quit live here too; on macOS they sit in the **Jump Hippo**
   application menu.
 - **View** — zoom the interface (Increase / Decrease / Reset Font Size,
   `Cmd/Ctrl +` `-` `0`), full screen.
@@ -75,11 +75,11 @@ The application menu carries the same actions plus standard fare:
 
 ## Appearance & language
 
-**Settings → Appearance** controls how Port Hippo looks: the **Theme**
+**Settings → Appearance** controls how Jump Hippo looks: the **Theme**
 (System / Light / Dark), the interface **Font** and **Font size**, and the
 **Language**.
 
-Port Hippo ships in seven languages:
+Jump Hippo ships in seven languages:
 
 - **English**, **Français** (French), **Deutsch** (German), **Español**
   (Spanish), **中文（简体）** (Simplified Chinese), **日本語** (Japanese), and
@@ -92,5 +92,5 @@ Hippo uses it automatically; otherwise it falls back to English. Any phrase a
 translation hasn't covered also falls back to English, so you'll never see a
 blank label.
 
-> The product name **Port Hippo** and protocol terms (SSH, SOCKS) are the same in
+> The product name **Jump Hippo** and protocol terms (SSH, SOCKS) are the same in
 > every language. This User Guide is currently available in English only.

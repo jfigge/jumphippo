@@ -17,7 +17,7 @@
 // host-keys-panel.js — the Settings → Host Keys tab body. It shows SSH host-key
 // fingerprints under two sub-tabs:
 //
-//   • "Port Hippo" — the keys the user accepted through Port Hippo (TOFU, stored
+//   • "Jump Hippo" — the keys the user accepted through Jump Hippo (TOFU, stored
 //     in known-hosts.json). Manageable: see the list and forget an entry, which
 //     removes the stored trust so the NEXT connection re-prompts as a fresh TOFU
 //     (also the only way to recover from a legitimate host-key rotation, since a
@@ -38,19 +38,19 @@ import { el, clear } from "../dom.js";
 import { t, formatDate } from "../i18n.js";
 
 export class HostKeysPanel {
-  #porthippo;
+  #jumphippo;
   #root;
   #tabsEl;
   #body;
-  #active = "porthippo"; // "porthippo" | "os"
+  #active = "jumphippo"; // "jumphippo" | "os"
 
-  constructor({ porthippo } = {}) {
-    this.#porthippo =
-      porthippo ||
-      (typeof window !== "undefined" ? window.porthippo : undefined);
+  constructor({ jumphippo } = {}) {
+    this.#jumphippo =
+      jumphippo ||
+      (typeof window !== "undefined" ? window.jumphippo : undefined);
 
     this.#tabsEl = el("div", { class: "hostkeys-tabs", role: "tablist" }, [
-      this.#tabButton("porthippo", true),
+      this.#tabButton("jumphippo", true),
       this.#tabButton("os", false),
     ]);
     this.#body = el("div", { class: "hostkeys-body" });
@@ -77,7 +77,7 @@ export class HostKeysPanel {
   /**
    * (Re)load and render the active sub-tab. Safe to call repeatedly — the Settings
    * popup calls it each time the Host Keys tab is revealed, so it reflects TOFU
-   * acceptances (Port Hippo tab) and known_hosts edits (OS tab) since it opened.
+   * acceptances (Jump Hippo tab) and known_hosts edits (OS tab) since it opened.
    * Never throws.
    */
   async load() {
@@ -109,10 +109,10 @@ export class HostKeysPanel {
   }
 
   #loadActive() {
-    return this.#active === "os" ? this.#loadOs() : this.#loadPortHippo();
+    return this.#active === "os" ? this.#loadOs() : this.#loadJumpHippo();
   }
 
-  // ── Port Hippo tab (the accepted-keys store — manageable) ────────────────────
+  // ── Jump Hippo tab (the accepted-keys store — manageable) ────────────────────
 
   /**
    * Pull the accepted-key list from main and render it. A genuine failure to load
@@ -120,18 +120,18 @@ export class HostKeysPanel {
    * — kept separate from a successful read of an empty store so "couldn't load"
    * never masquerades as "no keys trusted".
    */
-  async #loadPortHippo() {
+  async #loadJumpHippo() {
     const region = this.#renderBody(t("settings.hostkeys.help"));
-    const list = this.#porthippo?.hostkeys?.list;
+    const list = this.#jumphippo?.hostkeys?.list;
     if (typeof list !== "function") {
-      this.#renderError(region, () => this.#loadPortHippo());
+      this.#renderError(region, () => this.#loadJumpHippo());
       return;
     }
     let entries;
     try {
-      entries = (await this.#porthippo.hostkeys.list()) || [];
+      entries = (await this.#jumphippo.hostkeys.list()) || [];
     } catch {
-      this.#renderError(region, () => this.#loadPortHippo());
+      this.#renderError(region, () => this.#loadJumpHippo());
       return;
     }
     // Alphabetical by host:port for a stable inventory.
@@ -213,32 +213,32 @@ export class HostKeysPanel {
   async #forget(hostPort) {
     let res;
     try {
-      res = await this.#porthippo?.hostkeys?.revoke?.(hostPort);
+      res = await this.#jumphippo?.hostkeys?.revoke?.(hostPort);
     } catch {
       res = { __hippoError: true };
     }
     // Re-pull on success (the row disappears); leave the list untouched on a write
     // failure so the entry — and its forget button — remain for a retry.
-    if (!res || !res.__hippoError) this.#loadPortHippo();
+    if (!res || !res.__hippoError) this.#loadJumpHippo();
   }
 
   // ── Operating System tab (~/.ssh/known_hosts — read-only) ────────────────────
 
   /**
    * Pull the OS known_hosts inventory from main and render it read-only, headed by
-   * a note that Port Hippo can't manage it and a reference to the file. Same
-   * error/empty discipline as the Port Hippo tab.
+   * a note that Jump Hippo can't manage it and a reference to the file. Same
+   * error/empty discipline as the Jump Hippo tab.
    */
   async #loadOs() {
     const region = this.#renderBody(t("settings.hostkeys.os.help"));
-    const listOs = this.#porthippo?.hostkeys?.listOs;
+    const listOs = this.#jumphippo?.hostkeys?.listOs;
     if (typeof listOs !== "function") {
       this.#renderError(region, () => this.#loadOs());
       return;
     }
     let data;
     try {
-      data = (await this.#porthippo.hostkeys.listOs()) || {};
+      data = (await this.#jumphippo.hostkeys.listOs()) || {};
     } catch {
       this.#renderError(region, () => this.#loadOs());
       return;
@@ -279,7 +279,7 @@ export class HostKeysPanel {
   }
 
   // One OS host key: identity + fingerprint, with the key type as read-only meta.
-  // No forget action — Port Hippo can't edit ~/.ssh/known_hosts.
+  // No forget action — Jump Hippo can't edit ~/.ssh/known_hosts.
   #osRow(entry) {
     const host = entry.host || t("settings.hostkeys.os.hashed");
     return el(

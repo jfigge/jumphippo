@@ -20,13 +20,15 @@
 // startup (debounced) and on demand, downloads a newer build in the background,
 // and lets the renderer prompt the user to restart-and-install. Every update
 // lifecycle event is forwarded to the renderer as an `updater:*` push channel
-// (preload.js mirrors each into a `porthippo:update-*` DOM event); the renderer
+// (preload.js mirrors each into a `jumphippo:update-*` DOM event); the renderer
 // owns the user-facing toasts and the Settings → About status line. We never
 // restart without consent: a downloaded update installs only on a normal quit
 // (autoInstallOnAppQuit) or an explicit, user-confirmed quitAndInstall().
 //
 // The update check is the ONLY outbound call this module makes — no telemetry.
 "use strict";
+
+const { isStoreBuild } = require("./store-build");
 
 // Electron's `app` and electron-updater's `autoUpdater` are resolved LAZILY, and
 // through overridable refs. Accessing either eagerly constructs the platform
@@ -142,6 +144,17 @@ function initUpdater(getWindow, logger) {
  */
 function checkForUpdates({ manual = false } = {}) {
   _manual = !!manual;
+  // Store builds (Mac App Store / Microsoft Store) deliver updates through the
+  // store, and electron-updater has no feed to check (electron-builder strips it
+  // from MAS/appx). Short-circuit so the renderer reports it honestly. This one
+  // guard covers both the debounced startup check and every manual check.
+  if (isStoreBuild()) {
+    pushUpdaterEvent("updater:not-available", {
+      manual: _manual,
+      reason: "store-build",
+    });
+    return;
+  }
   if (!getApp().isPackaged) {
     pushUpdaterEvent("updater:not-available", {
       manual: _manual,

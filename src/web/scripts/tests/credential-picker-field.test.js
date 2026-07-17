@@ -39,11 +39,11 @@ function stub(creds) {
 
 async function mount(creds = [{ id: "c1", label: "Prod" }], onChange) {
   resetDom();
-  const porthippo = stub(creds);
-  const picker = new CredentialPickerField({ porthippo, onChange });
+  const jumphippo = stub(creds);
+  const picker = new CredentialPickerField({ jumphippo, onChange });
   document.body.appendChild(picker.element);
   await picker.load();
-  return { picker, porthippo };
+  return { picker, jumphippo };
 }
 
 const sel = (p) => p.element.querySelector(".cred-picker-select");
@@ -87,9 +87,9 @@ test("setValue selects, and a deleted selection falls back to none", async () =>
 });
 
 test("a credentials-changed event refreshes the options", async () => {
-  const { picker, porthippo } = await mount([{ id: "c1", label: "Prod" }]);
-  porthippo._list.push({ id: "c2", label: "New one" });
-  window.dispatchEvent(new CustomEvent("porthippo:credentials-changed"));
+  const { picker, jumphippo } = await mount([{ id: "c1", label: "Prod" }]);
+  jumphippo._list.push({ id: "c2", label: "New one" });
+  window.dispatchEvent(new CustomEvent("jumphippo:credentials-changed"));
   await flush();
   assert.equal(sel(picker).querySelectorAll("option").length, 3);
 });

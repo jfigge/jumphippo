@@ -17,9 +17,9 @@
 // stats-store.js — the renderer-side data seam for the Feature 30 stats stream.
 //
 // The main process emits one throttled snapshot of every tunnel over
-// `porthippo:stats` (re-dispatched onto `window` as a CustomEvent by preload.js).
+// `jumphippo:stats` (re-dispatched onto `window` as a CustomEvent by preload.js).
 // This store is a thin subscriber: it keeps the latest snapshot keyed by tunnel id
-// and re-emits a `porthippo:stats-updated` DOM event, so the Feature 50 Monitoring
+// and re-emits a `jumphippo:stats-updated` DOM event, so the Feature 50 Monitoring
 // view can be a pure subscriber that never touches IPC directly. No rendering and
 // no derived math live here — just the data.
 
@@ -27,17 +27,17 @@ class StatsStore {
   #byId = new Map();
 
   constructor() {
-    window.addEventListener("porthippo:stats", (event) =>
+    window.addEventListener("jumphippo:stats", (event) =>
       this.#ingest(event.detail),
     );
   }
 
-  /** Replace the snapshot map from a `porthippo:stats` payload and re-broadcast. */
+  /** Replace the snapshot map from a `jumphippo:stats` payload and re-broadcast. */
   #ingest(snapshots) {
     if (!Array.isArray(snapshots)) return;
     this.#byId = new Map(snapshots.map((s) => [s.id, s]));
     window.dispatchEvent(
-      new CustomEvent("porthippo:stats-updated", {
+      new CustomEvent("jumphippo:stats-updated", {
         detail: { stats: this.#byId },
       }),
     );

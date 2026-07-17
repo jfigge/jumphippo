@@ -23,7 +23,7 @@
 
 const { contextBridge, ipcRenderer } = require("electron");
 
-contextBridge.exposeInMainWorld("porthippo", {
+contextBridge.exposeInMainWorld("jumphippo", {
   platform: process.platform,
   docs: {
     /**

@@ -24,11 +24,11 @@ const flush = () => new Promise((r) => setTimeout(r, 0));
 function mount(io = {}) {
   resetDom();
   const calls = { export: [], importBundle: [], importSshConfig: [] };
-  const porthippo = {
+  const jumphippo = {
     io: {
       export: async (o) => (
         calls.export.push(o),
-        { ok: true, path: "/b.porthippo" }
+        { ok: true, path: "/b.jumphippo" }
       ),
       previewBundle: async () => io.preview,
       importBundle: async (o) => (calls.importBundle.push(o), { ok: true }),
@@ -40,7 +40,7 @@ function mount(io = {}) {
       ...io.overrides,
     },
   };
-  return { dlg: new ImportExportDialog({ porthippo }), calls };
+  return { dlg: new ImportExportDialog({ jumphippo }), calls };
 }
 
 const q = (dlg, sel) => dlg.element.querySelector(sel);
@@ -92,7 +92,7 @@ test("import: the diff summary renders and Import applies the chosen mode", asyn
   const { dlg, calls } = mount({
     preview: {
       ok: true,
-      path: "/backup.porthippo",
+      path: "/backup.jumphippo",
       needsPassphrase: false,
       counts: {
         tunnels: { add: 2, update: 0, conflict: 1 },
@@ -103,7 +103,7 @@ test("import: the diff summary renders and Import applies the chosen mode", asyn
   });
 
   let imported = false;
-  window.addEventListener("porthippo:data-imported", () => (imported = true));
+  window.addEventListener("jumphippo:data-imported", () => (imported = true));
 
   await dlg.startImport();
   await flush();
@@ -117,7 +117,7 @@ test("import: the diff summary renders and Import applies the chosen mode", asyn
   await flush();
   assert.equal(calls.importBundle.length, 1);
   assert.equal(calls.importBundle[0].mode, "replace");
-  assert.equal(calls.importBundle[0].path, "/backup.porthippo");
+  assert.equal(calls.importBundle[0].path, "/backup.jumphippo");
   assert.ok(imported, "a data-imported event fires so views reload");
 });
 

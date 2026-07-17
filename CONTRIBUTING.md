@@ -1,12 +1,12 @@
-# Contributing to Port Hippo
+# Contributing to Jump Hippo
 
-Thanks for your interest in improving Port Hippo! This document explains how to
+Thanks for your interest in improving Jump Hippo! This document explains how to
 get set up, the conventions the project follows, and — importantly — how to
 certify your contributions via the **Developer Certificate of Origin (DCO)**.
 
 ## License of contributions
 
-Port Hippo is licensed under the [Apache License, Version 2.0](LICENSE). By
+Jump Hippo is licensed under the [Apache License, Version 2.0](LICENSE). By
 contributing, you agree that your contributions are licensed under the same terms
 (Apache-2.0), as set out in section 5 ("Submission of Contributions") of the
 license.
@@ -80,7 +80,7 @@ are enforced by tests.
 - **Keep modules focused.** Split a file along its seams before it grows into a
   god-file.
 - **IPC in lockstep.** Every `ipcMain.handle` channel needs a matching
-  `window.porthippo.*` exposure in `preload.js`; a static test guards this.
+  `window.jumphippo.*` exposure in `preload.js`; a static test guards this.
 - **i18n is single-source.** Edit the embedded `EN` catalog in
   `src/web/scripts/i18n.js`, then regenerate `src/web/locales/en.json` (a test
   asserts they stay byte-identical and that every `t("…")` key exists).

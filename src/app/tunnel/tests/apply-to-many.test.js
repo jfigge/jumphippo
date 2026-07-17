@@ -17,7 +17,7 @@
 /**
  * apply-to-many.test.js — Feature 140 bulk actions. `engine.applyToMany(ids,
  * action)` delegates to the per-tunnel methods but must emit exactly ONE coalesced
- * `porthippo:tunnel-state` broadcast (array payload) for the whole set, not one per
+ * `jumphippo:tunnel-state` broadcast (array payload) for the whole set, not one per
  * tunnel. Arming a local tunnel only binds its listener (no SSH connect), so these
  * tests are deterministic without a real SSH server.
  */
@@ -47,7 +47,7 @@ async function makeEngineWith(n) {
 }
 
 const stateEvents = (events) =>
-  events.filter((e) => e.channel === "porthippo:tunnel-state");
+  events.filter((e) => e.channel === "jumphippo:tunnel-state");
 
 test("applyToMany arm emits ONE coalesced tunnel-state broadcast for the set", async () => {
   const { engine, defs, events } = await makeEngineWith(3);

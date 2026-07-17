@@ -1,6 +1,6 @@
 # Import & Export
 
-Everything you build in Port Hippo — tunnels, reusable credentials, and jump-host
+Everything you build in Jump Hippo — tunnels, reusable credentials, and jump-host
 chains — normally lives only on the machine you built it on, encrypted for *that*
 device. The **Import/Export** tab in Settings lets you move a setup between
 machines, keep a backup, and seed a fresh install from your existing
@@ -8,7 +8,7 @@ machines, keep a backup, and seed a fresh install from your existing
 
 Open it from **Settings → Import/Export**.
 
-## The `.porthippo` bundle
+## The `.jumphippo` bundle
 
 A **bundle** is a single self-describing file containing your tunnels, credentials,
 and jump hosts (and, optionally, your app settings). It's the unit of backup and of
@@ -27,9 +27,9 @@ moving to a new machine.
   - **Protect with a passphrase** — encrypt the secrets with a passphrase you
     choose. You'll need that same passphrase to import them.
 
-Then pick where to save the `.porthippo` file.
+Then pick where to save the `.jumphippo` file.
 
-> **Why secrets aren't just copied.** Port Hippo seals secrets at rest with a key
+> **Why secrets aren't just copied.** Jump Hippo seals secrets at rest with a key
 > that's bound to *this* device (or your OS keychain, or your master password) — so
 > the sealed form deliberately **won't decrypt anywhere else**. Export therefore
 > uses its own portable, passphrase-based encryption instead of copying the
@@ -37,7 +37,7 @@ Then pick where to save the `.porthippo` file.
 
 ### Importing
 
-**Settings → Import/Export → Import bundle…** — pick a `.porthippo` file and Port Hippo
+**Settings → Import/Export → Import bundle…** — pick a `.jumphippo` file and Jump Hippo
 shows you a **preview** before anything changes: how many tunnels, credentials, and
 jump hosts are **new**, an **update** to something you already have, or a
 name **conflict**. Choose how to apply it:
@@ -56,7 +56,7 @@ inconsistent is rejected whole, never half-applied.
 
 1. On the old machine: **Export bundle…**, choosing *Protect with a passphrase* if
    you want your secrets to come across.
-2. Copy the `.porthippo` file to the new machine (any way you like).
+2. Copy the `.jumphippo` file to the new machine (any way you like).
 3. On the new machine: **Import bundle…**, enter the passphrase, and choose
    **Merge** (or **Replace everything** for a fresh install).
 
@@ -73,9 +73,9 @@ the credential and re-enter the password.
 ## Importing from your SSH config
 
 If you already keep hosts in `~/.ssh/config`, **Settings → Import/Export → Import
-from SSH config…** proposes Port Hippo records from it — no retyping.
+from SSH config…** proposes Jump Hippo records from it — no retyping.
 
-Port Hippo reads the common directives — `Host`, `HostName`, `User`, `Port`,
+Jump Hippo reads the common directives — `Host`, `HostName`, `User`, `Port`,
 `IdentityFile`, `ProxyJump`, and `Include` — and proposes, for each host:
 
 - a **credential** (an *agent* credential, or a *key* credential pointing at the

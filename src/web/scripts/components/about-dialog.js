@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-// about-dialog.js — the in-app "About Port Hippo" modal, mirroring Rest Hippo's
+// about-dialog.js — the in-app "About Jump Hippo" modal, mirroring Rest Hippo's
 // AboutDialog. An in-app PopupManager modal (not a native BrowserWindow), so it
 // matches the app's other dialogs. Opened from the top-left brand mark and the
-// Help ▸ About / macOS app menu (via the porthippo:show-about event). A branded
+// Help ▸ About / macOS app menu (via the jumphippo:show-about event). A branded
 // card: logo, name (with an (i) toggle revealing version / platform / Electron),
 // subtitle, description, credit, and Close.
 //
-// Build metadata comes from the main process over the window.porthippo bridge —
+// Build metadata comes from the main process over the window.jumphippo bridge —
 // the async getVersion() plus the static platform / arch / electron fields.
 // PopupManager owns the overlay, the Escape key, and mask-click dismissal.
 
@@ -68,7 +68,7 @@ export class AboutDialog {
 
   /** Pull version + platform metadata from the main process / bridge. */
   async #loadInfo() {
-    const bridge = window.porthippo;
+    const bridge = window.jumphippo;
     let version = null;
     try {
       version = await bridge?.getVersion?.();

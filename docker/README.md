@@ -1,6 +1,6 @@
-# Port Hippo integration-test sandbox
+# Jump Hippo integration-test sandbox
 
-Two Docker containers that model Port Hippo's core scenario — a **jump host** and a
+Two Docker containers that model Jump Hippo's core scenario — a **jump host** and a
 **destination** reachable only through it — so you can exercise real SSH tunnels
 (password **and** key auth, single-hop **and** jump-chain, and — since Feature 110
 — **local**, **reverse** and **dynamic/SOCKS** forwarding) against live sshd
@@ -42,7 +42,7 @@ weak and must never be exposed.
 | `make sandbox-stop`    | Stop the containers (fast restart; state kept) |
 | `make sandbox-destroy` | Remove the containers + networks (keeps the image + keys) |
 | `make sandbox-verify`  | Prove the topology with **raw ssh**: local (direct + via jump), dynamic (jump → sealed dest) and reverse (jump → host echo) forwarding all work |
-| `make sandbox-e2e`     | Drive **Port Hippo's own tunnel engine** over the sandbox — one real round-trip per forwarding type (local direct, local via jump, dynamic/SOCKS, reverse). Exits non-zero on any failure |
+| `make sandbox-e2e`     | Drive **Jump Hippo's own tunnel engine** over the sandbox — one real round-trip per forwarding type (local direct, local via jump, dynamic/SOCKS, reverse). Exits non-zero on any failure |
 | `make sandbox-host-echo` | Run the host-side echo the **reverse** tunnel forwards back to (leave running in its own terminal) |
 | `make sandbox-access`  | Re-print the access details |
 | `make sandbox-status`  | `docker compose ps` |
@@ -50,19 +50,19 @@ weak and must never be exposed.
 
 `make sandbox-start` alone also creates anything missing, so the quick path is
 `make sandbox-start` → `make sandbox-verify` (topology, raw ssh) →
-`make sandbox-e2e` (Port Hippo's engine, all four tunnel types).
+`make sandbox-e2e` (Jump Hippo's engine, all four tunnel types).
 
 ## Credentials
 
 - **User:** `tunnel`  ·  **Password:** `tunnelpass` (both containers)
-- **Key:** `docker/keys/id_porthippo` (generated on `sandbox-create`; its `.pub`
+- **Key:** `docker/keys/id_jumphippo` (generated on `sandbox-create`; its `.pub`
   is authorised on both containers). The `keys/` dir is git-ignored.
 
-## Using it from Port Hippo
+## Using it from Jump Hippo
 
 `make sandbox-start` prints ready-to-enter tunnel definitions; `make sandbox-seed`
 writes them straight into the `make debug` data dir. Host keys change on
-destroy→recreate, so the first arm after a recreate raises Port Hippo's
+destroy→recreate, so the first arm after a recreate raises Jump Hippo's
 trust-on-first-use prompt.
 
 Four seeded tunnels, one per capability:
@@ -97,7 +97,7 @@ browser's SOCKS setting at the same port to browse "as if" from the jump.
 3. Trigger it from inside the jump:
 
 ```
-docker exec porthippo-jump sh -c 'echo ping | socat - TCP:127.0.0.1:9090'
+docker exec jumphippo-jump sh -c 'echo ping | socat - TCP:127.0.0.1:9090'
 ```
 
 You'll see the host echo's banner + `ping` come back, and the `make sandbox-host-echo`

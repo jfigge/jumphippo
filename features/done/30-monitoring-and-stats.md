@@ -12,7 +12,7 @@ Feature 50.
 The relay (`relay.js`) already increments byte counters (Feature 20, step 4). Here we
 aggregate them per tunnel, derive rates over a rolling window, and stream throttled
 snapshots to the renderer, following Rest Hippo's pattern of a main-owned source of truth
-broadcast to the renderer over a `porthippo:*` event.
+broadcast to the renderer over a `jumphippo:*` event.
 
 ## Goal
 Per-tunnel live statistics — up/down byte totals, current up/down rates, total data
@@ -24,7 +24,7 @@ connection and the definition intact.
 ## Design decisions (settled — do not relitigate)
 - **Metrics live in the engine, in main.** Each `Tunnel` owns a `Stats` object updated by
   its relays. There is no per-connection IPC chatter — the engine emits **one throttled
-  snapshot of all tunnels** (default ~1 Hz) over `porthippo:stats`. The renderer is a pure
+  snapshot of all tunnels** (default ~1 Hz) over `jumphippo:stats`. The renderer is a pure
   view of that snapshot.
 - **Rates are a rolling measurement, not instantaneous.** Compute up/down bytes-per-second
   from a short sliding window (e.g. 1s buckets over a few seconds, or an EWMA) so the
@@ -75,18 +75,18 @@ connection and the definition intact.
    `onConnected/onDisconnected` on SSH connect/teardown and set `armedAt` on arm.
 3. **Snapshot broadcaster.** In `engine.js`, a single throttled timer (start when ≥1 tunnel
    is armed, stop when none are) collects `snapshot()` from every tunnel and emits
-   `porthippo:stats` to all renderer windows. Also emit an immediate snapshot on any state
+   `jumphippo:stats` to all renderer windows. Also emit an immediate snapshot on any state
    change (so the UI doesn't wait up to a second to reflect connect/disconnect/pause).
 4. **Pause/resume in the engine.** Add `pause(id)` / `resume(id)` to `Tunnel` + `Engine`:
    pause stops the listener accepting, pauses every live relay's streams, sets state
    `paused`, freezes rates; resume reverses it. Ensure disarm-while-paused and
    SSH-drop-while-paused are handled cleanly.
 5. **IPC + preload.** `tunnels:pause`, `tunnels:resume` handlers; expose
-   `window.porthippo.tunnels.pause/resume`. The renderer subscribes to `porthippo:stats`
+   `window.jumphippo.tunnels.pause/resume`. The renderer subscribes to `jumphippo:stats`
    via an existing `onEvent`-style bridge (or `ipcRenderer.on` surfaced through preload as
-   `window.porthippo.onStats(cb)`). Keep main/preload in lockstep.
+   `window.jumphippo.onStats(cb)`). Keep main/preload in lockstep.
 6. **Renderer stats store (thin).** A small `src/web/scripts/stats-store.js` that holds the
-   latest snapshot map and re-emits a `porthippo:stats-updated` DOM event, so Feature 50's
+   latest snapshot map and re-emits a `jumphippo:stats-updated` DOM event, so Feature 50's
    view is a pure subscriber. No rendering here — just the data seam.
 7. **Tests.** `stats.test.js` (rate math with a fake clock: burst then idle → rate decays
    to zero; totals monotonic; connection counting) and an engine-level
@@ -96,7 +96,7 @@ connection and the definition intact.
 8. **License headers** on new files.
 
 ## Acceptance criteria
-- With traffic flowing through a tunnel, `porthippo:stats` snapshots show non-zero up/down
+- With traffic flowing through a tunnel, `jumphippo:stats` snapshots show non-zero up/down
   **rates** that decay to zero shortly after traffic stops, and monotonically increasing
   **totals**.
 - `activeConnections`, `lastActiveAt`, `openedAt` (SSH session), and `armedAt` are accurate
@@ -118,8 +118,8 @@ connection and the definition intact.
 
 ## Verify
 `make fmt && make lint && make test`. Then `make debug`: arm a tunnel, push traffic
-through the local port, and watch `porthippo:stats` in DevTools — confirm rates rise under
+through the local port, and watch `jumphippo:stats` in DevTools — confirm rates rise under
 load and decay to zero when idle, totals only grow, and `activeConnections` tracks live
-connections. Call `window.porthippo.tunnels.pause(id)` mid-transfer and confirm traffic
+connections. Call `window.jumphippo.tunnels.pause(id)` mid-transfer and confirm traffic
 halts while state is `paused` and the SSH connection stays up; `resume(id)` and confirm
 flow returns.

@@ -16,10 +16,10 @@
 
 // host-key-prompt.js — app-wide SSH host-key (TOFU) mediation. The engine can't
 // decide trust on its own, so on an unknown key it broadcasts
-// `porthippo:hostkey-unknown` and holds the connection pending until the renderer
+// `jumphippo:hostkey-unknown` and holds the connection pending until the renderer
 // answers via `hostkeys.trust(promptId)` / `hostkeys.reject(promptId)`. This
 // module turns that broadcast into a PopupManager confirm; a *changed* key
-// (`porthippo:hostkey-changed`) is a hard reject already made by the engine, so it
+// (`jumphippo:hostkey-changed`) is a hard reject already made by the engine, so it
 // only warns. It is app-wide state any panel might care about, so it lives here
 // rather than inside the Definition view.
 
@@ -27,25 +27,25 @@ import { PopupManager } from "./popup-manager.js";
 import { t } from "./i18n.js";
 
 export class HostKeyPrompt {
-  #porthippo;
+  #jumphippo;
   #onUnknown;
   #onChanged;
 
-  constructor({ porthippo } = {}) {
-    this.#porthippo = porthippo || window.porthippo;
+  constructor({ jumphippo } = {}) {
+    this.#jumphippo = jumphippo || window.jumphippo;
     this.#onUnknown = (e) => this.#promptUnknown(e.detail);
     this.#onChanged = (e) => this.#warnChanged(e.detail);
   }
 
   install() {
-    window.addEventListener("porthippo:hostkey-unknown", this.#onUnknown);
-    window.addEventListener("porthippo:hostkey-changed", this.#onChanged);
+    window.addEventListener("jumphippo:hostkey-unknown", this.#onUnknown);
+    window.addEventListener("jumphippo:hostkey-changed", this.#onChanged);
     return this;
   }
 
   uninstall() {
-    window.removeEventListener("porthippo:hostkey-unknown", this.#onUnknown);
-    window.removeEventListener("porthippo:hostkey-changed", this.#onChanged);
+    window.removeEventListener("jumphippo:hostkey-unknown", this.#onUnknown);
+    window.removeEventListener("jumphippo:hostkey-changed", this.#onChanged);
   }
 
   #promptUnknown(info) {
@@ -63,8 +63,8 @@ export class HostKeyPrompt {
       confirmLabel: t("common.trust"),
       cancelLabel: t("common.reject"),
       confirmClass: "btn--primary",
-      onConfirm: () => this.#porthippo?.hostkeys?.trust?.(promptId),
-      onCancel: () => this.#porthippo?.hostkeys?.reject?.(promptId),
+      onConfirm: () => this.#jumphippo?.hostkeys?.trust?.(promptId),
+      onCancel: () => this.#jumphippo?.hostkeys?.reject?.(promptId),
     });
   }
 

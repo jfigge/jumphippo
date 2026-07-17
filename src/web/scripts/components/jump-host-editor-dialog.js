@@ -18,7 +18,7 @@
 // <dialog>. A jump host is host/port plus a reference to a credential (chosen with
 // a nested CredentialPickerField, whose own "New…" opens the credential editor on
 // top — native <dialog> stacking). On a successful store write it emits a global
-// `porthippo:jumphosts-changed` so open pickers refresh, and calls back onSaved.
+// `jumphippo:jumphosts-changed` so open pickers refresh, and calls back onSaved.
 
 import { el } from "../dom.js";
 import { field, applyFieldErrors } from "../field.js";
@@ -37,7 +37,7 @@ function toPort(str) {
 
 export class JumpHostEditorDialog {
   #dialog;
-  #porthippo;
+  #jumphippo;
   #openKeyFile;
   #onSaved;
 
@@ -51,12 +51,12 @@ export class JumpHostEditorDialog {
 
   /**
    * @param {object} [opts]
-   * @param {object} [opts.porthippo]  IPC bridge (defaults to window.porthippo)
+   * @param {object} [opts.jumphippo]  IPC bridge (defaults to window.jumphippo)
    * @param {() => Promise<string|null>} [opts.openKeyFile]
    * @param {(record: object) => void} [opts.onSaved]
    */
-  constructor({ porthippo, openKeyFile, onSaved } = {}) {
-    this.#porthippo = porthippo || window.porthippo;
+  constructor({ jumphippo, openKeyFile, onSaved } = {}) {
+    this.#jumphippo = jumphippo || window.jumphippo;
     this.#openKeyFile = openKeyFile;
     this.#onSaved = onSaved;
 
@@ -144,7 +144,7 @@ export class JumpHostEditorDialog {
       onInput: (e) => (this.#form.port = e.target.value),
     });
     this.#credPicker = new CredentialPickerField({
-      porthippo: this.#porthippo,
+      jumphippo: this.#jumphippo,
       openKeyFile: this.#openKeyFile,
       label: t("editor.credential"),
       onChange: (id) => (this.#form.credentialId = id),
@@ -183,8 +183,8 @@ export class JumpHostEditorDialog {
     let result;
     try {
       result = this.#editingId
-        ? await this.#porthippo.jumpHosts.update(this.#editingId, payload)
-        : await this.#porthippo.jumpHosts.create(payload);
+        ? await this.#jumphippo.jumpHosts.update(this.#editingId, payload)
+        : await this.#jumphippo.jumpHosts.create(payload);
     } catch (err) {
       this.#dialog.showError(
         t("editor.saveError", { message: err?.message || String(err) }),
@@ -202,7 +202,7 @@ export class JumpHostEditorDialog {
 
     this.#dialog.close();
     window.dispatchEvent(
-      new CustomEvent("porthippo:jumphosts-changed", {
+      new CustomEvent("jumphippo:jumphosts-changed", {
         detail: { id: result && result.id },
       }),
     );

@@ -175,7 +175,7 @@ class Tunnel {
     return this.#paused ? "paused" : this.#state;
   }
 
-  /** A serializable snapshot for IPC status + `porthippo:tunnel-state` broadcasts. */
+  /** A serializable snapshot for IPC status + `jumphippo:tunnel-state` broadcasts. */
   status() {
     const snap = {
       id: this.#def.id,
@@ -200,7 +200,7 @@ class Tunnel {
   }
 
   /**
-   * The Feature 30 metrics snapshot for the `porthippo:stats` stream: the tunnel's
+   * The Feature 30 metrics snapshot for the `jumphippo:stats` stream: the tunnel's
    * reported state + error merged with its `Stats` (rates, totals, timestamps).
    * Plain serializable data — no live handles cross IPC.
    */

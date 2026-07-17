@@ -15,7 +15,7 @@
  */
 
 /**
- * seed-porthippo.js — populate Port Hippo's store with definitions that match the
+ * seed-jumphippo.js — populate Jump Hippo's store with definitions that match the
  * Docker sandbox (see docker/README.md): two reusable credentials (key + password),
  * a jump host, and two tunnels (direct to the jump's echo, and through the jump to
  * the dest's echo).
@@ -27,8 +27,8 @@
  * Idempotent: records are keyed by label/name, so re-running only adds what's
  * missing. Never touches unrelated entries you already have.
  *
- *   node docker/seed-porthippo.js [dataDir]
- *   PORTHIPPO_DATA_DIR=/path node docker/seed-porthippo.js
+ *   node docker/seed-jumphippo.js [dataDir]
+ *   JUMPHIPPO_DATA_DIR=/path node docker/seed-jumphippo.js
  *
  * Default dataDir is the repo's `data/` dir — the one `make debug` uses.
  */
@@ -63,11 +63,11 @@ const NET_ECHO_PORT = Number(env.NET_ECHO_PORT || 7001);
 const SOCKS_LOCAL_PORT = Number(env.SOCKS_LOCAL_PORT || 18080);
 const REMOTE_BIND_PORT = Number(env.REMOTE_BIND_PORT || 9090);
 const HOST_ECHO_PORT = Number(env.HOST_ECHO_PORT || 9091);
-const KEY_PATH = path.join(__dirname, "keys", "id_porthippo");
+const KEY_PATH = path.join(__dirname, "keys", "id_jumphippo");
 
 const dataDir =
   process.argv[2] ||
-  process.env.PORTHIPPO_DATA_DIR ||
+  process.env.JUMPHIPPO_DATA_DIR ||
   path.join(__dirname, "..", "data");
 
 // ── Idempotent upserts ──────────────────────────────────────────────────────────
@@ -114,7 +114,7 @@ function ensureTunnel(spec) {
   return created.id;
 }
 
-console.log(`Seeding Port Hippo sandbox definitions into: ${dataDir}\n`);
+console.log(`Seeding Jump Hippo sandbox definitions into: ${dataDir}\n`);
 
 // Two reusable credentials — the same login, exercised both ways.
 const keyCredId = ensureCredential({
@@ -184,7 +184,7 @@ ensureTunnel({
 // Scenario D (REMOTE / reverse, Feature 110) — bind a port ON the jump host and
 // forward every inbound connection back to a local echo on THIS machine. Run
 // `make sandbox-host-echo` first (the local target), arm this tunnel, then from
-// the jump: `docker exec porthippo-jump sh -c \
+// the jump: `docker exec jumphippo-jump sh -c \
 //   'echo ping | socat - TCP:127.0.0.1:${REMOTE_BIND_PORT}'` — it reaches the host echo.
 ensureTunnel({
   name: "Sandbox — reverse forward (jump → host)",

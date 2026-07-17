@@ -16,7 +16,7 @@
 
 // error-history-dialog.js — builds the popup body listing a tunnel's error (and,
 // later, warning) history, newest first. A pure DOM builder: it takes the event
-// log (as returned by `window.porthippo.tunnels.events(id)`) and returns a
+// log (as returned by `window.jumphippo.tunnels.events(id)`) and returns a
 // `.popup` element for PopupManager.open — no IPC, no singleton, so it's directly
 // unit-testable. Each event is `{ at, level, message }`; `level` styles the row
 // and picks its label so a future "warning" entry slots in with no new wiring.

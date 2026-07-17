@@ -17,7 +17,7 @@
 // group-editor-dialog.js — create/edit a reusable tunnel group (Feature 140) in a
 // native <dialog>. A group is purely organisational: a label plus a colour picked
 // from the fixed GROUP_COLORS token palette (never a free hex). On a successful
-// store write it emits a global `porthippo:groups-changed` so open lists / the tray
+// store write it emits a global `jumphippo:groups-changed` so open lists / the tray
 // refresh, and calls back `onSaved(record)` for the opener that launched it.
 
 import { el } from "../dom.js";
@@ -33,7 +33,7 @@ import {
 
 export class GroupEditorDialog {
   #dialog;
-  #porthippo;
+  #jumphippo;
   #onSaved;
 
   #form = blankForm();
@@ -46,15 +46,15 @@ export class GroupEditorDialog {
 
   /**
    * @param {object} [opts]
-   * @param {object} [opts.porthippo]  IPC bridge (defaults to window.porthippo)
+   * @param {object} [opts.jumphippo]  IPC bridge (defaults to window.jumphippo)
    * @param {(record: object) => void} [opts.onSaved]  the created/updated record
    */
-  constructor({ porthippo, onSaved } = {}) {
-    this.#porthippo = porthippo || window.porthippo;
+  constructor({ jumphippo, onSaved } = {}) {
+    this.#jumphippo = jumphippo || window.jumphippo;
     this.#onSaved = onSaved;
 
     this.#scheduleField = new ScheduleEditorField({
-      porthippo: this.#porthippo,
+      jumphippo: this.#jumphippo,
       onChange: () => this.#dialog.clearError(),
     });
 
@@ -182,8 +182,8 @@ export class GroupEditorDialog {
     let result;
     try {
       result = this.#editingId
-        ? await this.#porthippo.groups.update(this.#editingId, payload)
-        : await this.#porthippo.groups.create(payload);
+        ? await this.#jumphippo.groups.update(this.#editingId, payload)
+        : await this.#jumphippo.groups.create(payload);
     } catch (err) {
       this.#dialog.showError(
         t("editor.saveError", { message: err?.message || String(err) }),
@@ -201,7 +201,7 @@ export class GroupEditorDialog {
 
     this.#dialog.close();
     window.dispatchEvent(
-      new CustomEvent("porthippo:groups-changed", {
+      new CustomEvent("jumphippo:groups-changed", {
         detail: { id: result && result.id },
       }),
     );

@@ -20,7 +20,7 @@
 // inline (PopupManager only hosts one popup, so a nested confirm would detach
 // Settings): a non-master switch shows an inline confirm bar; master-password
 // reveals inline set/confirm fields; a locked session shows an inline unlock row.
-// Intents go out over window.porthippo.secretStorage.*; a decrypted secret never
+// Intents go out over window.jumphippo.secretStorage.*; a decrypted secret never
 // comes back. Fully self-contained — the popup just mounts `element` and calls
 // `load()` when the Security tab is revealed.
 
@@ -28,21 +28,21 @@ import { el } from "../dom.js";
 import { t } from "../i18n.js";
 
 export class SecuritySettings {
-  #porthippo;
+  #jumphippo;
   #root;
   #securityState = null; // last { mode, locked, available, hasPassword }
   #pendingMode = null; // a non-master mode awaiting inline switch confirmation
 
-  constructor({ porthippo } = {}) {
-    this.#porthippo =
-      porthippo ||
-      (typeof window !== "undefined" ? window.porthippo : undefined);
+  constructor({ jumphippo } = {}) {
+    this.#jumphippo =
+      jumphippo ||
+      (typeof window !== "undefined" ? window.jumphippo : undefined);
     this.#root = this.#securityPanel();
 
     // A mode/lock change (ours or from elsewhere — menu, another window) refreshes
     // the panel in place. Payload carries only status, never a secret.
     if (typeof window !== "undefined") {
-      window.addEventListener("porthippo:secret-storage-changed", (event) => {
+      window.addEventListener("jumphippo:secret-storage-changed", (event) => {
         this.#applySecurityState(event.detail);
       });
     }
@@ -237,7 +237,7 @@ export class SecuritySettings {
   async load() {
     let state;
     try {
-      state = await this.#porthippo?.secretStorage?.getMode?.();
+      state = await this.#jumphippo?.secretStorage?.getMode?.();
     } catch {
       return; // leave the panel as-is on a read failure
     }
@@ -299,7 +299,7 @@ export class SecuritySettings {
     this.#setSecurityStatus(t("settings.security.switching"));
     let res;
     try {
-      res = await this.#porthippo?.secretStorage?.setMode?.({ mode: target });
+      res = await this.#jumphippo?.secretStorage?.setMode?.({ mode: target });
     } catch {
       res = { ok: false, reason: "error" };
     }
@@ -326,7 +326,7 @@ export class SecuritySettings {
     this.#setSecurityStatus(t("settings.security.switching"));
     let res;
     try {
-      res = await this.#porthippo?.secretStorage?.setMode?.({
+      res = await this.#jumphippo?.secretStorage?.setMode?.({
         mode: "master-password",
         password: pw,
       });
@@ -349,7 +349,7 @@ export class SecuritySettings {
     this.#setSecurityStatus(t("settings.security.unlocking"));
     let res;
     try {
-      res = await this.#porthippo?.secretStorage?.unlock?.(pw);
+      res = await this.#jumphippo?.secretStorage?.unlock?.(pw);
     } catch {
       res = { ok: false, reason: "error" };
     }
@@ -371,7 +371,7 @@ export class SecuritySettings {
   }
 
   // Shared success/failure tail for a mode switch. On success the panel refreshes
-  // (here and via the porthippo:secret-storage-changed broadcast); on failure the
+  // (here and via the jumphippo:secret-storage-changed broadcast); on failure the
   // radio snaps back to the still-current mode and the reason shows.
   #afterMutation(res) {
     if (res && res.ok) {

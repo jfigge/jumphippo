@@ -1,4 +1,4 @@
-# Port Hippo integration-test sandbox.
+# Jump Hippo integration-test sandbox.
 #
 #   host ──2201──▶ [ jump 172.28.0.11 / 172.29.0.11 ] ──▶ [ dest 172.29.0.12 ]
 #                     sshd + echo(127.0.0.1:7000)            sshd + echo(127.0.0.1:7000)
@@ -11,7 +11,7 @@
 
 x-sandbox-common: &sandbox-common
   build: .
-  image: porthippo-sandbox
+  image: jumphippo-sandbox
   restart: unless-stopped
   volumes:
     - ./keys:/keys:ro
@@ -20,13 +20,13 @@ x-sandbox-common: &sandbox-common
 
 networks:
   front:
-    name: porthippo-front
+    name: jumphippo-front
     driver: bridge
     ipam:
       config:
         - subnet: ${FRONT_SUBNET}
   back:
-    name: porthippo-back
+    name: jumphippo-back
     driver: bridge
     internal: true # no route to the host or the internet — dest is sealed behind jump
     ipam:
@@ -36,7 +36,7 @@ networks:
 services:
   jump:
     <<: *sandbox-common
-    container_name: porthippo-jump
+    container_name: jumphippo-jump
     hostname: jump
     environment:
       SSH_USER: ${SSH_USER}
@@ -55,7 +55,7 @@ services:
 
   dest:
     <<: *sandbox-common
-    container_name: porthippo-dest
+    container_name: jumphippo-dest
     hostname: dest
     environment:
       SSH_USER: ${SSH_USER}

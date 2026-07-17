@@ -21,7 +21,7 @@
 // "cards" (the master TunnelList + per-tunnel TunnelDetail) and "list" (the
 // all-tunnels TunnelTable). Both share the persisted card order (columns) so the
 // "Cards" checklist governs either view. All native work flows through
-// `window.porthippo.*`; the existing dialogs are reused unchanged.
+// `window.jumphippo.*`; the existing dialogs are reused unchanged.
 
 import { el } from "../dom.js";
 import { t } from "../i18n.js";
@@ -53,7 +53,7 @@ export class TunnelsView {
   #detail;
   #table;
   #editor;
-  #porthippo;
+  #jumphippo;
   #now;
 
   #split;
@@ -83,19 +83,19 @@ export class TunnelsView {
   #onSetMode;
   #onScheduleUpdated;
 
-  constructor({ porthippo, openKeyFile, now } = {}) {
-    this.#porthippo = porthippo || window.porthippo;
+  constructor({ jumphippo, openKeyFile, now } = {}) {
+    this.#jumphippo = jumphippo || window.jumphippo;
     this.#now = now || Date.now;
 
     this.#editor = new TunnelEditorDialog({
-      porthippo: this.#porthippo,
+      jumphippo: this.#jumphippo,
       openKeyFile,
       onSubmit: (payload, ctx) => this.#submit(payload, ctx),
       onSaved: (record) => this.#afterSaved(record),
     });
 
     this.#groupEditor = new GroupEditorDialog({
-      porthippo: this.#porthippo,
+      jumphippo: this.#jumphippo,
       onSaved: (record) => this.#afterGroupSaved(record),
     });
 
@@ -197,12 +197,12 @@ export class TunnelsView {
     // A group create/edit/delete anywhere (this view's editor or another window)
     // re-reads the group list so both presentations refresh (Feature 140).
     this.#onGroupsChanged = () => this.load();
-    window.addEventListener("porthippo:stats-updated", this.#onStats);
-    window.addEventListener("porthippo:tunnel-state", this.#onTunnelState);
-    window.addEventListener("porthippo:set-detail-mode", this.#onSetMode);
-    window.addEventListener("porthippo:groups-changed", this.#onGroupsChanged);
+    window.addEventListener("jumphippo:stats-updated", this.#onStats);
+    window.addEventListener("jumphippo:tunnel-state", this.#onTunnelState);
+    window.addEventListener("jumphippo:set-detail-mode", this.#onSetMode);
+    window.addEventListener("jumphippo:groups-changed", this.#onGroupsChanged);
     window.addEventListener(
-      "porthippo:schedule-updated",
+      "jumphippo:schedule-updated",
       this.#onScheduleUpdated,
     );
   }
@@ -221,11 +221,11 @@ export class TunnelsView {
   /** Load definitions, jump hosts (breadcrumb), groups, live state, card order + mode. */
   async load() {
     const [defs, status, jumps, groups, settings] = await Promise.all([
-      this.#porthippo?.tunnels?.list?.() ?? [],
-      this.#porthippo?.tunnels?.status?.() ?? [],
-      this.#porthippo?.jumpHosts?.list?.() ?? [],
-      this.#porthippo?.groups?.list?.() ?? [],
-      this.#porthippo?.settings?.get?.() ?? {},
+      this.#jumphippo?.tunnels?.list?.() ?? [],
+      this.#jumphippo?.tunnels?.status?.() ?? [],
+      this.#jumphippo?.jumpHosts?.list?.() ?? [],
+      this.#jumphippo?.groups?.list?.() ?? [],
+      this.#jumphippo?.settings?.get?.() ?? {},
     ]);
     this.#defs = Array.isArray(defs) ? defs : [];
     this.#groups = Array.isArray(groups) ? groups : [];
@@ -294,15 +294,15 @@ export class TunnelsView {
   }
 
   destroy() {
-    window.removeEventListener("porthippo:stats-updated", this.#onStats);
-    window.removeEventListener("porthippo:tunnel-state", this.#onTunnelState);
-    window.removeEventListener("porthippo:set-detail-mode", this.#onSetMode);
+    window.removeEventListener("jumphippo:stats-updated", this.#onStats);
+    window.removeEventListener("jumphippo:tunnel-state", this.#onTunnelState);
+    window.removeEventListener("jumphippo:set-detail-mode", this.#onSetMode);
     window.removeEventListener(
-      "porthippo:groups-changed",
+      "jumphippo:groups-changed",
       this.#onGroupsChanged,
     );
     window.removeEventListener(
-      "porthippo:schedule-updated",
+      "jumphippo:schedule-updated",
       this.#onScheduleUpdated,
     );
     this.#resizer.destroy();
@@ -317,10 +317,10 @@ export class TunnelsView {
     this.#applyMode();
     // Echo the resolved mode so the header <select> reflects it.
     window.dispatchEvent(
-      new CustomEvent("porthippo:detail-mode-changed", { detail: { mode: m } }),
+      new CustomEvent("jumphippo:detail-mode-changed", { detail: { mode: m } }),
     );
     if (persist) {
-      this.#porthippo?.settings?.set?.({ detailMode: m })?.catch?.(() => {});
+      this.#jumphippo?.settings?.set?.({ detailMode: m })?.catch?.(() => {});
     }
   }
 
@@ -395,7 +395,7 @@ export class TunnelsView {
       { id: "delete", label: t("tunnels.menu.delete") },
     ];
 
-    const action = await this.#porthippo?.contextMenu?.popup?.({ items });
+    const action = await this.#jumphippo?.contextMenu?.popup?.({ items });
     switch (action) {
       case "edit":
         this.#editById(id);
@@ -495,12 +495,12 @@ export class TunnelsView {
 
   #submit(payload, { id }) {
     return id
-      ? this.#porthippo.tunnels.update(id, payload)
-      : this.#porthippo.tunnels.create(payload);
+      ? this.#jumphippo.tunnels.update(id, payload)
+      : this.#jumphippo.tunnels.create(payload);
   }
 
   async #afterSaved(record) {
-    window.dispatchEvent(new CustomEvent("porthippo:tunnels-changed"));
+    window.dispatchEvent(new CustomEvent("jumphippo:tunnels-changed"));
     if (record && record.id) this.#selectedId = record.id; // focus the saved tunnel
     await this.load();
   }
@@ -511,12 +511,12 @@ export class TunnelsView {
     PopupManager.confirmDelete({
       message: t("def.delete.message", { name: def.name || t("def.unnamed") }),
       onConfirm: async () => {
-        const result = await this.#porthippo.tunnels.delete(id);
+        const result = await this.#jumphippo.tunnels.delete(id);
         if (result && result.__hippoError) {
           PopupManager.notify({ message: result.message || "Delete failed" });
           return;
         }
-        window.dispatchEvent(new CustomEvent("porthippo:tunnels-changed"));
+        window.dispatchEvent(new CustomEvent("jumphippo:tunnels-changed"));
         if (this.#selectedId === id) this.#selectedId = null;
         await this.load();
       },
@@ -531,8 +531,8 @@ export class TunnelsView {
     const next = armed ? "disarmed" : "listening";
     this.#setLiveState(id, next);
     const result = await (armed
-      ? this.#porthippo?.tunnels?.disarm?.(id)
-      : this.#porthippo?.tunnels?.arm?.(id));
+      ? this.#jumphippo?.tunnels?.disarm?.(id)
+      : this.#jumphippo?.tunnels?.arm?.(id));
     if (result && result.__hippoError) {
       this.#setLiveState(id, prev);
       PopupManager.notify({ message: result.message || "Engine error" });
@@ -543,8 +543,8 @@ export class TunnelsView {
     const state = this.#states.get(id) || "disarmed";
     if (state !== "connected" && state !== "paused") return;
     const result = await (state === "paused"
-      ? this.#porthippo?.tunnels?.resume?.(id)
-      : this.#porthippo?.tunnels?.pause?.(id));
+      ? this.#jumphippo?.tunnels?.resume?.(id)
+      : this.#jumphippo?.tunnels?.pause?.(id));
     if (result && result.__hippoError) {
       PopupManager.notify({ message: result.message || "Engine error" });
     }
@@ -570,7 +570,7 @@ export class TunnelsView {
     const def = this.#defs.find((d) => d.id === id);
     let events = [];
     try {
-      const res = await this.#porthippo?.tunnels?.events?.(id);
+      const res = await this.#jumphippo?.tunnels?.events?.(id);
       if (Array.isArray(res)) events = res;
     } catch {
       events = [];
@@ -597,14 +597,14 @@ export class TunnelsView {
     this.#cardOrder = order;
     this.#detail.setCardOrder(order);
     this.#table.setCardOrder(order);
-    this.#porthippo?.settings?.set?.({ cardOrder: order })?.catch?.(() => {});
+    this.#jumphippo?.settings?.set?.({ cardOrder: order })?.catch?.(() => {});
   }
 
   /** Persist the shared card layout ({col,row} map) that every tunnel uses — the
    *  detail canvas reports it as the user drags / adds / removes a card. */
   #persistCardLayout(positions) {
     this.#cardLayout = positions;
-    this.#porthippo?.settings
+    this.#jumphippo?.settings
       ?.set?.({ cardLayout: positions })
       ?.catch?.(() => {});
   }
@@ -635,18 +635,18 @@ export class TunnelsView {
     }
     if (!migrated) migrated = Object.values(legacy).find(isLayout) || null;
 
-    this.#porthippo?.settings
+    this.#jumphippo?.settings
       ?.set?.({ cardLayout: migrated, cardLayouts: undefined })
       ?.catch?.(() => {});
     return migrated;
   }
 
   #persistListSort(sort) {
-    this.#porthippo?.settings?.set?.({ listSort: sort })?.catch?.(() => {});
+    this.#jumphippo?.settings?.set?.({ listSort: sort })?.catch?.(() => {});
   }
 
   #persistSplit(px) {
-    this.#porthippo?.settings
+    this.#jumphippo?.settings
       ?.set?.({ splitLeft: Math.round(px) })
       ?.catch?.(() => {});
   }
@@ -677,7 +677,7 @@ export class TunnelsView {
     // would replace — not merge — the key).
     const map = {};
     for (const id of this.#collapsed) map[id] = true;
-    this.#porthippo?.settings
+    this.#jumphippo?.settings
       ?.set?.({ groupCollapsed: map })
       ?.catch?.(() => {});
   }
@@ -696,7 +696,7 @@ export class TunnelsView {
   #groupAction(sectionId, action) {
     const ids = this.#idsInSection(sectionId);
     if (ids.length === 0) return;
-    this.#porthippo?.tunnels?.applyMany?.(ids, action)?.catch?.(() => {});
+    this.#jumphippo?.tunnels?.applyMany?.(ids, action)?.catch?.(() => {});
   }
 
   async #showGroupMenu(sectionId) {
@@ -714,7 +714,7 @@ export class TunnelsView {
         { id: "delete", label: t("group.menu.delete") },
       );
     }
-    const action = await this.#porthippo?.contextMenu?.popup?.({ items });
+    const action = await this.#jumphippo?.contextMenu?.popup?.({ items });
     switch (action) {
       case "arm":
       case "disarm":
@@ -751,7 +751,7 @@ export class TunnelsView {
     PopupManager.confirmDelete({
       message: t("group.delete.message", { name: group.label }),
       onConfirm: async () => {
-        const result = await this.#porthippo?.groups?.delete?.(groupId);
+        const result = await this.#jumphippo?.groups?.delete?.(groupId);
         if (result && result.__hippoError) {
           PopupManager.notify({ message: result.message || "Delete failed" });
           return;
@@ -763,7 +763,7 @@ export class TunnelsView {
 
   async #afterGroupSaved(record) {
     // If this group was created to receive a pending selection, move those tunnels
-    // into it now; #assignMany reloads. Otherwise the porthippo:groups-changed
+    // into it now; #assignMany reloads. Otherwise the jumphippo:groups-changed
     // listener reloads both views.
     if (this.#pendingAssignIds && record && record.id) {
       const ids = this.#pendingAssignIds;
@@ -781,7 +781,7 @@ export class TunnelsView {
       const def = this.#defs.find((d) => d.id === id);
       if (!def) continue;
       writes.push(
-        this.#porthippo?.tunnels?.update?.(
+        this.#jumphippo?.tunnels?.update?.(
           id,
           this.#assignPayload(def, groupId),
         ),
@@ -792,7 +792,7 @@ export class TunnelsView {
     } catch {
       // best-effort; a failed assignment just leaves that tunnel where it was
     }
-    window.dispatchEvent(new CustomEvent("porthippo:tunnels-changed"));
+    window.dispatchEvent(new CustomEvent("jumphippo:tunnels-changed"));
     await this.load();
   }
 
@@ -836,7 +836,7 @@ export class TunnelsView {
     if (currentGroupId === target && sameOrder) return; // nothing changed
 
     if (currentGroupId !== target) {
-      const res = await this.#porthippo?.tunnels?.update?.(
+      const res = await this.#jumphippo?.tunnels?.update?.(
         id,
         this.#assignPayload(def, target),
       );
@@ -845,8 +845,8 @@ export class TunnelsView {
         return;
       }
     }
-    await this.#porthippo?.tunnels?.reorder?.(order);
-    window.dispatchEvent(new CustomEvent("porthippo:tunnels-changed"));
+    await this.#jumphippo?.tunnels?.reorder?.(order);
+    window.dispatchEvent(new CustomEvent("jumphippo:tunnels-changed"));
     await this.load();
   }
 
@@ -868,7 +868,7 @@ export class TunnelsView {
     ids.splice(from, 1);
     const at = ids.indexOf(toId);
     ids.splice(at === -1 ? ids.length : at, 0, fromId);
-    const result = await this.#porthippo?.groups?.reorder?.(ids);
+    const result = await this.#jumphippo?.groups?.reorder?.(ids);
     if (result && result.__hippoError) return;
     await this.load();
   }

@@ -1,4 +1,4 @@
-// eslint.config.js — ESLint 9 flat configuration for Port Hippo
+// eslint.config.js — ESLint 9 flat configuration for Jump Hippo
 "use strict";
 
 const js = require("@eslint/js");

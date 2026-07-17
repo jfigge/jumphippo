@@ -16,7 +16,7 @@
 
 /**
  * tests/portable-ipc.test.js — the Feature 120 import/export IPC contract, end to
- * end through the real registerPortableIPC: export writes a `.porthippo` file via a
+ * end through the real registerPortableIPC: export writes a `.jumphippo` file via a
  * (faked) save dialog, preview + import read it back via a (faked) open dialog, and
  * a successful import reconciles the engine. Uses real Stores over temp profiles.
  */
@@ -33,7 +33,7 @@ const { Stores } = require("../store/stores");
 const { registerPortableIPC } = require("../ipc/portable");
 
 function freshDir() {
-  return fs.mkdtempSync(path.join(os.tmpdir(), "porthippo-ioipc-"));
+  return fs.mkdtempSync(path.join(os.tmpdir(), "jumphippo-ioipc-"));
 }
 
 // A harness wiring registerPortableIPC to real Stores with a scriptable dialog.
@@ -84,7 +84,7 @@ function seed(stores) {
 test("export writes a bundle; preview + import round-trip it and reconcile", async () => {
   const srcDir = freshDir();
   const dstDir = freshDir();
-  const bundlePath = path.join(srcDir, "backup.porthippo");
+  const bundlePath = path.join(srcDir, "backup.jumphippo");
   try {
     const a = harness(srcDir);
     seed(a.stores);
@@ -96,7 +96,7 @@ test("export writes a bundle; preview + import round-trip it and reconcile", asy
     assert.equal(exp.path, bundlePath);
     assert.ok(fs.existsSync(bundlePath), "the bundle file was written");
     const bundle = JSON.parse(fs.readFileSync(bundlePath, "utf8"));
-    assert.equal(bundle.format, "porthippo-bundle");
+    assert.equal(bundle.format, "jumphippo-bundle");
 
     // Preview on a fresh profile (fake open dialog → bundlePath).
     const b = harness(dstDir);

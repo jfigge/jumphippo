@@ -28,7 +28,7 @@ const { Stores } = require("../stores");
 // secret storage (safeStorage is absent in a plain `node --test` process) and
 // configures crypto, so secrets are really sealed on disk.
 function freshDir() {
-  return fs.mkdtempSync(path.join(os.tmpdir(), "porthippo-tunnels-"));
+  return fs.mkdtempSync(path.join(os.tmpdir(), "jumphippo-tunnels-"));
 }
 
 function readRawTunnels(dir) {

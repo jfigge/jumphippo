@@ -19,7 +19,7 @@
  * Monitoring view (Feature 50) renders. The relay feeds it byte counts and
  * connection open/close events; the tunnel feeds it arm / SSH-connect /
  * SSH-disconnect lifecycle events. `snapshot()` returns a plain, serializable
- * object the engine streams to the renderer over `porthippo:stats`.
+ * object the engine streams to the renderer over `jumphippo:stats`.
  *
  * Semantics (settled in the Feature 30 plan):
  *   - **Totals** (`bytesUp` / `bytesDown`) are monotonic counters, cumulative

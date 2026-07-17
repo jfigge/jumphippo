@@ -17,7 +17,7 @@
 /**
  * tray.js — the system-tray / menu-bar presence.
  *
- * Port Hippo is a background utility whose job is to keep tunnels alive, so the
+ * Jump Hippo is a background utility whose job is to keep tunnels alive, so the
  * tray is its primary always-available surface: a status-reflecting tooltip, a
  * per-tunnel quick submenu, arm-all/disarm-all, Show/Settings/Quit. It is fed by
  * `getStatus()` (a snapshot of `{ tunnels:[{id,name,state}], total, active }`

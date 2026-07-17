@@ -116,7 +116,7 @@ export const EN = {
   "editor.entryPort.desc":
     "The local address that represents the entry point of the tunnel on this machine. Enter a port on its own (bound to 127.0.0.1) or an address:port. An address must resolve to a loopback address, 0.0.0.0, or one of this machine’s own interfaces — it can’t point off-box.",
   "editor.entryPort.privileged":
-    "Ports below 1024 need Port Hippo to run as {admin} to open them.",
+    "Ports below 1024 need Jump Hippo to run as {admin} to open them.",
   "editor.entryPort.notLocal":
     "“{host}” isn’t an address on this machine — the entry point can only bind a local address.",
 
@@ -400,10 +400,10 @@ export const EN = {
 
   // ── App shell / header (Feature 60) ─────────────────────────────────────
   "header.settings": "Settings",
-  "header.about": "About Port Hippo",
+  "header.about": "About Jump Hippo",
 
   // ── About dialog (Feature 60) ───────────────────────────────────────────
-  "about.name": "Port Hippo",
+  "about.name": "Jump Hippo",
   "about.subtitle": "SSH Tunnel Manager",
   "about.description": "On-demand SSH tunnels for your desktop.",
   "about.credit": "Created by Jason, coded by Claude",
@@ -445,7 +445,7 @@ export const EN = {
   "settings.defaults.keepAlive.hint":
     "The keep-alive default for new tunnels (they can override it).",
 
-  "settings.behaviour.launchAtLogin": "Launch Port Hippo at login",
+  "settings.behaviour.launchAtLogin": "Launch Jump Hippo at login",
   "settings.behaviour.startMinimized": "Start minimized to the tray",
   "settings.behaviour.startMinimized.hint":
     "Only applies when launched at login.",
@@ -503,7 +503,7 @@ export const EN = {
 
   // ── Settings → Notifications & reliability (Feature 130) ─────────────────
   "settings.reliability.help":
-    "Get told when a tunnel drops, recovers or gives up — and tune how Port Hippo detects a dead connection and retries it.",
+    "Get told when a tunnel drops, recovers or gives up — and tune how Jump Hippo detects a dead connection and retries it.",
   "settings.reliability.notificationsEnabled": "Show desktop notifications",
   "settings.reliability.notificationsEnabled.hint":
     "The master switch. Your operating system’s Do Not Disturb is always respected.",
@@ -528,7 +528,7 @@ export const EN = {
   // ── Settings → Security (selectable secret storage, Feature 90) ─────────
   "settings.security.heading": "Secret storage",
   "settings.security.help":
-    "Choose how Port Hippo encrypts SSH passwords and key passphrases on this device. Switching re-encrypts every stored secret.",
+    "Choose how Jump Hippo encrypts SSH passwords and key passphrases on this device. Switching re-encrypts every stored secret.",
   "settings.security.modeAria": "Secret storage mode",
   "settings.security.mode.appKey": "This device (no prompt)",
   "settings.security.mode.appKeyDesc":
@@ -576,10 +576,10 @@ export const EN = {
   "settings.hostkeys.forget": "Forget",
   "settings.hostkeys.forgetAria": "Forget host key for {host}",
   "settings.hostkeys.confirm": "Forget this key?",
-  "settings.hostkeys.tab.porthippo": "Port Hippo",
+  "settings.hostkeys.tab.jumphippo": "Jump Hippo",
   "settings.hostkeys.tab.os": "Operating System",
   "settings.hostkeys.os.help":
-    "Host keys from your operating system’s SSH configuration. Port Hippo checks these too but can’t change them — manage them manually.",
+    "Host keys from your operating system’s SSH configuration. Jump Hippo checks these too but can’t change them — manage them manually.",
   "settings.hostkeys.os.path": "Found in {path}",
   "settings.hostkeys.os.empty":
     "No host keys found in your OS SSH configuration.",
@@ -591,13 +591,13 @@ export const EN = {
 
   // ── Import / export (Settings → Data, Feature 120) ──────────────────────
   "io.data.help":
-    "Back up your tunnels, credentials and jump hosts to a portable file, restore them on another machine, or seed Port Hippo from your SSH config.",
+    "Back up your tunnels, credentials and jump hosts to a portable file, restore them on another machine, or seed Jump Hippo from your SSH config.",
   "io.data.export": "Export bundle…",
   "io.data.exportDesc":
-    "Save your tunnels, credentials and jump hosts to a .porthippo file.",
+    "Save your tunnels, credentials and jump hosts to a .jumphippo file.",
   "io.data.importBundle": "Import bundle…",
   "io.data.importBundleDesc":
-    "Restore tunnels, credentials and jump hosts from a .porthippo file.",
+    "Restore tunnels, credentials and jump hosts from a .jumphippo file.",
   "io.data.importSsh": "Import from SSH config…",
   "io.data.importSshDesc":
     "Propose tunnels, credentials and jump hosts from your ~/.ssh/config.",
@@ -643,7 +643,7 @@ export const EN = {
   "io.import.passphrase": "Bundle passphrase",
   "io.import.submit": "Import",
   "io.import.done": "Import complete.",
-  "io.import.error.invalid": "That file isn’t a valid Port Hippo bundle.",
+  "io.import.error.invalid": "That file isn’t a valid Jump Hippo bundle.",
   "io.import.error.badPassphrase": "Incorrect passphrase.",
   "io.import.error.passphraseRequired": "Enter the bundle’s passphrase.",
   "io.import.error.dangling":
@@ -677,19 +677,19 @@ export const EN = {
   "menu.view": "View",
   "menu.viewDefinition": "Definition",
   "menu.viewMonitoring": "Monitoring",
-  "menu.userGuide": "Port Hippo User Guide",
+  "menu.userGuide": "Jump Hippo User Guide",
   "menu.copyDiagnostics": "Copy Diagnostics",
   "menu.showLogs": "Show Logs Folder",
-  "menu.about": "About Port Hippo",
-  "menu.hide": "Hide Port Hippo",
-  "menu.quit": "Quit Port Hippo",
+  "menu.about": "About Jump Hippo",
+  "menu.hide": "Hide Jump Hippo",
+  "menu.quit": "Quit Jump Hippo",
   "menu.checkUpdates": "Check for Updates…",
   "menu.fontIncrease": "Increase Font Size",
   "menu.fontDecrease": "Decrease Font Size",
   "menu.fontReset": "Reset Font Size",
 
   // ── Tray (MAIN process) ─────────────────────────────────────────────────
-  "tray.show": "Show Port Hippo",
+  "tray.show": "Show Jump Hippo",
   "tray.tunnels": "Tunnels",
   "tray.armAll": "Arm All",
   "tray.disarmAll": "Disarm All",
@@ -698,18 +698,18 @@ export const EN = {
   "tray.group.disarmAll": "Disarm All",
   "tray.settings": "Settings…",
   "tray.copyDiagnostics": "Copy Diagnostics",
-  "tray.quit": "Quit Port Hippo",
-  "tray.tooltip": "Port Hippo — {active} of {total} active",
-  "tray.tooltip.none": "Port Hippo — no tunnels",
+  "tray.quit": "Quit Jump Hippo",
+  "tray.tooltip": "Jump Hippo — {active} of {total} active",
+  "tray.tooltip.none": "Jump Hippo — no tunnels",
   // Aggregate-health summary line, shown only when not fully healthy (Feature 130).
   "tray.health.reconnecting": "Reconnecting {n} tunnel(s)…",
   "tray.health.error": "{n} tunnel(s) need attention",
 
   // ── Shell notifications / dialogs (MAIN process) ────────────────────────
-  "shell.hide.title": "Port Hippo is still running",
+  "shell.hide.title": "Jump Hippo is still running",
   "shell.hide.body":
     "Tunnels stay active in the background. Use the tray icon to show the window or quit.",
-  "shell.quit.title": "Quit Port Hippo?",
+  "shell.quit.title": "Quit Jump Hippo?",
   "shell.quit.message":
     "Quitting disarms every tunnel and closes its SSH connections.",
   "shell.quit.confirm": "Quit",
@@ -723,10 +723,10 @@ export const EN = {
   "notify.recovered.body": "“{name}” reconnected.",
   "notify.gaveUp.title": "Tunnel gave up",
   "notify.gaveUp.body":
-    "“{name}” couldn’t reconnect. Open Port Hippo to retry.",
+    "“{name}” couldn’t reconnect. Open Jump Hippo to retry.",
   "notify.hostkeyChanged.title": "⚠ SSH host key changed",
   "notify.hostkeyChanged.body":
-    "“{name}” was refused because its host key changed. Review it in Port Hippo.",
+    "“{name}” was refused because its host key changed. Review it in Jump Hippo.",
 };
 
 // ── Module state ─────────────────────────────────────────────────────────────
@@ -883,7 +883,7 @@ export function getLang() {
  */
 export async function init() {
   try {
-    const payload = await window?.porthippo?.i18n?.load?.();
+    const payload = await window?.jumphippo?.i18n?.load?.();
     if (payload) applyCatalog(payload);
   } catch {
     // Keep the embedded English catalog.

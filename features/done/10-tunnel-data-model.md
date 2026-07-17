@@ -1,13 +1,13 @@
 # Feature 10 — Tunnel data model & encrypted store
 
 ## Context
-Feature 00 gives us a launchable shell with a `window.porthippo` bridge but no data. Before
+Feature 00 gives us a launchable shell with a `window.jumphippo` bridge but no data. Before
 we can build the SSH engine (Feature 20) or any UI (Features 40/50), we need a **durable,
 typed model of a tunnel definition** and a place to keep it. Rest Hippo solves the same
 problem with a file-based store under Electron's `userData` path (`src/app/store/`), with
 atomic temp-then-rename writes, in-process write serialization, schema versioning +
 migrations, and **encrypt-at-rest for secrets** (`src/app/store/secret-storage.js`,
-`crypto.js`). Port Hippo reuses that architecture at a much smaller scale: a single
+`crypto.js`). Jump Hippo reuses that architecture at a much smaller scale: a single
 collection of tunnel definitions, plus an accepted-host-keys record and app settings.
 
 The security stakes are higher here than in a REST client: a tunnel definition can carry
@@ -17,7 +17,7 @@ an SSH **password** or a key **passphrase**. Those must never sit in plaintext o
 A main-process store that persists an ordered list of **tunnel definitions** — each fully
 describing a local port, a destination host/port, an SSH server, an ordered jump-host
 chain, and per-hop auth — with secrets encrypted at rest, exposed to the renderer through
-CRUD IPC on `window.porthippo.tunnels.*`, and covered by unit tests.
+CRUD IPC on `window.jumphippo.tunnels.*`, and covered by unit tests.
 
 ## Design decisions (settled — do not relitigate)
 - **One store module family under `src/app/store/`**, ported down from Rest Hippo:
@@ -85,7 +85,7 @@ Secret fields (`auth[].passphrase`, `auth[].password`) are stored as
 4. **Accepted host keys store.** A small `known-hosts-store.js` (`get(hostPort)`,
    `trust(hostPort, fingerprint)`, `list()`, `revoke()`) persisting fingerprints the user
    has accepted — consumed by the engine's host-key verifier (Feature 20). Kept separate
-   from `~/.ssh/known_hosts` (which the engine also reads); this holds Port-Hippo-accepted
+   from `~/.ssh/known_hosts` (which the engine also reads); this holds Jump-Hippo-accepted
    TOFU entries.
 5. **Settings store.** A minimal `settings-store.js` (`get()/set(patch)`) for app-wide
    prefs — theme, default `lingerMs`, default `bindHost`, launch-at-login (used later by
@@ -93,7 +93,7 @@ Secret fields (`auth[].passphrase`, `auth[].password`) are stored as
 6. **IPC + preload.** Register `tunnels:list/get/create/update/delete/reorder`,
    `settings:get/set`, and `hostkeys:list/revoke` handlers in a new
    `src/app/ipc/store.js` (called from `main.js`), and expose them under
-   `window.porthippo.tunnels.*`, `.settings.*`, `.hostkeys.*` in `preload.js`. Keep the two
+   `window.jumphippo.tunnels.*`, `.settings.*`, `.hostkeys.*` in `preload.js`. Keep the two
    files in lockstep.
 7. **IPC parity test.** Add `src/app/tests/ipc-parity.test.js` (ported from Rest Hippo)
    asserting every channel handled in main is exposed in preload and vice-versa. Wire it
@@ -106,7 +106,7 @@ Secret fields (`auth[].passphrase`, `auth[].password`) are stored as
 
 ## Acceptance criteria
 - A tunnel definition can be created, listed, updated, reordered, and deleted through
-  `window.porthippo.tunnels.*`, surviving an app restart.
+  `window.jumphippo.tunnels.*`, surviving an app restart.
 - A password/passphrase written into a definition is stored **encrypted** on disk
   (grep the JSON: no plaintext secret), and the renderer-facing read exposes only
   `hasSecret: true` — never the value.
@@ -124,7 +124,7 @@ Secret fields (`auth[].passphrase`, `auth[].password`) are stored as
 
 ## Verify
 `make fmt && make lint && make test`. Then in `make debug`, from DevTools:
-`await window.porthippo.tunnels.create({...})` a definition with a `password` auth,
+`await window.jumphippo.tunnels.create({...})` a definition with a `password` auth,
 restart the app, and confirm `tunnels.list()` returns it with `hasSecret:true` and no
 plaintext password. Inspect `data/tunnels.json` (the dev user-data dir) and confirm the
 secret is ciphertext. Create an invalid definition (port 99999) and confirm the validation

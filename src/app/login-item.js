@@ -20,7 +20,7 @@
  * macOS/Windows use Electron's native `app.setLoginItemSettings` (which also
  * honours `openAsHidden` so a login launch can start straight into the tray).
  * Linux has no such API, so we manage a freedesktop autostart entry ourselves
- * (`~/.config/autostart/porthippo.desktop`).
+ * (`~/.config/autostart/jumphippo.desktop`).
  *
  * Every collaborator (the Electron `app`, the platform, the home directory, and
  * `fs`) is injected so the module is unit-testable without a running Electron
@@ -31,7 +31,7 @@
 
 const path = require("path");
 
-const APP_ID = "porthippo";
+const APP_ID = "jumphippo";
 
 /**
  * @param {object} deps
@@ -46,7 +46,7 @@ const APP_ID = "porthippo";
 function createLoginItem({
   app,
   platform = process.platform,
-  appName = "Port Hippo",
+  appName = "Jump Hippo",
   exePath = process.execPath,
   homedir = require("os").homedir,
   fs = require("fs"),

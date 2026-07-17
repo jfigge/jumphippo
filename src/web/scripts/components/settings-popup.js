@@ -17,8 +17,8 @@
 // settings-popup.js — the Settings panel (Feature 60), following Rest Hippo's
 // SettingsPopup pattern: a tabbed popup over the shared PopupManager with NO
 // Save button — every change applies live. On change it persists the whole
-// settings object via `window.porthippo.settings.set(...)` and dispatches a
-// global `porthippo:settings-changed` CustomEvent so consumers (app.js theme,
+// settings object via `window.jumphippo.settings.set(...)` and dispatches a
+// global `jumphippo:settings-changed` CustomEvent so consumers (app.js theme,
 // the engine's live-read defaults) react. A language change reloads the window
 // so every string re-resolves against the new catalog.
 //
@@ -45,7 +45,7 @@ const PANELS = [
 ];
 
 export class SettingsPopup {
-  #porthippo;
+  #jumphippo;
   #el = null;
   #built = false;
   #loadedLanguage = null;
@@ -53,19 +53,19 @@ export class SettingsPopup {
   #hostKeys; // the Settings → Host Keys panel (accepted TOFU fingerprints)
   #impexp = null; // the Settings → Data import/export dialog (lazy)
 
-  constructor({ porthippo } = {}) {
-    this.#porthippo = porthippo || window.porthippo;
+  constructor({ jumphippo } = {}) {
+    this.#jumphippo = jumphippo || window.jumphippo;
     // Owns the Security tab (its DOM, state, and the secret-storage-changed
     // subscription); the popup just mounts it and asks it to reload on reveal.
-    this.#security = new SecuritySettings({ porthippo: this.#porthippo });
+    this.#security = new SecuritySettings({ jumphippo: this.#jumphippo });
     // Likewise owns the Host Keys tab: mounted here, reloaded on reveal.
-    this.#hostKeys = new HostKeysPanel({ porthippo: this.#porthippo });
+    this.#hostKeys = new HostKeysPanel({ jumphippo: this.#jumphippo });
   }
 
   /** The import/export dialog, built on first use (it stacks over this popup). */
   #importExport() {
     if (!this.#impexp) {
-      this.#impexp = new ImportExportDialog({ porthippo: this.#porthippo });
+      this.#impexp = new ImportExportDialog({ jumphippo: this.#jumphippo });
     }
     return this.#impexp;
   }
@@ -74,7 +74,7 @@ export class SettingsPopup {
   async open() {
     let settings = {};
     try {
-      settings = (await this.#porthippo?.settings?.get?.()) || {};
+      settings = (await this.#jumphippo?.settings?.get?.()) || {};
     } catch {
       // Fall back to empty → controls show their built-in defaults.
     }
@@ -148,7 +148,7 @@ export class SettingsPopup {
       class: "btn popup-btn btn--ghost",
       type: "button",
       text: t("tray.copyDiagnostics"),
-      onClick: () => this.#porthippo?.diagnostics?.copy?.(),
+      onClick: () => this.#jumphippo?.diagnostics?.copy?.(),
     });
 
     return el(
@@ -538,7 +538,7 @@ export class SettingsPopup {
     const values = this.#readValues();
     const languageChanged = values.language !== this.#loadedLanguage;
 
-    const saved = this.#porthippo?.settings?.set?.(values);
+    const saved = this.#jumphippo?.settings?.set?.(values);
     Promise.resolve(saved)
       .catch(() => {})
       .finally(() => {
@@ -549,7 +549,7 @@ export class SettingsPopup {
       });
 
     window.dispatchEvent(
-      new CustomEvent("porthippo:settings-changed", { detail: values }),
+      new CustomEvent("jumphippo:settings-changed", { detail: values }),
     );
   }
 }

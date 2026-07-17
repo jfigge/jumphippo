@@ -1,7 +1,7 @@
 name: Deploy Website
 
 # Builds the marketing/download site and publishes it to GitHub Pages
-# (porthippo.com). Runs on every push to main and manually. Downloads link to
+# (jumphippo.com). Runs on every push to main and manually. Downloads link to
 # GitHub Releases; versions.json and the hosted user guide are generated here so
 # the site always tracks the repo.
 #

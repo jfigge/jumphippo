@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  App Sandbox entitlements for the Mac App Store (MAS) build of Jump Hippo.
+
+  The MAS build runs under Apple's App Sandbox (NOT the hardened runtime — the
+  two are mutually exclusive; build.mas sets hardenedRuntime:false). Kept to the
+  minimum the App Store accepts:
+
+    * app-sandbox                 required for every MAS app.
+    * network.client              outbound SSH connections to jump hosts and
+                                  destinations (ssh2 over TCP).
+    * network.server              the local loopback tunnel listeners
+                                  (net.createServer bound to bindHost:localPort).
+    * files.user-selected.read-only  read the private-key files the user picks
+                                  through the native open dialog
+                                  (dialog:open-key-file). The sandbox grants
+                                  access only to files the user selected.
+    * cs.allow-jit                V8's JIT compiler.
+
+  Deliberately ABSENT (and why):
+    * files.user-selected.read-write   Jump Hippo never writes user-picked files;
+                                  everything it persists lives in its own
+                                  container (userData).
+    * disable-library-validation  forbidden under the App Sandbox; electron-builder
+                                  produces a MAS-signed bundle that doesn't need it.
+
+  Sandbox caveats (see STORE-PUBLISHING.md → "MAS functional caveats"): the
+  container gets its own $HOME, so ~/.ssh/known_hosts is invisible (host keys
+  fall back to the accepted-keys store / TOFU prompts, which still work),
+  ssh-agent's socket is unreachable (agent auth fails; use key/password auth),
+  and a key-file path picked in a previous session needs re-selection after a
+  relaunch until security-scoped bookmarks are implemented.
+-->
+<plist version="1.0">
+  <dict>
+    <key>com.apple.security.app-sandbox</key>
+    <true/>
+    <key>com.apple.security.network.client</key>
+    <true/>
+    <key>com.apple.security.network.server</key>
+    <true/>
+    <key>com.apple.security.files.user-selected.read-only</key>
+    <true/>
+    <key>com.apple.security.cs.allow-jit</key>
+    <true/>
+  </dict>
+</plist>

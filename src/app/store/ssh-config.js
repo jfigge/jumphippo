@@ -16,7 +16,7 @@
 
 /**
  * ssh-config.js — a dependency-free, read-only parser for the common `~/.ssh/config`
- * subset, plus a mapper that PROPOSES Port Hippo credentials / jump hosts / tunnel
+ * subset, plus a mapper that PROPOSES Jump Hippo credentials / jump hosts / tunnel
  * drafts from it (Feature 120). Nothing is written here — the renderer reviews the
  * proposal and the user commits a selection (portable.applySshProposal).
  *

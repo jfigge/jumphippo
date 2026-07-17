@@ -77,7 +77,7 @@ const numStr = (v) => (v === undefined || v === null ? "" : String(v));
 
 export class TunnelEditorDialog {
   #dialog;
-  #porthippo;
+  #jumphippo;
   #onSubmit;
   #onSaved;
 
@@ -110,21 +110,21 @@ export class TunnelEditorDialog {
 
   /**
    * @param {object} opts
-   * @param {object} [opts.porthippo]  IPC bridge (defaults to window.porthippo)
+   * @param {object} [opts.jumphippo]  IPC bridge (defaults to window.jumphippo)
    * @param {() => Promise<string|null>} [opts.openKeyFile]
    * @param {(payload: object, ctx: { id: string|null }) => Promise<object>} opts.onSubmit
    *        performs the store write and resolves to the record or a `{ __hippoError }`.
    * @param {(record: object) => void} [opts.onSaved]  fires after a successful write.
    */
-  constructor({ porthippo, openKeyFile, onSubmit, onSaved } = {}) {
-    this.#porthippo =
-      porthippo ||
-      (typeof window !== "undefined" ? window.porthippo : undefined);
+  constructor({ jumphippo, openKeyFile, onSubmit, onSaved } = {}) {
+    this.#jumphippo =
+      jumphippo ||
+      (typeof window !== "undefined" ? window.jumphippo : undefined);
     this.#onSubmit = onSubmit;
     this.#onSaved = onSaved;
 
     this.#credPicker = new CredentialPickerField({
-      porthippo: this.#porthippo,
+      jumphippo: this.#jumphippo,
       openKeyFile,
       label: t("editor.credential"),
       onChange: (id) => {
@@ -133,12 +133,12 @@ export class TunnelEditorDialog {
       },
     });
     this.#jumpPicker = new JumpHostPickerField({
-      porthippo: this.#porthippo,
+      jumphippo: this.#jumphippo,
       openKeyFile,
       onChange: () => this.#changed(),
     });
     this.#scheduleField = new ScheduleEditorField({
-      porthippo: this.#porthippo,
+      jumphippo: this.#jumphippo,
       onChange: () => this.#changed(),
       heading: false, // the "Schedule" tab already labels this section
     });
@@ -254,7 +254,7 @@ export class TunnelEditorDialog {
     this.#scheduleField.setValue(d.schedule);
 
     // Existing tunnels for the local-port conflict check.
-    this.#existing = (await this.#porthippo?.tunnels?.list?.()) || [];
+    this.#existing = (await this.#jumphippo?.tunnels?.list?.()) || [];
 
     this.#updateEntryWarning();
     this.#resetProbe();
@@ -657,7 +657,7 @@ export class TunnelEditorDialog {
   #closeResolvePopup() {
     if (this.#probeRunning && !this.#probeCancelled) {
       this.#probeCancelled = true;
-      this.#porthippo?.resolve?.cancel?.();
+      this.#jumphippo?.resolve?.cancel?.();
     }
     if (this.#resolvePopup?.open) this.#resolvePopup.close();
   }
@@ -709,7 +709,7 @@ export class TunnelEditorDialog {
     }
     let res;
     try {
-      res = await this.#porthippo?.resolve?.bindcheck?.(host);
+      res = await this.#jumphippo?.resolve?.bindcheck?.(host);
     } catch {
       res = null;
     }
@@ -735,7 +735,7 @@ export class TunnelEditorDialog {
     }
     let res;
     try {
-      res = await this.#porthippo?.resolve?.lookup?.(host);
+      res = await this.#jumphippo?.resolve?.lookup?.(host);
     } catch {
       res = null;
     }
@@ -764,7 +764,7 @@ export class TunnelEditorDialog {
 
     let result;
     try {
-      result = await this.#porthippo?.resolve?.test?.(this.buildPayload());
+      result = await this.#jumphippo?.resolve?.test?.(this.buildPayload());
     } catch (err) {
       result = { __hippoError: true, message: err?.message || String(err) };
     }
@@ -879,7 +879,7 @@ export class TunnelEditorDialog {
 
   /** The OS term for the privileged account, chosen from the reported platform. */
   #adminTerm() {
-    return this.#porthippo?.platform === "win32"
+    return this.#jumphippo?.platform === "win32"
       ? t("common.administrator")
       : t("common.root");
   }

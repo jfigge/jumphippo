@@ -1,16 +1,16 @@
 <div align="center">
 
-<img src="website/favicon.svg" width="72" height="72" alt="Port Hippo" />
+<img src="website/favicon.svg" width="72" height="72" alt="Jump Hippo" />
 
-# Port Hippo
+# Jump Hippo
 
 **SSH tunnels that open on demand.**
 
-[Download](https://porthippo.com/#downloads) · [User Guide](https://porthippo.com/docs/) · [Website](https://porthippo.com)
+[Download](https://jumphippo.com/#downloads) · [User Guide](https://jumphippo.com/docs/) · [Website](https://jumphippo.com)
 
 </div>
 
-Port Hippo is a cross-platform desktop app (Electron + Vanilla JS/Node) that binds
+Jump Hippo is a cross-platform desktop app (Electron + Vanilla JS/Node) that binds
 a local port and **automatically opens an SSH tunnel the moment that port is
 accessed** — through a chain of jump hosts if you need them — holds it open while
 traffic is flowing, and tears the SSH connection down once the port goes idle. The
@@ -38,13 +38,13 @@ and **never phones home**.
 ## Download
 
 Get the latest build for macOS, Windows, or Linux from
-**[porthippo.com](https://porthippo.com/#downloads)**.
+**[jumphippo.com](https://jumphippo.com/#downloads)**.
 
 ## Documentation
 
-The full **[User Guide](https://porthippo.com/docs/)** covers defining tunnels,
+The full **[User Guide](https://jumphippo.com/docs/)** covers defining tunnels,
 jump hosts, authentication, host-key trust, monitoring, background behaviour, and
-security. It's also available in-app from **Help → Port Hippo User Guide**.
+security. It's also available in-app from **Help → Jump Hippo User Guide**.
 
 ## Build from source
 
@@ -60,11 +60,11 @@ architecture and conventions.
 
 ## Security
 
-Port Hippo handles SSH credentials and forwards ports. In short: entry ports bind
+Jump Hippo handles SSH credentials and forwards ports. In short: entry ports bind
 to **loopback by default**; secrets are **encrypted at rest** and never leave the
 main process in cleartext; **every** SSH host key is verified and a *changed* key
 is refused; logs and diagnostics are redacted; and the app makes no telemetry
-calls. See the [Security guide](https://porthippo.com/docs/security.html) for the
+calls. See the [Security guide](https://jumphippo.com/docs/security.html) for the
 full picture, and [`SECURITY.md`](SECURITY.md) to report a vulnerability privately.
 
 ## Contributing

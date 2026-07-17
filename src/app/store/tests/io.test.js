@@ -32,7 +32,7 @@ const path = require("node:path");
 const io = require("../io");
 
 function freshDir() {
-  return fs.mkdtempSync(path.join(os.tmpdir(), "porthippo-io-"));
+  return fs.mkdtempSync(path.join(os.tmpdir(), "jumphippo-io-"));
 }
 
 function withDir(fn) {
@@ -141,7 +141,7 @@ test("readJSON rethrows a non-ENOENT read error (e.g. a directory)", () => {
 test("gcOrphanTempFiles removes only aged temp files, never real data", () => {
   withDir((dir) => {
     const real = path.join(dir, "data.json");
-    const orphan = path.join(dir, "data.json.porthippotmp-1.tmp");
+    const orphan = path.join(dir, "data.json.jumphippotmp-1.tmp");
     fs.writeFileSync(real, "{}");
     fs.writeFileSync(orphan, "partial");
 
@@ -160,7 +160,7 @@ test("gcOrphanTempFiles removes only aged temp files, never real data", () => {
 
 test("gcOrphanTempFiles spares a temp file younger than maxAgeMs", () => {
   withDir((dir) => {
-    const orphan = path.join(dir, "data.json.porthippotmp-2.tmp");
+    const orphan = path.join(dir, "data.json.jumphippotmp-2.tmp");
     fs.writeFileSync(orphan, "in flight");
     const removed = io.gcOrphanTempFiles(dir, {
       maxAgeMs: 5000,
@@ -175,7 +175,7 @@ test("gcOrphanTempFiles recurses into subdirectories", () => {
   withDir((dir) => {
     const sub = path.join(dir, "keys");
     fs.mkdirSync(sub);
-    const orphan = path.join(sub, "host.json.porthippotmp-3.tmp");
+    const orphan = path.join(sub, "host.json.jumphippotmp-3.tmp");
     fs.writeFileSync(orphan, "x");
     const removed = io.gcOrphanTempFiles(dir, {
       maxAgeMs: 0,
@@ -188,7 +188,7 @@ test("gcOrphanTempFiles recurses into subdirectories", () => {
 test("gcOrphanTempFiles is a no-op on a missing directory", () => {
   assert.deepEqual(
     io.gcOrphanTempFiles(
-      path.join(os.tmpdir(), "porthippo-does-not-exist-xyz"),
+      path.join(os.tmpdir(), "jumphippo-does-not-exist-xyz"),
     ),
     [],
   );
@@ -197,7 +197,7 @@ test("gcOrphanTempFiles is a no-op on a missing directory", () => {
 // ── id / temp-name predicates ────────────────────────────────────────────────────
 
 test("isTempFileName matches only our temp pattern", () => {
-  assert.equal(io.isTempFileName("data.json.porthippotmp-7.tmp"), true);
+  assert.equal(io.isTempFileName("data.json.jumphippotmp-7.tmp"), true);
   assert.equal(io.isTempFileName("data.json"), false);
   assert.equal(io.isTempFileName("data.json.tmp"), false);
   assert.equal(io.isTempFileName("data.json.corrupt-123-abcd"), false);

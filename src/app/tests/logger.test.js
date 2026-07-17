@@ -25,7 +25,7 @@ const path = require("node:path");
 const { createLogger, formatArg } = require("../logger");
 
 function freshDir() {
-  return fs.mkdtempSync(path.join(os.tmpdir(), "porthippo-log-"));
+  return fs.mkdtempSync(path.join(os.tmpdir(), "jumphippo-log-"));
 }
 
 test("a line carries an ISO timestamp, level and scope, parts space-joined", () => {

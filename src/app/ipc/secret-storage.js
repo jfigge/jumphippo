@@ -32,13 +32,13 @@
  * On a successful unlock or mode switch the engine is asked to `reconcileAll()`
  * so tunnels that armed while a secret was undecryptable (a locked master key)
  * pick up the now-decryptable definition and can (re)connect, and a one-way
- * `porthippo:secret-storage-changed` broadcast lets the UI reflect the new
+ * `jumphippo:secret-storage-changed` broadcast lets the UI reflect the new
  * mode/lock status. A successful unlock additionally fires the optional
  * `onUnlock` hook, which main uses to run any startup arming it DEFERRED because
  * the store booted locked (the unlock-on-launch prompt). Reason codes are
  * machine-readable only; a secret never crosses this boundary.
  *
- * Every channel registered here MUST have a matching `window.porthippo.*`
+ * Every channel registered here MUST have a matching `window.jumphippo.*`
  * exposure in preload.js AND this file must be listed in the ipc-parity test's
  * scan set (tests/ipc-parity.test.js) — the guard fails the build otherwise.
  *
@@ -92,7 +92,7 @@ function registerSecretStorageIPC({
         );
       }
     }
-    broadcast?.("porthippo:secret-storage-changed", state());
+    broadcast?.("jumphippo:secret-storage-changed", state());
   };
 
   ipcMain.handle("secret-storage:get-mode", () => state());

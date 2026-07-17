@@ -58,7 +58,7 @@ further interaction.
   a dropped or renamed token silently breaks a string. The parity test (below) makes that a CI
   failure rather than a runtime surprise.
 
-- **The product noun and protocol terms stay untranslated.** "Port Hippo" is a brand and is
+- **The product noun and protocol terms stay untranslated.** "Jump Hippo" is a brand and is
   never localized. Protocol proper nouns (SSH, SOCKS, `known_hosts`, "fingerprint" where it
   names the SSH artefact) stay as-is; the prose around them is translated. Curly quotes/typography
   in `EN` (`“…”`, `’`, `—`) are matched to each language's convention where it differs (e.g.
@@ -117,7 +117,7 @@ further interaction.
 
 1. **Author the six catalogs.** For each of `fr`, `de`, `es`, `zh`, `ja`, `it`, create
    `src/web/locales/<lang>.json` from `en.json`'s key set — same keys, same order — and translate
-   every value. Preserve every `{placeholder}` token; keep `Port Hippo` and protocol proper nouns
+   every value. Preserve every `{placeholder}` token; keep `Jump Hippo` and protocol proper nouns
    verbatim; use each language's quotation/punctuation convention. (Translation quality matters —
    these are short, user-facing UI strings; a machine first-draft is acceptable **only** if
    human-reviewed by a speaker. Untranslatable-yet keys carry the English value explicitly, never
@@ -167,7 +167,7 @@ further interaction.
   translation.
 - Numbers and dates format per the active locale (already via `Intl` — spot-check thousands
   separators and date order in, e.g., German and Japanese).
-- "Port Hippo" is never translated. No secret is touched and no behaviour changes — only strings
+- "Jump Hippo" is never translated. No secret is touched and no behaviour changes — only strings
   and a font fallback. `make fmt && make lint && make test` is green.
 
 ## Constraints
@@ -178,7 +178,7 @@ further interaction.
   keys are invariant. Enforced by the parity test.
 - **No CDN webfont and no bundled multi-MB CJK font** — CJK glyphs come from the OS via the
   font-stack fallback (house rule: never load fonts from a CDN).
-- Product name "Port Hippo" and protocol proper nouns (SSH, SOCKS, `known_hosts`) stay
+- Product name "Jump Hippo" and protocol proper nouns (SSH, SOCKS, `known_hosts`) stay
   untranslated.
 - English remains the source of truth: `EN` / `en.json` stay byte-identical and unchanged; a
   locale layers over the English fallback and never replaces it. An untranslated key ships as an

@@ -26,7 +26,7 @@ const { Stores } = require("../stores");
 const portable = require("../portable");
 
 function freshDir() {
-  return fs.mkdtempSync(path.join(os.tmpdir(), "porthippo-portable-"));
+  return fs.mkdtempSync(path.join(os.tmpdir(), "jumphippo-portable-"));
 }
 function readRaw(dir) {
   return fs.readFileSync(path.join(dir, "tunnels.json"), "utf8");
@@ -80,7 +80,7 @@ test("stripped round-trip reproduces tunnels/credentials/jump hosts on a fresh p
     seed(a);
     const bundle = portable.buildBundle(a, { secretMode: "stripped" });
 
-    assert.equal(bundle.format, "porthippo-bundle");
+    assert.equal(bundle.format, "jumphippo-bundle");
     assert.equal(bundle.secrets, "stripped");
     assert.ok(
       !JSON.stringify(bundle).includes("s3cr3t"),
@@ -190,7 +190,7 @@ test("a dangling reference is rejected whole", () => {
   const dst = freshDir();
   try {
     const bundle = {
-      format: "porthippo-bundle",
+      format: "jumphippo-bundle",
       version: 1,
       exportedAt: 1,
       secrets: "stripped",

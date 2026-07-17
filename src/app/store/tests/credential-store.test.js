@@ -25,7 +25,7 @@ const path = require("node:path");
 const { Stores } = require("../stores");
 
 function freshDir() {
-  return fs.mkdtempSync(path.join(os.tmpdir(), "porthippo-creds-"));
+  return fs.mkdtempSync(path.join(os.tmpdir(), "jumphippo-creds-"));
 }
 function readRaw(dir) {
   return fs.readFileSync(path.join(dir, "tunnels.json"), "utf8");

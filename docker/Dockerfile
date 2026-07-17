@@ -1,4 +1,4 @@
-# Port Hippo — integration-test sandbox image.
+# Jump Hippo — integration-test sandbox image.
 #
 # One image, used by BOTH the jump host and the destination (behaviour is set by
 # env vars at runtime). It runs:

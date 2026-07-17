@@ -1,7 +1,7 @@
 # Feature 40 — Definition view (UI)
 
 ## Context
-The engine (20), stats (30), and store (10) are all reachable over `window.porthippo.*`,
+The engine (20), stats (30), and store (10) are all reachable over `window.jumphippo.*`,
 but the only UI so far is Feature 00's empty two-view shell. This stage builds the first
 real view: **Definition** — where the user creates and edits tunnel definitions, including
 the auth picker and the jump-host chain builder — and fleshes out the **single-page,
@@ -27,7 +27,7 @@ binds beyond loopback. The two-view shell (toggle + optional split) is finalized
   panels; each view is a class-based component under `src/web/scripts/components/`
   (`definition-view.js`, plus `tunnel-editor.js`, `jump-host-editor.js`,
   `auth-editor.js`). Widgets report to their parent via **constructor callbacks**;
-  app-wide changes go out as **`porthippo:*` events**.
+  app-wide changes go out as **`jumphippo:*` events**.
 - **The editor is form-first, not modal-first.** Editing a definition happens in an inline
   editor pane (master-list on the left, editor on the right) rather than a popup, because
   definitions are dense (chain + auth). `PopupManager` is still used for confirmations
@@ -44,7 +44,7 @@ binds beyond loopback. The two-view shell (toggle + optional split) is finalized
   `localhost`, show a persistent inline warning ("reachable by other machines on your
   network") — an explicit, acknowledged choice, per the security posture.
 - **Arm from the Definition view too.** Each definition row has an arm/disarm toggle
-  (calls `tunnels.arm/disarm`), reflecting live `porthippo:tunnel-state`, so the user can
+  (calls `tunnels.arm/disarm`), reflecting live `jumphippo:tunnel-state`, so the user can
   define-and-run without leaving the view.
 - **File Browse is native.** The key-file picker uses a main-process native dialog IPC
   (renderer is sandboxed and can't read a typed path directly), mirroring Rest Hippo's
@@ -55,10 +55,10 @@ binds beyond loopback. The two-view shell (toggle + optional split) is finalized
    Definition | Monitoring | Split) and a content area that mounts the Definition pane and
    (from Feature 50) the Monitoring pane. Persist `viewMode` via `settings-store`. Add
    `src/web/styles/components.css` for component styles; extend `theme.css` tokens as
-   needed. Emit `porthippo:view-changed` on toggle.
+   needed. Emit `jumphippo:view-changed` on toggle.
 2. **`definition-view.js`.** Master list of definitions (name, local port → destination
    summary, state badge, arm toggle, add/delete/reorder controls) + an editor region. Loads
-   via `window.porthippo.tunnels.list()`; refreshes on `porthippo:tunnels-changed`.
+   via `window.jumphippo.tunnels.list()`; refreshes on `jumphippo:tunnels-changed`.
 3. **`tunnel-editor.js`.** The editor form: name, `localPort`, `bindHost` (with the
    loopback-exposure guard), destination host/port, the SSH-server sub-editor, the jump-host
    list, `lingerMs`, `keepAlive`. Save calls `tunnels.create`/`update`; surfaces
@@ -68,14 +68,14 @@ binds beyond loopback. The two-view shell (toggle + optional split) is finalized
 5. **`jump-host-editor.js`.** Ordered list of SSH-server sub-editors (reusing the same
    host/port/user + `auth-editor`), with add/remove/reorder. Emits the `jumps[]` array up.
 6. **Arm/disarm + state reflection.** Wire the per-row toggle to `tunnels.arm/disarm`;
-   subscribe to `porthippo:tunnel-state` to render live badges (listening/connecting/
+   subscribe to `jumphippo:tunnel-state` to render live badges (listening/connecting/
    connected/paused/error) with an error tooltip.
-7. **Host-key trust prompt.** Listen for `porthippo:hostkey-unknown` and show a
+7. **Host-key trust prompt.** Listen for `jumphippo:hostkey-unknown` and show a
    `PopupManager` confirm ("Trust the host key for `<host>`? fingerprint `<fp>`") wired to
-   `hostkeys.trust`/`reject`. Handle `porthippo:hostkey-changed` with a stronger warning
+   `hostkeys.trust`/`reject`. Handle `jumphippo:hostkey-changed` with a stronger warning
    dialog.
 8. **Native key-file picker IPC.** Add `dialog:openKeyFile` in main (returns a path) and
-   `window.porthippo.dialog.openKeyFile()` in preload; the auth editor's Browse uses it.
+   `window.jumphippo.dialog.openKeyFile()` in preload; the auth editor's Browse uses it.
    Keep main/preload in lockstep.
 9. **Delete confirmation** via `PopupManager.confirmDelete`, and reorder persisted through
    `tunnels.reorder`.
@@ -105,9 +105,9 @@ binds beyond loopback. The two-view shell (toggle + optional split) is finalized
 - No framework; class-based ES modules + plain DOM. `PopupManager` for dialogs; design
   tokens in `theme.css`; class naming `prefix-name` / `block--modifier` (no bare state
   classes).
-- Parent-owned widgets → constructor callbacks; app-wide changes → `porthippo:*` events.
+- Parent-owned widgets → constructor callbacks; app-wide changes → `jumphippo:*` events.
 - The renderer never reads secrets or touches the filesystem/SSH directly — only
-  `window.porthippo.*`. Native file Browse goes through main.
+  `window.jumphippo.*`. Native file Browse goes through main.
 - Keep main/preload in lockstep for the new dialog IPC.
 
 ## Verify

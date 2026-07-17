@@ -25,7 +25,7 @@ const path = require("node:path");
 const { Stores } = require("../stores");
 
 function freshDir() {
-  return fs.mkdtempSync(path.join(os.tmpdir(), "porthippo-groups-"));
+  return fs.mkdtempSync(path.join(os.tmpdir(), "jumphippo-groups-"));
 }
 
 function seedCredential(stores) {

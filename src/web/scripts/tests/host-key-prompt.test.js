@@ -37,12 +37,12 @@ function stubHostkeys(calls = {}) {
 
 function unknown(detail) {
   window.dispatchEvent(
-    new CustomEvent("porthippo:hostkey-unknown", { detail }),
+    new CustomEvent("jumphippo:hostkey-unknown", { detail }),
   );
 }
 function changed(detail) {
   window.dispatchEvent(
-    new CustomEvent("porthippo:hostkey-changed", { detail }),
+    new CustomEvent("jumphippo:hostkey-changed", { detail }),
   );
 }
 
@@ -57,7 +57,7 @@ test("an unknown key prompts and Trust routes back to hostkeys.trust(promptId)",
   resetDom();
   const calls = {};
   const prompt = new HostKeyPrompt({
-    porthippo: stubHostkeys(calls),
+    jumphippo: stubHostkeys(calls),
   }).install();
   try {
     unknown(INFO);
@@ -83,7 +83,7 @@ test("an unknown key that the user rejects routes back to hostkeys.reject(prompt
   resetDom();
   const calls = {};
   const prompt = new HostKeyPrompt({
-    porthippo: stubHostkeys(calls),
+    jumphippo: stubHostkeys(calls),
   }).install();
   try {
     unknown(INFO);
@@ -105,7 +105,7 @@ test("a CHANGED key only warns — it never offers to trust", () => {
   resetDom();
   const calls = {};
   const prompt = new HostKeyPrompt({
-    porthippo: stubHostkeys(calls),
+    jumphippo: stubHostkeys(calls),
   }).install();
   try {
     changed({ host: "db.example.com", port: 22 });
@@ -130,7 +130,7 @@ test("a payload with no promptId is ignored (no popup, no call)", () => {
   resetDom();
   const calls = {};
   const prompt = new HostKeyPrompt({
-    porthippo: stubHostkeys(calls),
+    jumphippo: stubHostkeys(calls),
   }).install();
   try {
     unknown({ host: "db.example.com", port: 22 }); // no promptId
@@ -147,7 +147,7 @@ test("uninstall() stops mediating — a later unknown key raises no prompt", () 
   resetDom();
   const calls = {};
   const prompt = new HostKeyPrompt({
-    porthippo: stubHostkeys(calls),
+    jumphippo: stubHostkeys(calls),
   }).install();
   prompt.uninstall();
   try {

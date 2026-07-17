@@ -17,7 +17,7 @@
 // zoom-handlers.js — UI zoom ("font size") input handlers. Ported from Rest
 // Hippo's event-bus/zoom-handlers.js. Owns the three paths that step the global
 // UI font size: Ctrl/Cmd + wheel or pinch, the Ctrl/Cmd + '+' / '-' / '0'
-// keyboard shortcuts, and the `porthippo:ui-font-change` events the native menu
+// keyboard shortcuts, and the `jumphippo:ui-font-change` events the native menu
 // re-dispatches (via preload). Each step commits a new fontSize setting through
 // `ctx.setFontSize`, which persists it and applies the matching Chromium zoom
 // factor so the whole (px-authored) UI scales.
@@ -116,7 +116,7 @@ export function installZoomHandlers(ctx) {
   // ── Native menu (main → preload → renderer) ────────────────────────────────
   // The View menu's Increase/Decrease/Reset Font Size items send "menu:font-change",
   // which preload re-dispatches as this CustomEvent.
-  window.addEventListener("porthippo:ui-font-change", (e) => {
+  window.addEventListener("jumphippo:ui-font-change", (e) => {
     const direction = e.detail;
     if (direction === "in") changeFontByStep(+1);
     else if (direction === "out") changeFontByStep(-1);

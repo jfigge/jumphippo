@@ -5,17 +5,17 @@ This page walks you from a fresh install to a working, on-demand SSH tunnel.
 ## Install
 
 Download the build for your platform from
-[porthippo.com](https://porthippo.com/#downloads):
+[jumphippo.com](https://jumphippo.com/#downloads):
 
-- **macOS** — open the `.dmg` and drag Port Hippo to Applications.
-- **Windows** — run the installer (`Port-Hippo-Setup-…exe`) or use the portable
+- **macOS** — open the `.dmg` and drag Jump Hippo to Applications.
+- **Windows** — run the installer (`Jump-Hippo-Setup-…exe`) or use the portable
   build.
 - **Linux** — the `AppImage` (make it executable and run it) or the `.deb`.
 
-You can also [build from source](https://github.com/jfigge/porthippo#readme) with
+You can also [build from source](https://github.com/jfigge/jumphippo#readme) with
 `make install && make dmg`.
 
-On first launch Port Hippo appears in your system tray and opens its window. No
+On first launch Jump Hippo appears in your system tray and opens its window. No
 account, no sign-in — everything stays on your machine.
 
 ## Define your first tunnel
@@ -46,7 +46,7 @@ lamp for **Listening**.
 > connection is opened lazily, on first access, so an armed tunnel you never use
 > costs nothing.
 
-By default, enabled tunnels arm automatically when Port Hippo starts. You can turn
+By default, enabled tunnels arm automatically when Jump Hippo starts. You can turn
 that off in **Settings → Behaviour**.
 
 ## Use it
@@ -57,7 +57,7 @@ Point your app (or a quick test) at the entry port:
 psql -h 127.0.0.1 -p 5432
 ```
 
-On that first connection Port Hippo moves through **Connecting → Connected**: it
+On that first connection Jump Hippo moves through **Connecting → Connected**: it
 opens the SSH chain, verifies each host key (see [Host Keys & Trust](host-keys.md)),
 authenticates, and starts relaying bytes. Your app talks to the destination as if
 it were local.
@@ -76,5 +76,5 @@ freeze a live tunnel without closing it, **[pause](monitoring.md)** it.
 - Fine-tune behaviour in **[Defining Tunnels](defining-tunnels.md)** (linger,
   keep-alive, auto-reconnect).
 - Understand the live view in **[Monitoring & Pause](monitoring.md)**.
-- Read the **[Security](security.md)** page — Port Hippo handles SSH credentials,
+- Read the **[Security](security.md)** page — Jump Hippo handles SSH credentials,
   so it's worth knowing how they're stored and how servers are trusted.

@@ -34,7 +34,7 @@ const TIME_OPTS = { hour: "numeric", minute: "2-digit" };
  * null when the tunnel isn't governed (nothing to badge). Pure — unit-testable
  * without the DOM.
  *
- * @param {object|null} entry  a `porthippo:schedule` tunnel entry
+ * @param {object|null} entry  a `jumphippo:schedule` tunnel entry
  * @returns {{ label: string, title: string, overridden: boolean }|null}
  */
 export function scheduleBadgeInfo(entry) {

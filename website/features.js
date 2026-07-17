@@ -1,4 +1,4 @@
-/* Port Hippo website — feature-request list.
+/* Jump Hippo website — feature-request list.
  *
  * Reads open feature requests straight from the public GitHub Issues API (no
  * auth, CORS-enabled) and renders them most-upvoted first. Progressive
@@ -11,7 +11,7 @@
 (function () {
   "use strict";
 
-  var REPO = "jfigge/porthippo";
+  var REPO = "jfigge/jumphippo";
   var LABEL = "enhancement";
   var API =
     "https://api.github.com/repos/" + REPO + "/issues" +

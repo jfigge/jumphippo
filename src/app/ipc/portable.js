@@ -21,7 +21,7 @@
  * reviews the proposed diff.
  *
  *   portable:export   ({ includeSettings, secretMode, passphrase? }) → save dialog,
- *                      build a `.porthippo` bundle, write it. → { ok, path } | { canceled }
+ *                      build a `.jumphippo` bundle, write it. → { ok, path } | { canceled }
  *   portable:preview  () → open dialog, parse the chosen bundle, return the
  *                      add/update/conflict diff → { ok, path, ... } | { canceled }
  *   portable:import   ({ path, mode, passphrase? }) → re-read + apply → { ok, counts }
@@ -33,7 +33,7 @@
  * this boundary: export unseals+re-seals in main, import re-seals in main, and a
  * bundle's only secret form is the portable `encp:` envelope.
  *
- * Every channel registered here MUST have a matching `window.porthippo.*` exposure
+ * Every channel registered here MUST have a matching `window.jumphippo.*` exposure
  * in preload.js AND this file must be listed in the ipc-parity test's scan set
  * (tests/ipc-parity.test.js) — the guard fails the build otherwise.
  *
@@ -54,8 +54,8 @@ const portable = require("../store/portable");
 const sshConfig = require("../store/ssh-config");
 const { readDoc } = require("../store/definitions-doc");
 
-const BUNDLE_EXT = "porthippo";
-const DEFAULT_BUNDLE_NAME = "porthippo-backup.porthippo";
+const BUNDLE_EXT = "jumphippo";
+const DEFAULT_BUNDLE_NAME = "jumphippo-backup.jumphippo";
 
 function registerPortableIPC({
   ipcMain,
@@ -85,9 +85,9 @@ function registerPortableIPC({
     "portable:export",
     wrap("portable:export", async (opts = {}) => {
       const result = await dialog.showSaveDialog(parent(), {
-        title: "Export Port Hippo bundle",
+        title: "Export Jump Hippo bundle",
         defaultPath: DEFAULT_BUNDLE_NAME,
-        filters: [{ name: "Port Hippo bundle", extensions: [BUNDLE_EXT] }],
+        filters: [{ name: "Jump Hippo bundle", extensions: [BUNDLE_EXT] }],
       });
       if (result.canceled || !result.filePath) return { canceled: true };
 
@@ -108,10 +108,10 @@ function registerPortableIPC({
     "portable:preview",
     wrap("portable:preview", async () => {
       const result = await dialog.showOpenDialog(parent(), {
-        title: "Import Port Hippo bundle",
+        title: "Import Jump Hippo bundle",
         properties: ["openFile"],
         filters: [
-          { name: "Port Hippo bundle", extensions: [BUNDLE_EXT] },
+          { name: "Jump Hippo bundle", extensions: [BUNDLE_EXT] },
           { name: "All files", extensions: ["*"] },
         ],
       });

@@ -30,7 +30,7 @@ function arg(flag, fallback) {
   return i !== -1 && process.argv[i + 1] ? process.argv[i + 1] : fallback;
 }
 
-const repo = arg("--repo", process.env.REPO || "jfigge/porthippo");
+const repo = arg("--repo", process.env.REPO || "jfigge/jumphippo");
 const out = arg("--out", "website/versions.json");
 const token = process.env.GITHUB_TOKEN || process.env.GH_TOKEN || "";
 
@@ -56,7 +56,7 @@ function classify(name) {
 }
 
 async function gh(path) {
-  const headers = { Accept: "application/vnd.github+json", "User-Agent": "porthippo-build-versions" };
+  const headers = { Accept: "application/vnd.github+json", "User-Agent": "jumphippo-build-versions" };
   if (token) headers.Authorization = `Bearer ${token}`;
   const res = await fetch(`https://api.github.com${path}`, { headers });
   if (!res.ok) throw new Error(`GitHub API ${path} -> ${res.status} ${res.statusText}`);

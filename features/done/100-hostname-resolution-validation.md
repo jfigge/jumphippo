@@ -25,7 +25,7 @@ actually resolved. Doing so also *validates each jump host* (you cannot resolve 
 without successfully connecting through hop *n*), which is what the request asks for.
 
 **Prerequisites:** **Feature 20** (`ssh-chain.js` `connectChain`/`forwardOut`, the
-`TunnelEngine` host-key TOFU mediation — `hostVerifierFactory`, `porthippo:hostkey-unknown`,
+`TunnelEngine` host-key TOFU mediation — `hostVerifierFactory`, `jumphippo:hostkey-unknown`,
 `hostkeys:trust|reject`, `trustHostKey/rejectHostKey`) and **Feature 45** (`store/resolve.js`,
 the `TunnelEditorDialog`, reusable `credentials[]` / `jumpHosts[]`, the soft-warning pattern —
 `editor-bind-warning` / `editor-port-warning`). No new dependency; `dns` and `ssh2` are already
@@ -79,7 +79,7 @@ behind.
   from the final client. A hop that fails to build *is* the resolvability/reachability failure
   for that hop, reported with its `hopError` label.
 - **Reuse the engine's host-key TOFU mediation verbatim.** The probe runs through the same
-  `hostVerifierFactory` → `porthippo:hostkey-unknown` → `hostkeys:trust|reject` flow, resolved
+  `hostVerifierFactory` → `jumphippo:hostkey-unknown` → `hostkeys:trust|reject` flow, resolved
   by the existing `host-key-prompt.js` renderer component. No new prompt UI; a key accepted
   during a test is persisted, so the subsequent real arm won't re-prompt — this is what makes
   the test genuinely *validate* the jump host.
@@ -125,7 +125,7 @@ behind.
    `resolve:cancel` (aborts the in-flight run → `{ ok }`). Register in `main.js`; **add
    `ipc/resolve.js` to the `ipc-parity.test.js` scan list.** Host-key prompts already broadcast
    from the engine — no new channel.
-4. **`preload.js`** — expose `window.porthippo.resolve.{ lookup(host), test(payload), cancel() }`
+4. **`preload.js`** — expose `window.jumphippo.resolve.{ lookup(host), test(payload), cancel() }`
    mirroring the channels (keep handler ↔ exposure in lockstep).
 5. **Editor — live local warnings** in `components/tunnel-editor-dialog.js`. Add soft-warning
    `<p>` elements (styled like `editor-bind-warning`) for the **destination host** and, in
@@ -156,7 +156,7 @@ behind.
      called**; abort + timeout paths reject and dispose; `#tunnels` untouched.
    - `ipc-parity` covers `resolve:lookup|test|cancel`; a small reason-shape test for the probe
      result.
-   - `tunnel-editor-dialog.test.js` additions (inject a fake `porthippo.resolve`): a local
+   - `tunnel-editor-dialog.test.js` additions (inject a fake `jumphippo.resolve`): a local
      warning appears when `lookup` reports unresolved and clears when it resolves; IP literals
      don't trigger a lookup; the Test button calls `resolve.test` and renders the per-hop rows;
      a failed resolution does **not** block Save.

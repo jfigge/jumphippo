@@ -24,7 +24,7 @@
  * renderer can surface — carrying `.code`/`.errors` so a validation failure lands
  * as field-keyed messages, not a generic toast).
  *
- * Every channel registered here MUST have a matching `window.porthippo.*` exposure
+ * Every channel registered here MUST have a matching `window.jumphippo.*` exposure
  * in preload.js — the ipc-parity test fails the build otherwise.
  *
  * @param {object} deps
@@ -243,7 +243,7 @@ function registerStoreIPC({
     safeCall("hostkeys:list", () => getStores().knownHostsStore().list(), []),
   );
 
-  // The OS's own ~/.ssh/known_hosts, read-only (Port Hippo can't manage it — the
+  // The OS's own ~/.ssh/known_hosts, read-only (Jump Hippo can't manage it — the
   // "Operating System" tab surfaces it so the user knows where to manage it).
   ipcMain.handle("hostkeys:list-os", () =>
     safeCall(

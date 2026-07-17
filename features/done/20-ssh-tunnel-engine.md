@@ -1,7 +1,7 @@
 # Feature 20 — SSH tunnel engine (on-demand forwarding + lifecycle)
 
 ## Context
-This is the **heart of Port Hippo** and the reason it exists. With definitions persisted
+This is the **heart of Jump Hippo** and the reason it exists. With definitions persisted
 (Feature 10), the engine must implement the product's defining behaviour: bind a local
 port, **open an SSH tunnel automatically the moment that port is accessed**, hold it open
 while any connection is live, and **tear the SSH connection down once the local port goes
@@ -46,8 +46,8 @@ in-process test SSH server.
   `sshServer`. The final client `forwardOut`s to `destination`. Each hop authenticates
   independently.
 - **Host-key verification is mandatory.** `ssh2`'s `hostVerifier` checks each hop's key
-  against (a) the user's `~/.ssh/known_hosts` and (b) Port Hippo's accepted-keys store
-  (Feature 10). Unknown key → emit `porthippo:hostkey-unknown` to the renderer and hold
+  against (a) the user's `~/.ssh/known_hosts` and (b) Jump Hippo's accepted-keys store
+  (Feature 10). Unknown key → emit `jumphippo:hostkey-unknown` to the renderer and hold
   the connection pending until the user trusts (TOFU) or rejects. **Never auto-accept.**
 - **Bind loopback by default.** Listener binds `def.bindHost` (default `127.0.0.1`).
 - **One engine, many tunnels.** A single `TunnelEngine` singleton owns a `Map<id, Tunnel>`.
@@ -87,7 +87,7 @@ in-process test SSH server.
 6. **`src/app/tunnel/host-verifier.js`.** Parse `~/.ssh/known_hosts` (host/IP + key type +
    base64 key), compute the presented key's fingerprint, and accept if it matches there or
    in the accepted-keys store. On mismatch → hard reject (possible MITM; emit
-   `porthippo:hostkey-changed`). On unknown → emit `porthippo:hostkey-unknown`
+   `jumphippo:hostkey-changed`). On unknown → emit `jumphippo:hostkey-unknown`
    `{ tunnelId, hop, fingerprint }` and await an IPC decision (`hostkeys:trust` /
    `hostkeys:reject`), persisting a trust via Feature 10's store.
 7. **`src/app/tunnel/engine.js`.** The `TunnelEngine` singleton: `arm(id)`, `disarm(id)`,
@@ -96,8 +96,8 @@ in-process test SSH server.
    on `before-quit`.
 8. **IPC + preload.** `tunnels:arm`, `tunnels:disarm`, `tunnels:status`,
    `hostkeys:trust`, `hostkeys:reject` handlers (extend `ipc/store.js` or a new
-   `ipc/engine.js`); expose under `window.porthippo.tunnels.*` / `.hostkeys.*`. Broadcast
-   `porthippo:tunnel-state` `{ id, state, error? }` on every state change (the monitoring
+   `ipc/engine.js`); expose under `window.jumphippo.tunnels.*` / `.hostkeys.*`. Broadcast
+   `jumphippo:tunnel-state` `{ id, state, error? }` on every state change (the monitoring
    view consumes it in Feature 50). Keep main/preload in lockstep.
 9. **Tests (integration, in-process).** Add `src/app/tunnel/tests/`: spin up an in-process
    **`ssh2` server** (accepting a fixture key, implementing `direct-tcpip`) plus a plain TCP
@@ -126,7 +126,7 @@ in-process test SSH server.
 
 ## Constraints
 - All sockets/SSH in **main**; the renderer only sends arm/disarm/trust intents and
-  receives `porthippo:tunnel-state` / `porthippo:hostkey-*` events.
+  receives `jumphippo:tunnel-state` / `jumphippo:hostkey-*` events.
 - `ssh2` is the only new runtime dependency; do not add per-feature helper libs — parse
   `known_hosts` and count bytes ourselves.
 - Bind `127.0.0.1` unless the definition explicitly opts into a wider `bindHost`.
@@ -137,7 +137,7 @@ in-process test SSH server.
 `make fmt && make lint && make test`. Then a real end-to-end check: run a throwaway local
 SSH server you can reach (or `localhost` sshd), define a tunnel whose destination is some
 reachable service, `make debug`, arm it, and confirm (a) `nc`/app access to the local port
-opens the tunnel, (b) traffic flows, (c) `porthippo:tunnel-state` transitions
+opens the tunnel, (b) traffic flows, (c) `jumphippo:tunnel-state` transitions
 listening→connecting→connected in DevTools, and (d) after closing the client and waiting
 the linger, the SSH connection drops while the local port is still bound. Test a jump-host
 chain against two hosts if available.

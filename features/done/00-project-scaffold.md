@@ -4,7 +4,7 @@
 The repo currently holds only `README.md` and this `features/` folder. Everything else
 must be created. This stage stands up the **skeleton** that every later stage builds on,
 copying the proven engineering setup from Rest Hippo
-(`/Users/jason/src/js/projects/resthippo`) but stripped to a Port-Hippo-sized shell —
+(`/Users/jason/src/js/projects/resthippo`) but stripped to a Jump-Hippo-sized shell —
 no REST/OAuth/GraphQL machinery, no 7-locale i18n yet (that seam lands in Feature 60).
 The reference project's layout is: a top-level `Makefile` orchestrating everything,
 `src/package.json` holding both dependencies and the full electron-builder config,
@@ -12,12 +12,12 @@ The reference project's layout is: a top-level `Makefile` orchestrating everythi
 build tooling, and a root `LICENSE`/`NOTICE` under Apache-2.0.
 
 There is no SSH, tunnelling, storage, or real UI in this stage — just a launchable
-Electron window with an empty two-view shell and a working `window.porthippo` IPC bridge,
+Electron window with an empty two-view shell and a working `window.jumphippo` IPC bridge,
 so `make debug` opens the app and the toolchain (`fmt`/`lint`/`test`/`build`) is green
 from commit one.
 
 ## Goal
-A cloneable repo where `make install` then `make debug` launches a Port Hippo Electron
+A cloneable repo where `make install` then `make debug` launches a Jump Hippo Electron
 window showing an empty **Definition / Monitoring** two-view shell, `make build`
 produces an unsigned macOS app bundle, and `make fmt && make lint && make test` all pass
 — with the license-header guard already wired.
@@ -32,7 +32,7 @@ produces an unsigned macOS app bundle, and `make fmt && make lint && make test` 
   is a hard, permanent constraint carried in `CLAUDE.md`.
 - **Electron 42+**, Node ≥20 engine, CommonJS in `src/app` (like Rest Hippo's
   `require(...)` main), ES modules in `src/web`.
-- **IPC namespace is `window.porthippo`.** One preload bridge; `main.js` handlers and
+- **IPC namespace is `window.jumphippo`.** One preload bridge; `main.js` handlers and
   `preload.js` exports stay in lockstep (a parity test is added in Feature 10 once there
   are channels worth checking — for now the bridge exposes `platform` and `getVersion`).
 - **Apache-2.0 from day one**, with the license-header guard (`scripts/license-header.mjs`
@@ -49,14 +49,14 @@ produces an unsigned macOS app bundle, and `make fmt && make lint && make test` 
    `.gitignore` covering `src/node_modules/`, `build/`, `dist/`, `data/`, `*.env`
    (keep `*.env.example`), `.DS_Store`. Add `dev.env.example` (empty scaffold for the
    shared dev-env pattern) and `CLAUDE.md` (project guide — see step 8).
-2. **`src/package.json`.** `name: porthippo`, `version: 0.1.0`, `main: app/main.js`,
+2. **`src/package.json`.** `name: jumphippo`, `version: 0.1.0`, `main: app/main.js`,
    `license: Apache-2.0`, author Jason Figge, `homepage`/`repository`
-   `github.com/jfigge/porthippo`, `engines.node >=20`. Scripts: `start`, `dev`, `fmt`,
+   `github.com/jfigge/jumphippo`, `engines.node >=20`. Scripts: `start`, `dev`, `fmt`,
    `lint` (paths `web/scripts/**/*.js` + `app/**/*.js`). devDependencies: `electron`,
    `electron-builder`, `eslint`, `globals`, `prettier`. dependencies: leave the runtime
    set empty for now (`ssh2` lands in Feature 20, `electron-updater` in Feature 70). Add
-   the electron-builder `build` block scaffold (appId `com.porthippo.app`, productName
-   `Port Hippo`, `directories.output: dist`, `files` globbing `app/**` + `web/**` +
+   the electron-builder `build` block scaffold (appId `com.jumphippo.app`, productName
+   `Jump Hippo`, `directories.output: dist`, `files` globbing `app/**` + `web/**` +
    `package.json`) — full multi-platform target matrix is completed in Feature 70.
 3. **Makefile.** Port the Rest Hippo Makefile's *structure* (VERSION/COMMIT/BRANCH vars,
    `WORKSPACE`/`SRC_DIR`/`BUILD_DIR`/`DATA_DIR`, shared `dev.env` include+export,
@@ -73,7 +73,7 @@ produces an unsigned macOS app bundle, and `make fmt && make lint && make test` 
    `app:platform` → `process.platform`/arch, `app:version` → app version. Wire a hidden
    hot-reload watcher of `web/` (chokidar-free: `fs.watch`) that reloads the window — or
    omit and just document `make debug` reload via relaunch.
-5. **Preload bridge (`src/app/preload.js`).** `contextBridge.exposeInMainWorld("porthippo", { platform, getVersion })`, each backed by `ipcRenderer.invoke`. This is the single
+5. **Preload bridge (`src/app/preload.js`).** `contextBridge.exposeInMainWorld("jumphippo", { platform, getVersion })`, each backed by `ipcRenderer.invoke`. This is the single
    seam every later stage extends.
 6. **Renderer shell (`src/web`).** `index.html` (loads `styles/theme.css`,
    `styles/app.css`, and `scripts/app.js` as a module); `styles/theme.css` with the
@@ -81,12 +81,12 @@ produces an unsigned macOS app bundle, and `make fmt && make lint && make test` 
    override via `prefers-color-scheme`); `scripts/app.js` bootstrap that mounts a header
    with a **Definition | Monitoring** view toggle and two empty `<section>` placeholders,
    switching visibility on toggle. Bundle the Inter variable font under `src/web/fonts/`
-   (no CDN). Add an app icon `src/web/porthippo-icon.svg` (a simple placeholder is fine;
+   (no CDN). Add an app icon `src/web/jumphippo-icon.svg` (a simple placeholder is fine;
    real icon + generated `.ico`/png set come in Feature 70).
 7. **License-header tooling.** Port `scripts/license-header.mjs` (stamp + `--check`
    modes) with `ROOTS` = `src/app`, `src/web/scripts`, `src/web/styles`, `scripts`;
    stamp every file created above. `make test-license-headers` must pass.
-8. **`CLAUDE.md`.** A Port-Hippo project guide modelled on Rest Hippo's: what the app is,
+8. **`CLAUDE.md`.** A Jump-Hippo project guide modelled on Rest Hippo's: what the app is,
    the `src/app`/`src/web` split, key entry points, common `make` commands, the
    no-framework + class-naming + IPC-lockstep + Apache-header rules, and the git workflow
    ("solo project, commit on `main`, never auto-branch, push only when asked").
@@ -95,9 +95,9 @@ produces an unsigned macOS app bundle, and `make fmt && make lint && make test` 
    produce a clean `make lint && make fmt-check`.
 
 ## Acceptance criteria
-- `make install && make debug` opens a Port Hippo window with a working
+- `make install && make debug` opens a Jump Hippo window with a working
   Definition/Monitoring view toggle (both empty) and no console errors.
-- The renderer can call `window.porthippo.platform` / `.getVersion()` and get real
+- The renderer can call `window.jumphippo.platform` / `.getVersion()` and get real
   values over IPC.
 - `make build` (or `make dmg`) produces an unsigned macOS artifact under
   `build/src/dist/`.
@@ -108,7 +108,7 @@ produces an unsigned macOS app bundle, and `make fmt && make lint && make test` 
 
 ## Constraints
 - No framework, no bundler-built renderer (plain `<script type="module">`), no CDN
-  fonts/assets. Native I/O only in main; renderer only via `window.porthippo.*`.
+  fonts/assets. Native I/O only in main; renderer only via `window.jumphippo.*`.
 - Do not port Rest Hippo's domain code, its i18n catalogs, or its release/store Make
   targets — those arrive in later stages.
 - CSS via `theme.css` tokens; class naming `prefix-name` / `block--modifier`.
@@ -117,6 +117,6 @@ produces an unsigned macOS app bundle, and `make fmt && make lint && make test` 
 ## Verify
 `make install`, then `make fmt-check && make lint && make test` (all green). Run
 `make debug`: confirm the window opens, the view toggle switches between the two empty
-sections, and DevTools shows `window.porthippo.platform` returning your OS. Run
+sections, and DevTools shows `window.jumphippo.platform` returning your OS. Run
 `make build` and confirm an unsigned app bundle appears under `build/src/dist/`. Finally
 `make clean` and confirm build artifacts are removed.

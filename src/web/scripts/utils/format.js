@@ -15,7 +15,7 @@
  */
 
 // format.js — pure, unit-tested display formatters for the Feature 50 Monitoring
-// view. The renderer is a pure subscriber of the `porthippo:stats` stream (all
+// view. The renderer is a pure subscriber of the `jumphippo:stats` stream (all
 // numbers come from main); these functions only turn those raw bytes/timestamps
 // into human units. Kept free of DOM and time-of-day side effects: the one
 // now-dependent function takes an injected `now` so the relative-time math is

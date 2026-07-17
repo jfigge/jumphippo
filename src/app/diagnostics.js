@@ -145,7 +145,7 @@ function buildReport({
   generatedAt,
 } = {}) {
   const lines = [];
-  lines.push("Port Hippo diagnostics report");
+  lines.push("Jump Hippo diagnostics report");
   lines.push("=============================");
   if (generatedAt) lines.push(`generated: ${generatedAt}`);
   for (const [key, value] of Object.entries(app)) {

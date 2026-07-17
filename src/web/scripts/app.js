@@ -19,7 +19,7 @@
 // update notifier, wires the Settings/About shell, and applies the chosen theme.
 
 // Activate the stats seam: importing it for its side effect starts the
-// `porthippo:stats` subscription so snapshots are captured from load.
+// `jumphippo:stats` subscription so snapshots are captured from load.
 import "./stats-store.js";
 
 import { TunnelsView } from "./components/tunnels-view.js";
@@ -86,7 +86,7 @@ function applyAppearance(settings) {
       ? settings.fontSize
       : DEFAULT_FONT_SIZE;
     currentFontSize = size;
-    window.porthippo?.setZoomFactor?.(size / DEFAULT_FONT_SIZE);
+    window.jumphippo?.setZoomFactor?.(size / DEFAULT_FONT_SIZE);
     // Keep the settings popup's dropdown in step when a zoom gesture (not the
     // popup itself) changed the size.
     settingsPopup?.syncAppearance?.({ fontSize: size });
@@ -97,7 +97,7 @@ function applyAppearance(settings) {
 // settings popup persists through its own change handler; this is the other path.)
 function commitFontSize(size) {
   if (size === currentFontSize) return;
-  window.porthippo?.settings?.set?.({ fontSize: size })?.catch?.(() => {});
+  window.jumphippo?.settings?.set?.({ fontSize: size })?.catch?.(() => {});
   applyAppearance({ fontSize: size });
 }
 
@@ -126,7 +126,7 @@ function initShell() {
     settingsBtn.addEventListener("click", () => settingsPopup.open());
   }
 
-  window.addEventListener("porthippo:open-settings", () =>
+  window.addEventListener("jumphippo:open-settings", () =>
     settingsPopup.open(),
   );
 
@@ -149,19 +149,19 @@ function initShell() {
     renderToggle(currentMode); // sensible default until the view echoes back
     viewToggle.addEventListener("click", () => {
       window.dispatchEvent(
-        new CustomEvent("porthippo:set-detail-mode", {
+        new CustomEvent("jumphippo:set-detail-mode", {
           detail: { mode: currentMode === "cards" ? "list" : "cards" },
         }),
       );
     });
-    window.addEventListener("porthippo:detail-mode-changed", (event) => {
+    window.addEventListener("jumphippo:detail-mode-changed", (event) => {
       const mode = event.detail && event.detail.mode;
       if (mode) renderToggle(mode);
     });
   }
 
   // The top-left brand ICON button opens the in-app About dialog (also reachable
-  // from the Help ▸ About / macOS app menu, which arrives as porthippo:show-about).
+  // from the Help ▸ About / macOS app menu, which arrives as jumphippo:show-about).
   // It's a native <button>, so Enter/Space activation is handled for us; the logo
   // + subtitle text beside it are intentionally not clickable.
   const brand = document.getElementById("app-brand");
@@ -171,21 +171,21 @@ function initShell() {
     brand.addEventListener("click", () => AboutDialog.open());
   }
 
-  window.addEventListener("porthippo:show-about", () => AboutDialog.open());
+  window.addEventListener("jumphippo:show-about", () => AboutDialog.open());
 
   // "New Tunnel" from the native menu / tray opens the editor.
-  window.addEventListener("porthippo:new-tunnel", () =>
+  window.addEventListener("jumphippo:new-tunnel", () =>
     tunnelsView?.createNew(),
   );
 
   // A bundle / SSH-config import (Feature 120) can add or replace many tunnels at
   // once from the Settings → Data dialog; reload the master list so they appear.
-  window.addEventListener("porthippo:data-imported", () => {
+  window.addEventListener("jumphippo:data-imported", () => {
     tunnelsView?.load()?.catch?.(() => {});
   });
 
   // "Edit" affordances (e.g. from the tray) select the tunnel in the detail view.
-  window.addEventListener("porthippo:edit-tunnel", (event) => {
+  window.addEventListener("jumphippo:edit-tunnel", (event) => {
     const id = event.detail && event.detail.id;
     if (id) tunnelsView?.selectById(id);
   });
@@ -193,7 +193,7 @@ function initShell() {
   // A settings change re-applies appearance live — theme, typeface, and zoom
   // (other prefs are read on demand by their consumers; language triggers a full
   // reload from the popup itself).
-  window.addEventListener("porthippo:settings-changed", (event) => {
+  window.addEventListener("jumphippo:settings-changed", (event) => {
     applyAppearance(event.detail);
   });
 }
@@ -207,7 +207,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   // One settings read drives the pre-paint theme.
   let settings = {};
   try {
-    settings = (await window.porthippo?.settings?.get?.()) || {};
+    settings = (await window.jumphippo?.settings?.get?.()) || {};
   } catch {
     // Non-fatal: fall back to defaults.
   }

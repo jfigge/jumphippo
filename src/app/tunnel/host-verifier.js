@@ -19,7 +19,7 @@
  *
  * `makeHostVerifier(opts)` returns the function ssh2 calls with the presented host
  * key (a raw wire-format Buffer). It accepts the key iff its SHA-256 fingerprint
- * matches either (a) the user's `~/.ssh/known_hosts` or (b) Port Hippo's own
+ * matches either (a) the user's `~/.ssh/known_hosts` or (b) Jump Hippo's own
  * accepted-keys store (`KnownHostsStore`, trust-on-first-use). The precedence:
  *
  *   - match found            → accept.
@@ -166,7 +166,7 @@ function loadKnownHosts(file) {
 /**
  * List the user's OS `~/.ssh/known_hosts` entries for a READ-ONLY inventory (the
  * Settings → Host Keys "Operating System" tab): each entry's host pattern(s), its
- * SHA-256 fingerprint, and its key type. Port Hippo never edits this file — it is
+ * SHA-256 fingerprint, and its key type. Jump Hippo never edits this file — it is
  * managed by the OS / OpenSSH — so there is no revoke counterpart.
  *
  * Hashed host patterns (`|1|salt|hash`, OpenSSH's default on some distros) can't
@@ -240,7 +240,7 @@ function makeHostVerifier(opts) {
       return;
     }
 
-    // (a) Port Hippo's own accepted-keys store (TOFU).
+    // (a) Jump Hippo's own accepted-keys store (TOFU).
     let tofu = null;
     try {
       tofu = knownHostsStore.get(hostPort);

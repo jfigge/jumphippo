@@ -17,12 +17,12 @@
 // import-export-dialog.js — the Feature 120 Import/Export flows, opened from
 // Settings → Data. A single native <dialog> re-rendered for each flow:
 //   - Export      choose contents + secret mode (strip / passphrase), then save.
-//   - Import      pick a .porthippo bundle → review the add/update/conflict diff →
+//   - Import      pick a .jumphippo bundle → review the add/update/conflict diff →
 //                 Merge or Replace (+ passphrase for an encp: bundle).
 //   - SSH config  pick a ~/.ssh/config → tick the proposed hosts → commit.
 //
 // Every store write, all crypto and the SSH-config parse happen in main behind
-// window.porthippo.io.*; this component only gathers intent and renders the diff.
+// window.jumphippo.io.*; this component only gathers intent and renders the diff.
 // A successful import fires the app-wide refresh events so open views reload.
 
 import { el, clear } from "../dom.js";
@@ -30,7 +30,7 @@ import { t } from "../i18n.js";
 import { PopupManager } from "../popup-manager.js";
 
 export class ImportExportDialog {
-  #porthippo;
+  #jumphippo;
   #el;
   #titleEl;
   #bodyEl;
@@ -38,8 +38,8 @@ export class ImportExportDialog {
   #bannerEl;
   #busy = false;
 
-  constructor({ porthippo } = {}) {
-    this.#porthippo = porthippo || window.porthippo;
+  constructor({ jumphippo } = {}) {
+    this.#jumphippo = jumphippo || window.jumphippo;
     this.#build();
   }
 
@@ -206,7 +206,7 @@ export class ImportExportDialog {
     }
     this.#busy = true;
     try {
-      const res = await this.#porthippo.io.export({
+      const res = await this.#jumphippo.io.export({
         includeSettings: state.includeSettings,
         secretMode: state.secretMode,
         passphrase: state.secretMode === "encp" ? pass : undefined,
@@ -229,7 +229,7 @@ export class ImportExportDialog {
     this.#busy = true;
     let preview;
     try {
-      preview = await this.#porthippo.io.previewBundle();
+      preview = await this.#jumphippo.io.previewBundle();
     } finally {
       this.#busy = false;
     }
@@ -342,7 +342,7 @@ export class ImportExportDialog {
     if (this.#busy) return;
     this.#busy = true;
     try {
-      const res = await this.#porthippo.io.importBundle({
+      const res = await this.#jumphippo.io.importBundle({
         path,
         mode,
         passphrase,
@@ -366,7 +366,7 @@ export class ImportExportDialog {
     this.#busy = true;
     let scan;
     try {
-      scan = await this.#porthippo.io.scanSshConfig();
+      scan = await this.#jumphippo.io.scanSshConfig();
     } finally {
       this.#busy = false;
     }
@@ -461,7 +461,7 @@ export class ImportExportDialog {
     if (this.#busy) return;
     this.#busy = true;
     try {
-      const res = await this.#porthippo.io.importSshConfig({
+      const res = await this.#jumphippo.io.importSshConfig({
         proposal,
         selected,
       });
@@ -486,9 +486,9 @@ export class ImportExportDialog {
 /** After an import, refresh every open view / picker. */
 function announceDataChanged() {
   for (const name of [
-    "porthippo:data-imported",
-    "porthippo:credentials-changed",
-    "porthippo:jumphosts-changed",
+    "jumphippo:data-imported",
+    "jumphippo:credentials-changed",
+    "jumphippo:jumphosts-changed",
   ]) {
     window.dispatchEvent(new CustomEvent(name));
   }

@@ -1,14 +1,14 @@
 # Jump Hosts
 
 A **jump host** (bastion) is an intermediate SSH server you connect *through* on
-the way to the target. Port Hippo supports a **chain** of them, so you can reach a
+the way to the target. Jump Hippo supports a **chain** of them, so you can reach a
 destination that's several SSH hops away.
 
 ```
   entry port ──ssh──▶ jump 1 ──ssh──▶ jump 2 ──ssh──▶ target server ──▶ exit port
 ```
 
-Each hop is a real SSH connection, chained inside the previous one — Port Hippo
+Each hop is a real SSH connection, chained inside the previous one — Jump Hippo
 owns the sockets and relays the bytes itself; it never shells out to the system
 `ssh` binary.
 
@@ -46,7 +46,7 @@ auth freely across the chain.
 
 ## Host-key trust along the chain
 
-Port Hippo verifies the host key of **every** hop — each jump host and the target
+Jump Hippo verifies the host key of **every** hop — each jump host and the target
 server — against your `known_hosts` and its own accepted-keys store. An unknown
 key prompts you to trust it (once); a *changed* key is refused. See
 [Host Keys & Trust](host-keys.md).
@@ -54,7 +54,7 @@ key prompts you to trust it (once); a *changed* key is refused. See
 ## Testing the chain
 
 Use **Test resolution** in the editor to walk the whole chain before you rely on
-it. Port Hippo connects hop-by-hop and reports, per host, whether it resolved and
+it. Jump Hippo connects hop-by-hop and reports, per host, whether it resolved and
 was reachable — and probes the destination from the far end. It's protocol-only
 and never executes anything on a remote host.
 

@@ -25,14 +25,14 @@
 // multi-resolution `.ico` plus a PNG icon-set directory (which also supplies the
 // Linux icon referenced by package.json's `build` block).
 //
-// The macOS app icon (`src/web/porthippo-mac-icon.png`) is DELIBERATELY NOT
+// The macOS app icon (`src/web/jumphippo-mac-icon.png`) is DELIBERATELY NOT
 // touched here: it needs custom safe-area padding — the rounded square filling
 // ~80% of the canvas that macOS expects — which a plain edge-to-edge downscale
 // cannot produce. It is maintained separately; this script never reads or writes
 // it.
 //
 // Outputs (committed to the repo, consumed at build time by package.json):
-//   src/web/porthippo-icon.ico   — Windows icon, PNG-encoded entries 16…256
+//   src/web/jumphippo-icon.ico   — Windows icon, PNG-encoded entries 16…256
 //   src/web/icons/<N>x<N>.png    — Linux icon set (16…1024)
 //
 // macOS-only: downscaling uses the system `sips` tool. Run after replacing the
@@ -55,7 +55,7 @@ const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), ".."
 // Master source: a single high-resolution PNG. Every emitted size is a
 // downscale of this; nothing scales it up.
 const SOURCE = path.join(repoRoot, "icons/1024x1024.png");
-const ICO_OUT = path.join(repoRoot, "src/web/porthippo-icon.ico");
+const ICO_OUT = path.join(repoRoot, "src/web/jumphippo-icon.ico");
 const LINUX_DIR = path.join(repoRoot, "src/web/icons");
 
 // The master source is 1024×1024; every smaller size is a high-quality Lanczos
@@ -115,7 +115,7 @@ if (!existsSync(SOURCE)) {
 }
 
 console.log(`Downscaling icons from ${path.relative(repoRoot, SOURCE)}…`);
-const work = mkdtempSync(path.join(tmpdir(), "porthippo-icons-"));
+const work = mkdtempSync(path.join(tmpdir(), "jumphippo-icons-"));
 try {
   // Linux icon set.
   mkdirSync(LINUX_DIR, { recursive: true });
@@ -138,7 +138,7 @@ try {
 
   console.log(`\nWrote ${path.relative(repoRoot, ICO_OUT)}`);
   console.log(`Wrote ${path.relative(repoRoot, LINUX_DIR)}/ (${LINUX_SIZES.length} sizes)`);
-  console.log("macOS icon (src/web/porthippo-mac-icon.png) left untouched — custom padding.");
+  console.log("macOS icon (src/web/jumphippo-mac-icon.png) left untouched — custom padding.");
 } finally {
   rmSync(work, { recursive: true, force: true });
 }

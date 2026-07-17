@@ -47,7 +47,7 @@ const DEFAULTS = Object.freeze({
   groupCollapsed: {},
 
   // ── Feature 60 behaviour ──────────────────────────────────────────────────
-  launchAtLogin: false, // start Port Hippo at OS login
+  launchAtLogin: false, // start Jump Hippo at OS login
   startMinimized: false, // when launched at login, start hidden in the tray
   armOnLaunch: true, // arm enabled definitions on startup (bind their listeners)
   confirmOnQuit: false, // ask before quitting (tears down live tunnels)

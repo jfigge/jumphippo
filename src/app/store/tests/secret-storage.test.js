@@ -31,7 +31,7 @@ const { SecretStorage } = require("../secret-storage");
 // A fresh temp profile + store per test. crypto is a process-wide singleton, so
 // each test also resets it (node --test isolates by FILE, not by test).
 function fresh() {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "porthippo-secret-"));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "jumphippo-secret-"));
   const paths = new Paths(dir);
   return { dir, paths, sec: new SecretStorage(paths) };
 }
@@ -52,7 +52,7 @@ function keychainMock() {
 
 // A tunnels.json document carrying two sealed secrets on credential records: a
 // password credential and a key-passphrase credential (the two secret-bearing
-// shapes Port Hippo stores since Feature 45). A tunnel + jump host reference them
+// shapes Jump Hippo stores since Feature 45). A tunnel + jump host reference them
 // but hold no secret themselves.
 function tunnelsDoc(passwordEnc, passphraseEnc) {
   return {

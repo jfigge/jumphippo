@@ -1,13 +1,13 @@
 # Feature 70 — CI/CD, packaging & download website
 
 ## Context
-Port Hippo now works end-to-end locally. This stage makes it **shippable**: signed,
+Jump Hippo now works end-to-end locally. This stage makes it **shippable**: signed,
 notarized, auto-updating installers for **all major OSes in both arm64 and x64**, built and
 published by **GitHub Actions**, with a **GitHub Pages** download site — exactly the
 pipeline Rest Hippo runs (`.github/workflows/{ci,dco,release,deploy-site}.yml`, the
 electron-builder `build` block in `src/package.json`, the `packaging/` entitlements, the
 `release` Makefile target, and the `website/` folder). We port that pipeline, adjusting
-identifiers to Port Hippo and dropping Rest-Hippo-specific bits (mock server, Keycloak,
+identifiers to Jump Hippo and dropping Rest-Hippo-specific bits (mock server, Keycloak,
 store-build/MAS gating can be deferred).
 
 Feature 00 stubbed the electron-builder `build` block and the local build targets; this
@@ -24,7 +24,7 @@ site — all gated behind a green CI (lint, format, tests) and DCO check.
 - **electron-builder, full matrix.** Complete the `build` block in `src/package.json`:
   `mac` (dmg + zip, arm64 + x64; hardenedRuntime, entitlements, `notarize:true`), `win`
   (nsis + portable, x64 + arm64), `linux` (AppImage + deb, x64 + arm64), `publish` →
-  `github` (owner `jfigge`, repo `porthippo`), `artifactName` `Port-Hippo-${version}-${arch}.${ext}`. Port `packaging/entitlements.mac.plist`. Mac App Store / Microsoft Store
+  `github` (owner `jfigge`, repo `jumphippo`), `artifactName` `Jump-Hippo-${version}-${arch}.${ext}`. Port `packaging/entitlements.mac.plist`. Mac App Store / Microsoft Store
   packaging is **explicitly deferred** (a later feature) — ship direct-download first.
 - **electron-updater for auto-update.** Add it as a runtime dep; port Rest Hippo's
   `updater.js`; the GitHub Release provides the update feed (electron-builder emits
@@ -45,7 +45,7 @@ site — all gated behind a green CI (lint, format, tests) and DCO check.
 - **The site is static + generated.** Port `website/` (index/download/features/privacy),
   `scripts/build-versions.mjs` (reads GitHub Releases → `versions.json`), and the
   auto-detect download logic (`downloads.js`) that offers the right OS/arch build.
-  `website/CNAME` = `porthippo.com` (falls back to the `*.github.io` URL until DNS exists).
+  `website/CNAME` = `jumphippo.com` (falls back to the `*.github.io` URL until DNS exists).
 - **Native runners per platform.** macOS artifacts on `macos-latest`, Windows on
   `windows-latest` (MSYS2 for `make`), Linux on `ubuntu-latest` — cross-building is not
   attempted. CI's smoke-build may run Linux-only to save minutes (Rest Hippo does this),
@@ -55,9 +55,9 @@ site — all gated behind a green CI (lint, format, tests) and DCO check.
 1. **Complete the electron-builder `build` block** in `src/package.json` (targets, arches,
    signing, publish, artifact names) and port `packaging/entitlements.mac.plist`. Add
    `electron-updater` to `dependencies` and port `src/app/updater.js`; wire an update check
-   into the app (menu/tray) + `porthippo:update-*` events.
+   into the app (menu/tray) + `jumphippo:update-*` events.
 2. **App icons.** Add `scripts/make-icons.mjs` (port) to generate the Windows `.ico`, macOS
-   `.png`/icns, and Linux icon set from `src/web/porthippo-icon.svg`; commit outputs;
+   `.png`/icns, and Linux icon set from `src/web/jumphippo-icon.svg`; commit outputs;
    reference them in the `build` block.
 3. **Complete the Makefile release/dist targets.** Port `release.env`/`RELEASE_ENV_VARS`
    handling, `UNSIGNED_ENV`, `dmg`/`sign-dmg`/`sign-all`, `dist`/`dist-mac`/`dist-linux`/
@@ -75,7 +75,7 @@ site — all gated behind a green CI (lint, format, tests) and DCO check.
 7. **`deploy-site.yml`.** Port verbatim (no `paths:` filter, no `release:` trigger — the
    dispatch from release.yml handles post-release): generate `versions.json`, build any
    hosted docs (Feature 80), configure + upload + deploy Pages.
-8. **Website.** Port `website/` and rebrand to Port Hippo: `index.html` (hero + auto-detect
+8. **Website.** Port `website/` and rebrand to Jump Hippo: `index.html` (hero + auto-detect
    download button via `downloads.js`), a features page, `versions.json` (generated),
    `CNAME`, `favicon.svg`, `robots.txt`/`sitemap.xml`. `scripts/build-versions.mjs` reads
    the repo's Releases.

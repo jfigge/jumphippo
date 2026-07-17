@@ -1,8 +1,8 @@
-# Port Hippo User Guide
+# Jump Hippo User Guide
 
-**Port Hippo** manages **SSH tunnels that open on demand.** You define a tunnel
+**Jump Hippo** manages **SSH tunnels that open on demand.** You define a tunnel
 once: a local port, where traffic should end up, and the SSH server (and any jump
-hosts) to route it through. Port Hippo binds the local port and waits. The moment
+hosts) to route it through. Jump Hippo binds the local port and waits. The moment
 something connects to that port, it opens the SSH tunnel — through a chain of jump
 hosts if you need them — holds it open while traffic is flowing, and tears the SSH
 connection down again once the port goes idle. The local listener stays bound the
@@ -21,12 +21,12 @@ encrypted at rest, and **never phones home**.
 
 1. **Armed** — the tunnel's local **entry port** is bound and listening. No SSH
    connection exists yet.
-2. **First access** — an app connects to the entry port. Port Hippo opens the SSH
+2. **First access** — an app connects to the entry port. Jump Hippo opens the SSH
    chain (jump hosts, then the target server), authenticates each hop, verifies
    each host key, and forwards your traffic to the **exit port** (the destination).
 3. **Live** — the SSH connection is held open while any client is connected, with
    byte counters and connection stats updating in the Monitoring view.
-4. **Idle** — after the last client disconnects, Port Hippo waits the tunnel's
+4. **Idle** — after the last client disconnects, Jump Hippo waits the tunnel's
    **idle linger** and then closes the SSH connection. The entry port stays bound,
    ready to open it again on the next access.
 
@@ -42,7 +42,7 @@ down, and **resume** it later.
 - **[Jump Hosts](jump-hosts.md)** — reusable hosts and multi-hop chains.
 - **[Authentication](authentication.md)** — SSH agent, private keys, passwords,
   and passphrases.
-- **[Host Keys & Trust](host-keys.md)** — how Port Hippo verifies servers, and
+- **[Host Keys & Trust](host-keys.md)** — how Jump Hippo verifies servers, and
   what a "changed key" warning means.
 - **[Monitoring & Pause](monitoring.md)** — live stats, the Cards and List views,
   groups, and pause/resume.
@@ -51,10 +51,10 @@ down, and **resume** it later.
 - **[Tray & Background](tray-and-background.md)** — hide-to-tray, launch-at-login,
   and quit behaviour.
 - **[Security](security.md)** — binding scope, where secrets live, host-key trust,
-  and Port Hippo's privacy posture.
+  and Jump Hippo's privacy posture.
 - **[Troubleshooting](troubleshooting.md)** — port already in use, privileged
   ports, connection failures, and reconnects.
 
-> Port Hippo is open source under the Apache 2.0 license. The source, issue
+> Jump Hippo is open source under the Apache 2.0 license. The source, issue
 > tracker, and build instructions are on
-> [GitHub](https://github.com/jfigge/porthippo#readme).
+> [GitHub](https://github.com/jfigge/jumphippo#readme).

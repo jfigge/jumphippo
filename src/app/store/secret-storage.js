@@ -54,10 +54,10 @@ const DEFAULT_MODE = "app-key";
 
 // A fixed constant sealed under the master key; decrypting it back proves the
 // entered password is correct (the GCM tag does the verification). Not secret.
-const VERIFIER_PLAINTEXT = "porthippo:secret-storage:verifier:v1";
+const VERIFIER_PLAINTEXT = "jumphippo:secret-storage:verifier:v1";
 const MASTER_SALT_LEN = 16;
 
-// tunnels.json is Port Hippo's only secret-bearing file; since Feature 45 a
+// tunnels.json is Jump Hippo's only secret-bearing file; since Feature 45 a
 // credential's auth secret lives at `credentials[].{password|passphrase}` as
 // `{ enc: "<ciphertext>" }` (tunnels + jump hosts carry no secret of their own).
 const SECRET_FIELDS = ["password", "passphrase"];
@@ -441,7 +441,7 @@ class SecretStorage {
 
   // ── Re-encryption (all-or-nothing, two-pass) ────────────────────────────────
 
-  /** The secret-bearing files: Port Hippo has exactly one (tunnels.json). */
+  /** The secret-bearing files: Jump Hippo has exactly one (tunnels.json). */
   _secretFiles() {
     return [
       {

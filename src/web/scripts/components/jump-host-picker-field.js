@@ -19,7 +19,7 @@
 // <select> of the remaining jump hosts and a "New…" that opens the
 // JumpHostEditorDialog). Row order IS hop order; the chosen ids are reported up as
 // `jumpHostIds[]` via the `onChange` callback. Reloads on
-// `porthippo:jumphosts-changed`, preserving the chain (dropping any deleted ref).
+// `jumphippo:jumphosts-changed`, preserving the chain (dropping any deleted ref).
 
 import { el, clear } from "../dom.js";
 import { t } from "../i18n.js";
@@ -30,7 +30,7 @@ export class JumpHostPickerField {
   #listEl;
   #emptyEl;
   #addSelect;
-  #porthippo;
+  #jumphippo;
   #openKeyFile;
   #onChange;
   #jumpHosts = []; // available records
@@ -40,19 +40,19 @@ export class JumpHostPickerField {
 
   /**
    * @param {object} [opts]
-   * @param {object} [opts.porthippo]
+   * @param {object} [opts.jumphippo]
    * @param {(ids: string[]) => void} [opts.onChange]
    * @param {() => Promise<string|null>} [opts.openKeyFile]
    */
-  constructor({ porthippo, onChange, openKeyFile } = {}) {
-    this.#porthippo = porthippo || window.porthippo;
+  constructor({ jumphippo, onChange, openKeyFile } = {}) {
+    this.#jumphippo = jumphippo || window.jumphippo;
     this.#openKeyFile = openKeyFile;
     this.#onChange = onChange;
     this.#el = this.#build();
 
     this.#onJumpsChanged = () => this.refresh();
     window.addEventListener(
-      "porthippo:jumphosts-changed",
+      "jumphippo:jumphosts-changed",
       this.#onJumpsChanged,
     );
   }
@@ -81,7 +81,7 @@ export class JumpHostPickerField {
 
   /** Reload the available jump hosts, pruning any chain ref that no longer exists. */
   async refresh() {
-    const list = (await this.#porthippo?.jumpHosts?.list?.()) || [];
+    const list = (await this.#jumphippo?.jumpHosts?.list?.()) || [];
     this.#jumpHosts = Array.isArray(list) ? list : [];
     const known = new Set(this.#jumpHosts.map((j) => j.id));
     const pruned = this.#chain.filter((id) => known.has(id));
@@ -94,7 +94,7 @@ export class JumpHostPickerField {
 
   destroy() {
     window.removeEventListener(
-      "porthippo:jumphosts-changed",
+      "jumphippo:jumphosts-changed",
       this.#onJumpsChanged,
     );
   }
@@ -215,7 +215,7 @@ export class JumpHostPickerField {
   #ensureEditor() {
     if (this.#editor) return this.#editor;
     this.#editor = new JumpHostEditorDialog({
-      porthippo: this.#porthippo,
+      jumphippo: this.#jumphippo,
       openKeyFile: this.#openKeyFile,
       onSaved: async (record) => {
         await this.refresh();

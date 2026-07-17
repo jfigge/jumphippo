@@ -16,11 +16,11 @@
 
 /**
  * known-hosts-store.js — SSH host-key fingerprints the user has accepted through
- * Port Hippo (trust-on-first-use). Consumed by the Feature 20 host-key verifier.
+ * Jump Hippo (trust-on-first-use). Consumed by the Feature 20 host-key verifier.
  *
  * Kept deliberately separate from `~/.ssh/known_hosts` (which the engine also
  * reads): this file holds only the TOFU entries a user explicitly accepted in
- * Port Hippo, keyed by `"<host>:<port>"`. Persisted as
+ * Jump Hippo, keyed by `"<host>:<port>"`. Persisted as
  * `{ schemaVersion, hosts: { "<hostPort>": { fingerprint, addedAt } } }`.
  */
 "use strict";

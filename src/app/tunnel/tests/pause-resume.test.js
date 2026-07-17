@@ -21,7 +21,7 @@
  * byte flow and stops accepting new connections **without** dropping the SSH
  * connection, its totals freeze while paused, resuming restores flow, and a paused
  * tunnel can still be disarmed cleanly. A final engine-level test confirms the
- * `porthippo:stats` snapshot reports the paused state.
+ * `jumphippo:stats` snapshot reports the paused state.
  */
 "use strict";
 
@@ -147,7 +147,7 @@ test("a paused tunnel can still be disarmed, which tears SSH down cleanly", asyn
   }
 });
 
-test("engine pause/resume delegate and the porthippo:stats snapshot reports paused", async () => {
+test("engine pause/resume delegate and the jumphippo:stats snapshot reports paused", async () => {
   const echo = await startEcho();
   const ssh = await startSsh();
   const localPort = await freePort();
@@ -160,7 +160,7 @@ test("engine pause/resume delegate and the porthippo:stats snapshot reports paus
     // lazy SSH connect completes without a real user prompt.
     broadcast: (channel, payload) => {
       events.push({ channel, payload });
-      if (channel === "porthippo:hostkey-unknown")
+      if (channel === "jumphippo:hostkey-unknown")
         engine.trustHostKey(payload.promptId);
     },
     knownHostsFile: "/nonexistent/known_hosts",
@@ -168,7 +168,7 @@ test("engine pause/resume delegate and the porthippo:stats snapshot reports paus
 
   const latestStatsFor = (id) => {
     for (let i = events.length - 1; i >= 0; i--) {
-      if (events[i].channel !== "porthippo:stats") continue;
+      if (events[i].channel !== "jumphippo:stats") continue;
       const snap = events[i].payload.find((s) => s.id === id);
       if (snap) return snap;
     }

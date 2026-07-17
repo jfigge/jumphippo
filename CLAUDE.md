@@ -1,8 +1,8 @@
-# Port Hippo — Project Guide for Claude
+# Jump Hippo — Project Guide for Claude
 
 ## What This Is
 
-**Port Hippo** is a cross-platform desktop app that manages **SSH tunnels**. It binds a
+**Jump Hippo** is a cross-platform desktop app that manages **SSH tunnels**. It binds a
 local port and, **on first access to that port, automatically opens an SSH tunnel** to a
 destination (optionally through a chain of jump hosts), holds it open while any connection
 is live, and **tears the SSH connection down once the local port goes idle** — however long
@@ -30,9 +30,11 @@ its plan file into `features/done/`.
   handlers (`ipc/`), storage (`store/`), and the SSH tunnel engine (`tunnel/`). All native
   I/O — sockets and SSH — lives here. Feature 60 adds the app-shell modules: `tray.js`,
   `tray-icon.js`, `menu.js`, `login-item.js`, `logger.js`, `diagnostics.js`, and `i18n.js`
-  (main-side catalog loader).
+  (main-side catalog loader). `store-build.js` is the single "is this a Mac App Store /
+  Microsoft Store build?" predicate — store-incompatible features (the self-updater)
+  gate on it at runtime; see `STORE-PUBLISHING.md`.
 - `src/web/` — **renderer** (Vanilla JS ES modules + CSS): UI. Sandboxed; talks to main
-  only through `window.porthippo.*`.
+  only through `window.jumphippo.*`.
 - `src/web/fonts/` — bundled Inter variable font; never load fonts from a CDN.
 - `src/web/locales/` — i18n catalogs (`en.json` shipped complete). English is also embedded
   in `src/web/scripts/i18n.js` as `EN` so `t()` resolves synchronously; a test keeps the two
@@ -55,12 +57,12 @@ Electron main process (src/app/main.js)
   ├── Logging       (logger.js/diagnostics)  rotating log + redacted diagnostics report
   ├── i18n (main)   (src/app/i18n.js)         loads locale catalogs for menu/tray/dialogs
   ├── IPC handlers  (src/app/ipc/)           store.js + engine.js + dialog.js + shell.js
-  └── IPC bridge    (src/app/preload.js)     →  window.porthippo.*
+  └── IPC bridge    (src/app/preload.js)     →  window.jumphippo.*
         └── Renderer / UI (src/web/scripts/app.js)
 ```
 
 - The main process owns all filesystem I/O, sockets, and SSH (via `ssh2`). The renderer is
-  sandboxed and communicates exclusively via `window.porthippo.*`.
+  sandboxed and communicates exclusively via `window.jumphippo.*`.
 - Request/response IPC channels are registered in `ipc/store.js` (CRUD + settings +
   `hostkeys:list|revoke`), `ipc/engine.js` (`tunnels:arm|disarm|status|pause|resume|apply`,
   `hostkeys:trust|reject`), `ipc/resolve.js` (`resolve:lookup|test|cancel` — Feature 100),
@@ -68,11 +70,11 @@ Electron main process (src/app/main.js)
   native tunnel-row right-click menu), `ipc/shell.js`
   (`i18n:load`, `diagnostics:copy`) and `ipc/secret-storage.js`
   (`secret-storage:get-mode|set-mode|unlock|lock`), and exposed through `preload.js`; **keep
-  the handler and the `window.porthippo.*` exposure in lockstep** (the `ipc-parity` test
+  the handler and the `window.jumphippo.*` exposure in lockstep** (the `ipc-parity` test
   guards this — add any new `ipc/*.js` file to its scan list).
-- Live state flows the other way as one-way `porthippo:*` broadcasts
-  (`porthippo:tunnel-state`, `porthippo:hostkey-unknown`, `porthippo:hostkey-changed`,
-  `porthippo:secret-storage-changed`):
+- Live state flows the other way as one-way `jumphippo:*` broadcasts
+  (`jumphippo:tunnel-state`, `jumphippo:hostkey-unknown`, `jumphippo:hostkey-changed`,
+  `jumphippo:secret-storage-changed`):
   `main.js` sends via `webContents.send`; `preload.js` re-dispatches each as a global
   `CustomEvent` on `window`. Payloads are serializable and carry fingerprints only — never
   secrets.
@@ -107,7 +109,7 @@ socket and relay bytes ourselves — never shell out to the system `ssh`.
 
 ### App shell (Feature 60)
 
-Port Hippo is a **background utility**, so the shell keeps tunnels alive:
+Jump Hippo is a **background utility**, so the shell keeps tunnels alive:
 
 - **Lifecycle — close hides, only Quit disarms.** The window `close` event hides to the tray
   (unless the module `isQuitting` flag is set); `window-all-closed` never quits on its own.
@@ -117,13 +119,13 @@ Port Hippo is a **background utility**, so the shell keeps tunnels alive:
   the `trayHintSeen` setting).
 - **Tray is the primary presence** (`tray.js`, macOS template glyph synthesised in
   `tray-icon.js`). It is fed by teeing the engine `broadcast` — `main.js` calls `tray.update()`
-  on each `porthippo:tunnel-state` (not on the byte-rate `porthippo:stats` heartbeat).
+  on each `jumphippo:tunnel-state` (not on the byte-rate `jumphippo:stats` heartbeat).
 - **Single-instance lock** in `main.js` (skipped under `--hot-reload`); a second launch focuses
   the running window.
 - **Native menu** (`menu.js`) and **tray** take injected Electron (`Menu`/`Tray`/`app`) — they
   don't `require("electron")`. Custom items either call a main action directly (arm-all, quit,
   copy-diagnostics) or `webContents.send("menu:*")` → preload re-dispatches as a
-  `porthippo:*` `CustomEvent` app.js binds.
+  `jumphippo:*` `CustomEvent` app.js binds.
 - **Launch at login** (`login-item.js`): `setLoginItemSettings` on macOS/Windows, a
   `~/.config/autostart` `.desktop` on Linux. Applied (packaged builds only) via the
   `afterSettingsWrite` hook when the `launchAtLogin` setting changes.
@@ -133,7 +135,7 @@ Port Hippo is a **background utility**, so the shell keeps tunnels alive:
 - Renderer `src/web/scripts/i18n.js` exports `t(key, params)`, `formatNumber`, `formatDate`,
   `applyCatalog`, `init`, and the embedded English catalog `EN`. `t()` resolves synchronously
   against `EN`; `init()` (awaited once in `app.js`) layers the active locale over IPC
-  (`window.porthippo.i18n.load`). Keys are flat `area.component.label`; `{name}` interpolates.
+  (`window.jumphippo.i18n.load`). Keys are flat `area.component.label`; `{name}` interpolates.
 - Main `src/app/i18n.js` (`loadCatalog`/`readCatalog`/`label`/`format`) resolves labels for
   main-side chrome (menu/tray/dialogs) from `src/web/locales/<lang>.json`.
 - **Single source of truth:** edit `EN` in the renderer module, then regenerate `en.json`:
@@ -155,7 +157,7 @@ The user guide is **one Markdown source, two renderers** (Rest Hippo's model), s
 in-app and hosted guides can never drift.
 
 - **Source of truth:** `src/web/docs/*.md`. `README.md` is the overview (slug `overview`).
-- **In-app:** Help → *Port Hippo User Guide* opens a standalone window (`docs.html` +
+- **In-app:** Help → *Jump Hippo User Guide* opens a standalone window (`docs.html` +
   `docs-window.js` → `components/docs-viewer.js`), created by `showDocsWindow()` in
   `main.js` with the narrow `preload-docs.js` (exposes only `docs:read`). The viewer
   fetches Markdown over the `docs:read` IPC and renders it with the vendored
@@ -234,10 +236,10 @@ make clean     # Remove build/ and dist/
   double-hyphen is reserved for modifiers (and for `--color-*`/`--space-*` token names).
 - **Component ↔ app communication**: a parent-owned widget reporting to the one parent that
   created it → **constructor callback** (`this.#onSave?.(payload)`); an app-wide state
-  change any number of panels may react to → a global **`porthippo:*` `CustomEvent`**. Pick
+  change any number of panels may react to → a global **`jumphippo:*` `CustomEvent`**. Pick
   by who needs to hear it.
 - IPC channels registered in `main.js` are exposed through `preload.js` as
-  `window.porthippo.*`; keep the two in lockstep.
+  `window.jumphippo.*`; keep the two in lockstep.
 
 ## Security posture (this is a credential-handling app)
 
@@ -250,7 +252,7 @@ make clean     # Remove build/ and dist/
   the **OS keychain** (`enc:v1:`, `safeStorage`), or a **master password** (`encm:v1:`,
   PBKDF2→AES-256-GCM; the key lives in memory only, so the mode boots **locked** and prompts
   to unlock). All crypto/keychain/migration lives in main (`store/{crypto,secret-storage}.js`);
-  the renderer only sends mode/unlock intents and reacts to `porthippo:secret-storage-changed`.
+  the renderer only sends mode/unlock intents and reacts to `jumphippo:secret-storage-changed`.
 - Switching backends **re-encrypts every stored secret** all-or-nothing (crash-safe: a durable
   migration marker, then the mode flip as the atomicity anchor, auto-finished on next launch).
   **No mode ever silently downgrades a secret to plaintext** — OS keychain is refused when

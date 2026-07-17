@@ -15,13 +15,13 @@
  */
 
 /**
- * e2e.js — end-to-end exercise of every Port Hippo forwarding type against the
+ * e2e.js — end-to-end exercise of every Jump Hippo forwarding type against the
  * Docker sandbox, driving the REAL tunnel engine (src/app/tunnel), not raw ssh.
  *
  * Where `verify.sh` proves the sandbox topology with the system `ssh` binary, this
- * proves Port Hippo's OWN listener → ssh-chain → relay / socks5 code carries real
+ * proves Jump Hippo's OWN listener → ssh-chain → relay / socks5 code carries real
  * bytes over that topology. It mirrors the four seeded sandbox definitions (see
- * docker/seed-porthippo.js), one per scenario:
+ * docker/seed-jumphippo.js), one per scenario:
  *
  *   A) local  (direct)   — SSH to the jump, forward to its loopback echo.
  *   B) local  (via jump) — SSH to the sealed dest THROUGH the jump, forward to
@@ -77,8 +77,8 @@ const JUMP_SSH_PORT = Number(env.JUMP_SSH_PORT || 2201);
 const DEST_BACK_IP = env.DEST_BACK_IP || "172.29.0.12";
 const ECHO_PORT = Number(env.ECHO_PORT || 7000);
 const NET_ECHO_PORT = Number(env.NET_ECHO_PORT || 7001);
-const KEY_PATH = path.join(DOCKER, "keys", "id_porthippo");
-const JUMP_CONTAINER = "porthippo-jump";
+const KEY_PATH = path.join(DOCKER, "keys", "id_jumphippo");
+const JUMP_CONTAINER = "jumphippo-jump";
 
 // The reverse scenario binds its own dedicated port ON the jump (distinct from the
 // seed's REMOTE_BIND_PORT) so this test can run even while the debug app has the
@@ -367,7 +367,7 @@ async function preflight() {
 async function main() {
   await preflight();
   console.log(
-    `\nPort Hippo e2e — driving the real tunnel engine over the Docker sandbox\n` +
+    `\nJump Hippo e2e — driving the real tunnel engine over the Docker sandbox\n` +
       c.dim(
         `  jump=127.0.0.1:${JUMP_SSH_PORT}  dest=${DEST_BACK_IP}  user=${SSH_USER}\n`,
       ),
@@ -394,7 +394,7 @@ async function main() {
   if (failures === 0) {
     console.log(
       c.ok(
-        `  All ${SCENARIOS.length} tunnel types round-tripped through Port Hippo. ✔\n`,
+        `  All ${SCENARIOS.length} tunnel types round-tripped through Jump Hippo. ✔\n`,
       ),
     );
     process.exit(0);

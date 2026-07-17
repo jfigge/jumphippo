@@ -46,7 +46,7 @@
  * reachability probe runs only when a governed rule needs one.
  *
  * PRIVACY: an SSID / probe result only ever flows into the in-memory decision and
- * the (fingerprint-free) `porthippo:schedule` status; it is never logged.
+ * the (fingerprint-free) `jumphippo:schedule` status; it is never logged.
  */
 "use strict";
 
@@ -294,7 +294,7 @@ class Scheduler {
       this.#stopTimers();
       this.#unsubscribePower();
       this.#state.clear();
-      this.#broadcast?.("porthippo:schedule", { enabled: false, tunnels: [] });
+      this.#broadcast?.("jumphippo:schedule", { enabled: false, tunnels: [] });
     }
   }
 
@@ -564,7 +564,7 @@ class Scheduler {
 
   #broadcastStatus() {
     if (!this.#broadcast) return;
-    this.#broadcast("porthippo:schedule", this.status());
+    this.#broadcast("jumphippo:schedule", this.status());
   }
 
   #statusEntry(id, schedule, nowMs) {

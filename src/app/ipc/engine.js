@@ -20,14 +20,14 @@
  * The renderer only ever sends *intents* over these channels — arm/disarm a
  * definition, pause/resume it, ask for a status snapshot, or answer a host-key
  * trust prompt. All sockets and SSH live in the engine (main). Live state flows
- * the other way as `porthippo:tunnel-state` /
- * `porthippo:stats` / `porthippo:hostkey-*` broadcasts (see main.js), not through
+ * the other way as `jumphippo:tunnel-state` /
+ * `jumphippo:stats` / `jumphippo:hostkey-*` broadcasts (see main.js), not through
  * these request/response channels.
  *
  * Engine calls are async, so each handler is wrapped to await the result and turn a
  * failure into the same discriminable `{ __hippoError }` envelope the store IPC uses.
  *
- * Every channel registered here MUST have a matching `window.porthippo.*` exposure
+ * Every channel registered here MUST have a matching `window.jumphippo.*` exposure
  * in preload.js — the ipc-parity test fails the build otherwise.
  *
  * @param {object} deps

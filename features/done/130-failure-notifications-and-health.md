@@ -15,7 +15,7 @@ no countdown), a half-dead peer isn't detected until TCP eventually times out, a
 policy is hard-coded with no way to tune it. For a background utility whose whole job is
 "keep my tunnel up," silent failure is the worst outcome.
 
-Port Hippo already uses `new Notification(...)` in `main.js` (the one-off "running in the
+Jump Hippo already uses `new Notification(...)` in `main.js` (the one-off "running in the
 tray" hint), so the OS notification surface is proven — this feature puts it to work.
 
 ## Goal
@@ -31,7 +31,7 @@ configurable globally with an optional per-tunnel override.
 
 - **The engine emits richer lifecycle events; it does not change the algorithm.** Add typed
   transitions to the existing broadcast — `dropped`, `reconnecting` (with `attempt`,
-  `nextRetryAt`), `recovered`, `gave-up` — carried on the existing `porthippo:tunnel-state`
+  `nextRetryAt`), `recovered`, `gave-up` — carried on the existing `jumphippo:tunnel-state`
   broadcast payload (never a new secret-bearing channel). The backoff math in `tunnel.js`
   stays; we only surface its state.
 - **Active keepalive uses ssh2's built-in probing.** Pass `keepaliveInterval` /
@@ -45,7 +45,7 @@ configurable globally with an optional per-tunnel override.
   injected Electron) turns lifecycle events into notification payloads using main-side i18n
   (`i18n.js` `label`). Rules: **debounce** a flapping tunnel (no more than one drop notice per
   tunnel per cooldown), notify on *recovered* only if a *dropped* was shown, always notify on
-  *gave-up* and on `porthippo:hostkey-changed`. Payloads carry the tunnel **name** only —
+  *gave-up* and on `jumphippo:hostkey-changed`. Payloads carry the tunnel **name** only —
   never a host, user, or secret. A Settings toggle (master on/off) plus per-event granularity;
   respect OS Do-Not-Disturb (rely on `Notification.isSupported()` + the OS honouring DND).
 - **The retry policy becomes data.** Promote the current hard-coded backoff deps to settings

@@ -15,11 +15,11 @@
  */
 
 /**
- * portable.js — the `.porthippo` backup/restore bundle (Feature 120).
+ * portable.js — the `.jumphippo` backup/restore bundle (Feature 120).
  *
  * A bundle is a versioned, self-describing document — never the raw tunnels.json:
  *
- *   { format: "porthippo-bundle", version: 1, exportedAt,
+ *   { format: "jumphippo-bundle", version: 1, exportedAt,
  *     secrets: "stripped" | "encp:v1",
  *     contents: { tunnels[], credentials[], jumpHosts[], settings? } }
  *
@@ -68,7 +68,7 @@ const {
   _aesGcmDecrypt,
 } = require("./crypto");
 
-const FORMAT = "porthippo-bundle";
+const FORMAT = "jumphippo-bundle";
 const VERSION = 1;
 
 // Portable-secret ciphertext family. A DISTINCT prefix from the at-rest families
@@ -170,7 +170,7 @@ function openPassphrase(value, passphrase) {
 // ── Export ──────────────────────────────────────────────────────────────────────
 
 /**
- * Build a `.porthippo` bundle from the live store.
+ * Build a `.jumphippo` bundle from the live store.
  *
  * @param {import('./stores').Stores} stores
  * @param {object} opts
@@ -266,10 +266,10 @@ function exportCredential(cred, seal, passphrase) {
  */
 function validateBundle(bundle) {
   if (!bundle || typeof bundle !== "object" || Array.isArray(bundle)) {
-    throw bundleError("INVALID_BUNDLE", "not a Port Hippo bundle");
+    throw bundleError("INVALID_BUNDLE", "not a Jump Hippo bundle");
   }
   if (bundle.format !== FORMAT) {
-    throw bundleError("INVALID_BUNDLE", "not a Port Hippo bundle");
+    throw bundleError("INVALID_BUNDLE", "not a Jump Hippo bundle");
   }
   if (bundle.version !== VERSION) {
     throw bundleError("INVALID_BUNDLE", `unsupported bundle version`);

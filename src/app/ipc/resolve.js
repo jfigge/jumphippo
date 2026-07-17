@@ -28,13 +28,13 @@
  *     in main (`tunnelStore().resolveDecrypted`) and hands the engine-shaped def to
  *     the engine's disposable probe; only host/port/status/reason cross back — never
  *     a secret. An unknown host key surfaces over the existing
- *     `porthippo:hostkey-unknown` broadcast + `hostkeys:trust|reject`, not here.
+ *     `jumphippo:hostkey-unknown` broadcast + `hostkeys:trust|reject`, not here.
  *   - `resolve:cancel` — abort the in-flight `resolve:test`.
  *
  * Only one probe runs at a time: a fresh `resolve:test` supersedes (aborts) any prior
  * run, so a user hammering the button can't stack live SSH connections.
  *
- * Every channel registered here MUST have a matching `window.porthippo.*` exposure in
+ * Every channel registered here MUST have a matching `window.jumphippo.*` exposure in
  * preload.js — the ipc-parity test (which scans this file) fails the build otherwise.
  *
  * @param {object} deps

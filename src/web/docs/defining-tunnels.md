@@ -26,7 +26,7 @@ unchanged.
 The **Remote bind** is a bare port (bound on the server's loopback) or an
 `address:port`. Binding a **non-loopback** address on the server — so other hosts
 can reach it — only works if the server's `sshd` has **`GatewayPorts`** enabled;
-Port Hippo warns you, but only the server can allow it. A remote tunnel connects
+Jump Hippo warns you, but only the server can allow it. A remote tunnel connects
 **eagerly** on arm (the server-side listener only exists while the SSH connection
 is up) and re-establishes on a drop.
 
@@ -41,11 +41,11 @@ Point your client at `127.0.0.1:<port>` (e.g. `curl --socks5 127.0.0.1:1080 …`
 *(For a **Local** tunnel — see [Forwarding types](#forwarding-types) for how the
 fields change for Remote and Dynamic.)*
 
-Port Hippo routes traffic through three points:
+Jump Hippo routes traffic through three points:
 
 | Field | What it is | Examples |
 | --- | --- | --- |
-| **Entry port** | The local port Port Hippo binds and listens on. | `5432` (binds `127.0.0.1:5432`), `0.0.0.0:5432` |
+| **Entry port** | The local port Jump Hippo binds and listens on. | `5432` (binds `127.0.0.1:5432`), `0.0.0.0:5432` |
 | **Target server** | The SSH server the tunnel connects to (the last hop). | `bastion.example.com`, `bastion.example.com:2222` |
 | **Exit port** | *(optional)* Where the SSH server forwards your traffic. | `db.internal:5432` |
 
@@ -81,7 +81,7 @@ Three options control the SSH connection's lifecycle:
 
 ### Idle linger (ms)
 
-How long Port Hippo holds the SSH connection open after the **last** client
+How long Jump Hippo holds the SSH connection open after the **last** client
 disconnects, before tearing it down. The default is **10 000 ms** (10 seconds).
 
 - A **longer** linger avoids reconnect churn for apps that open and close
@@ -110,7 +110,7 @@ survives a transient network blip.
 
 **Arming** is the live action that binds the entry port. The editor's collapsible
 **Advanced** section has an **Arm on startup** toggle that controls whether a tunnel
-arms automatically when Port Hippo launches *and* whether it's swept up by **Arm
+arms automatically when Jump Hippo launches *and* whether it's swept up by **Arm
 All**. Turn it off to keep a tunnel's definition but leave it out of both — you can
 still arm it by hand.
 
@@ -144,7 +144,7 @@ arm-all / disarm-all.
 
 ## Editing a live tunnel
 
-You can edit an armed or connected tunnel. Port Hippo **reconciles** the change:
+You can edit an armed or connected tunnel. Jump Hippo **reconciles** the change:
 edits that don't affect the live connection apply immediately; edits that change
 the route (addresses, auth, jumps) take effect on the next connection, so an
 in-flight session isn't ripped out from under a connected client.

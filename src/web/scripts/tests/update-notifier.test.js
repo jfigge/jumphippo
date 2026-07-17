@@ -28,8 +28,8 @@ function setup() {
   const win = resetDom();
   PopupManager.close();
   const calls = { install: 0 };
-  win.porthippo = { updater: { install: () => (calls.install += 1) } };
-  new UpdateNotifier({ porthippo: win.porthippo }).install();
+  win.jumphippo = { updater: { install: () => (calls.install += 1) } };
+  new UpdateNotifier({ jumphippo: win.jumphippo }).install();
   return { win, calls };
 }
 
@@ -39,7 +39,7 @@ function emit(win, name, detail) {
 
 test("a downloaded update offers a restart that calls updater.install", () => {
   const { win, calls } = setup();
-  emit(win, "porthippo:update-downloaded", { version: "1.2.3" });
+  emit(win, "jumphippo:update-downloaded", { version: "1.2.3" });
 
   const confirm = document.querySelector(".popup-confirm");
   assert.ok(confirm, "a restart confirm is shown");
@@ -51,14 +51,14 @@ test("a downloaded update offers a restart that calls updater.install", () => {
 
 test("a manual up-to-date check toasts; a silent one stays quiet", () => {
   let { win } = setup();
-  emit(win, "porthippo:update-not-available", { manual: true });
+  emit(win, "jumphippo:update-not-available", { manual: true });
   assert.ok(
     document.querySelector(".popup-notify"),
     "a manual check shows a toast",
   );
 
   ({ win } = setup()); // fresh DOM + notifier
-  emit(win, "porthippo:update-not-available", { manual: false });
+  emit(win, "jumphippo:update-not-available", { manual: false });
   assert.equal(
     document.querySelector(".popup-dialog"),
     null,
@@ -68,7 +68,7 @@ test("a manual up-to-date check toasts; a silent one stays quiet", () => {
 
 test("a manual error is surfaced", () => {
   const { win } = setup();
-  emit(win, "porthippo:update-error", { manual: true, message: "no network" });
+  emit(win, "jumphippo:update-error", { manual: true, message: "no network" });
   const notify = document.querySelector(".popup-notify");
   assert.ok(notify, "the error is shown");
   assert.match(notify.textContent, /no network/);

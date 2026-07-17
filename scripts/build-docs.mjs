@@ -35,7 +35,7 @@ import { slugify } from "../src/web/scripts/utils/slugify.js";
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 export const SRC = resolve(ROOT, "src/web/docs");
 const OUT = resolve(ROOT, "website/docs");
-const SITE_URL = "https://porthippo.com";
+const SITE_URL = "https://jumphippo.com";
 
 // marked is an ESM-only package; bare specifiers don't honor NODE_PATH, so
 // resolve it by file path. Locally it's a src/ devDependency; CI installs it to a
@@ -106,7 +106,7 @@ function rewriteHref(href) {
   const [path, anchor] = href.split("#");
   const frag = anchor ? `#${anchor}` : "";
   if (path === "../README.md")
-    return "https://github.com/jfigge/porthippo#readme";
+    return "https://github.com/jfigge/jumphippo#readme";
   const base = path.replace(/^\.\//, "");
   if (/README\.md$/i.test(base)) return `index.html${frag}`;
   if (/\.md$/i.test(base)) return `${base.replace(/\.md$/i, ".html")}${frag}`;
@@ -129,7 +129,7 @@ export function renderBody(md) {
   return html;
 }
 
-export const LOGO_SVG = `<svg width="24" height="24" viewBox="0 0 512 512" role="img" aria-label="Port Hippo"><rect width="512" height="512" rx="114" fill="#4785F0"/><circle cx="170" cy="146" r="40" fill="#fff"/><circle cx="342" cy="146" r="40" fill="#fff"/><rect x="144" y="140" width="224" height="190" rx="74" fill="#fff"/><rect x="118" y="260" width="276" height="150" rx="74" fill="#fff"/><circle cx="201" cy="198" r="17" fill="#1C1C1C"/><circle cx="311" cy="198" r="17" fill="#1C1C1C"/><ellipse cx="210" cy="332" rx="18" ry="23" fill="#1C1C1C"/><ellipse cx="302" cy="332" rx="18" ry="23" fill="#1C1C1C"/></svg>`;
+export const LOGO_SVG = `<svg width="24" height="24" viewBox="0 0 512 512" role="img" aria-label="Jump Hippo"><rect width="512" height="512" rx="114" fill="#4785F0"/><circle cx="170" cy="146" r="40" fill="#fff"/><circle cx="342" cy="146" r="40" fill="#fff"/><rect x="144" y="140" width="224" height="190" rx="74" fill="#fff"/><rect x="118" y="260" width="276" height="150" rx="74" fill="#fff"/><circle cx="201" cy="198" r="17" fill="#1C1C1C"/><circle cx="311" cy="198" r="17" fill="#1C1C1C"/><ellipse cx="210" cy="332" rx="18" ry="23" fill="#1C1C1C"/><ellipse cx="302" cy="332" rx="18" ry="23" fill="#1C1C1C"/></svg>`;
 
 const STYLE = `
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -183,22 +183,22 @@ function page({ title, slug, body }) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#4785F0" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-  <title>${esc(title)} · Port Hippo Guide</title>
-  <meta name="description" content="${esc(title)} — the Port Hippo user guide." />
+  <title>${esc(title)} · Jump Hippo Guide</title>
+  <meta name="description" content="${esc(title)} — the Jump Hippo user guide." />
   <link rel="canonical" href="${SITE_URL}/docs/${outFile({ slug })}" />
   <meta property="og:type" content="article" />
-  <meta property="og:site_name" content="Port Hippo" />
-  <meta property="og:title" content="${esc(title)} · Port Hippo Guide" />
-  <meta property="og:description" content="${esc(title)} — the Port Hippo user guide." />
+  <meta property="og:site_name" content="Jump Hippo" />
+  <meta property="og:title" content="${esc(title)} · Jump Hippo Guide" />
+  <meta property="og:description" content="${esc(title)} — the Jump Hippo user guide." />
   <meta property="og:url" content="${SITE_URL}/docs/${outFile({ slug })}" />
   <meta name="twitter:card" content="summary" />
-  <meta name="twitter:title" content="${esc(title)} · Port Hippo Guide" />
-  <meta name="twitter:description" content="${esc(title)} — the Port Hippo user guide." />
+  <meta name="twitter:title" content="${esc(title)} · Jump Hippo Guide" />
+  <meta name="twitter:description" content="${esc(title)} — the Jump Hippo user guide." />
   <style>${STYLE}</style>
 </head>
 <body>
   <header class="topbar">
-    <a class="brand" href="/">${LOGO_SVG}<span>Port Hippo</span></a>
+    <a class="brand" href="/">${LOGO_SVG}<span>Jump Hippo</span></a>
     <a class="back" href="/">← Back to site</a>
   </header>
   <div class="layout">

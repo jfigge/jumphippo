@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://porthippo.com/sitemap.xml
+Sitemap: https://jumphippo.com/sitemap.xml

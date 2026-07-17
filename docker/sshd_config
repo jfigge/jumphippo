@@ -1,7 +1,7 @@
-# Port Hippo sandbox sshd config. Deliberately permissive for LOCAL TESTING ONLY.
+# Jump Hippo sandbox sshd config. Deliberately permissive for LOCAL TESTING ONLY.
 Port 22
 
-# Both auth methods are enabled so Port Hippo can be exercised against each.
+# Both auth methods are enabled so Jump Hippo can be exercised against each.
 PasswordAuthentication yes
 PubkeyAuthentication yes
 AuthorizedKeysFile .ssh/authorized_keys

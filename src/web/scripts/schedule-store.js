@@ -16,10 +16,10 @@
 
 // schedule-store.js — the renderer-side data seam for the Feature 150 scheduler.
 //
-// Main pushes a `porthippo:schedule` snapshot whenever the scheduler re-evaluates
+// Main pushes a `jumphippo:schedule` snapshot whenever the scheduler re-evaluates
 // (re-dispatched onto `window` by preload.js). This store keeps the latest entry
 // per tunnel id (its `wanted` / `overridden` state and next time-window
-// transition) and re-emits a `porthippo:schedule-updated` DOM event so the tunnel
+// transition) and re-emits a `jumphippo:schedule-updated` DOM event so the tunnel
 // views can adorn their rows without touching IPC directly. It primes itself with
 // a one-shot pull so the badges are right before the first push arrives. It holds
 // only ids + timings — never an SSID, network name, or probe result.
@@ -29,15 +29,15 @@ class ScheduleStore {
   #byId = new Map();
 
   constructor(
-    porthippo = typeof window !== "undefined" ? window.porthippo : null,
+    jumphippo = typeof window !== "undefined" ? window.jumphippo : null,
   ) {
     if (typeof window !== "undefined") {
-      window.addEventListener("porthippo:schedule", (event) =>
+      window.addEventListener("jumphippo:schedule", (event) =>
         this.#ingest(event.detail),
       );
     }
     // Prime from the current status so a row is badged before the first push.
-    Promise.resolve(porthippo?.schedule?.status?.())
+    Promise.resolve(jumphippo?.schedule?.status?.())
       .then((status) => this.#ingest(status))
       .catch(() => {});
   }
@@ -49,7 +49,7 @@ class ScheduleStore {
     this.#byId = new Map(tunnels.map((s) => [s.id, s]));
     if (typeof window !== "undefined") {
       window.dispatchEvent(
-        new CustomEvent("porthippo:schedule-updated", {
+        new CustomEvent("jumphippo:schedule-updated", {
           detail: { enabled: this.#enabled, byId: this.#byId },
         }),
       );

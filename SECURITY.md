@@ -1,6 +1,6 @@
 # Security Policy
 
-Port Hippo manages SSH tunnels and stores SSH credentials, so we take security
+Jump Hippo manages SSH tunnels and stores SSH credentials, so we take security
 reports seriously. Thank you for helping keep users safe.
 
 ## Reporting a vulnerability
@@ -12,9 +12,9 @@ Instead, report privately using one of:
 
 - **GitHub Security Advisories** — the preferred channel. On the repository, open
   **Security → Report a vulnerability** to start a private advisory:
-  <https://github.com/jfigge/porthippo/security/advisories/new>
+  <https://github.com/jfigge/jumphippo/security/advisories/new>
 - **Email** — <jason.figge@gmail.com> with the subject line
-  `Port Hippo security`.
+  `Jump Hippo security`.
 
 Please include enough detail to reproduce:
 
@@ -41,9 +41,9 @@ Security-relevant areas include, but aren't limited to:
 
 ## Supported versions
 
-Port Hippo is distributed as a rolling release; **the latest published release**
+Jump Hippo is distributed as a rolling release; **the latest published release**
 receives security fixes. Please upgrade to the newest version (Help → Check for
-Updates, or [porthippo.com](https://porthippo.com/#downloads)) before reporting,
+Updates, or [jumphippo.com](https://jumphippo.com/#downloads)) before reporting,
 and confirm the issue still reproduces there.
 
 | Version | Supported |
@@ -61,5 +61,5 @@ and confirm the issue still reproduces there.
 - On a shared or portable machine, use the **OS keychain** or a **master
   password** for secret storage (Settings → Security).
 
-See the in-app **Security** guide (Help → Port Hippo User Guide → Security) for
+See the in-app **Security** guide (Help → Jump Hippo User Guide → Security) for
 details.

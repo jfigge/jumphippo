@@ -36,7 +36,7 @@ function stub(calls = {}) {
 function mount(calls = {}, onSaved) {
   resetDom();
   const dlg = new CredentialEditorDialog({
-    porthippo: stub(calls),
+    jumphippo: stub(calls),
     openKeyFile: async () => "/picked/key",
     onSaved,
   });
@@ -102,7 +102,7 @@ test("a valid create persists, closes, emits, and calls onSaved", async () => {
   const saved = [];
   const changed = [];
   const dlg = mount(calls, (r) => saved.push(r));
-  window.addEventListener("porthippo:credentials-changed", (e) =>
+  window.addEventListener("jumphippo:credentials-changed", (e) =>
     changed.push(e.detail),
   );
   dlg.openCreate();

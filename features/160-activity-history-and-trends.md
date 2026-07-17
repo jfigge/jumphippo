@@ -5,8 +5,8 @@
 Depends on: **30** (stats snapshots), **50** (Monitoring view), **60** (logging/diagnostics +
 `redact()`). Complements **130** (which adds the lifecycle *events* this feature persists).
 
-Two things reset to nothing every time Port Hippo restarts. First, the per-tunnel **event
-log** — `error-history-dialog.js` already renders `window.porthippo.tunnels.events(id)` as
+Two things reset to nothing every time Jump Hippo restarts. First, the per-tunnel **event
+log** — `error-history-dialog.js` already renders `window.jumphippo.tunnels.events(id)` as
 `{ at, level, message }` rows (with a `warning` level scaffolded next to `error`) — is held
 only in memory, so "why did this tunnel drop at 2am?" is unanswerable after a relaunch.
 Second, **stats** are instantaneous: the Monitoring view shows the current rate and monotonic
@@ -42,7 +42,7 @@ opt-out with a retention cap. Secrets never touch either store.
   through cache in front of the store. Feature 130's lifecycle transitions are the primary event
   source.
 - **Metrics history is downsampled and fixed-size per tunnel.** The engine already emits ~1 Hz
-  `porthippo:stats` snapshots. A `metrics-history.js` aggregator folds them into fixed buckets
+  `jumphippo:stats` snapshots. A `metrics-history.js` aggregator folds them into fixed buckets
   at a couple of resolutions (e.g. a few minutes of ~5 s buckets for the live sparkline + a few
   hours of ~1 min buckets for the detail chart) held in a **ring buffer per tunnel**, flushed to
   disk periodically and on quit, reloaded on launch. No per-snapshot disk write; storage is
@@ -57,7 +57,7 @@ opt-out with a retention cap. Secrets never touch either store.
   optionally append the **recent, redacted** activity tail to a copied report (it already reads
   the sealed tunnel list + redacted log tail — this slots in beside it).
 - **The renderer only reads and renders.** Persistence, rotation, redaction, and downsampling
-  live in main; the renderer subscribes to the live `porthippo:stats` (unchanged) for the
+  live in main; the renderer subscribes to the live `jumphippo:stats` (unchanged) for the
   moving edge and pulls history/activity over IPC for the backfill.
 
 ## Data shapes (reference)
@@ -84,7 +84,7 @@ opt-out with a retention cap. Secrets never touch either store.
    snapshot tee that updates the tray/stats.
 4. **IPC + preload.** Extend `tunnels:events` to read the persisted log with an optional level/
    type filter + paging; add `activity:clear` and `metrics:history(id, resolution)`. Register in
-   `ipc/store.js` (or `ipc/shell.js`), expose under `window.porthippo.tunnels.*`, preload in
+   `ipc/store.js` (or `ipc/shell.js`), expose under `window.jumphippo.tunnels.*`, preload in
    lockstep, `ipc-parity` green.
 5. **`components/sparkline.js`.** A pure data→SVG builder (points, min/max scaling, up/down
    overlay) using theme tokens; unit-test the point math.

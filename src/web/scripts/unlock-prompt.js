@@ -29,21 +29,21 @@ import { el } from "./dom.js";
 import { t } from "./i18n.js";
 
 export class UnlockPrompt {
-  #porthippo;
+  #jumphippo;
   #onChanged;
   #open = false;
   #input = null;
   #errorEl = null;
   #unlockBtn = null;
 
-  constructor({ porthippo } = {}) {
-    this.#porthippo = porthippo || window.porthippo;
+  constructor({ jumphippo } = {}) {
+    this.#jumphippo = jumphippo || window.jumphippo;
     this.#onChanged = (e) => this.#onStateChanged(e.detail);
   }
 
   install() {
     window.addEventListener(
-      "porthippo:secret-storage-changed",
+      "jumphippo:secret-storage-changed",
       this.#onChanged,
     );
     this.#checkLocked();
@@ -52,7 +52,7 @@ export class UnlockPrompt {
 
   uninstall() {
     window.removeEventListener(
-      "porthippo:secret-storage-changed",
+      "jumphippo:secret-storage-changed",
       this.#onChanged,
     );
   }
@@ -61,7 +61,7 @@ export class UnlockPrompt {
   async #checkLocked() {
     let state;
     try {
-      state = await this.#porthippo?.secretStorage?.getMode?.();
+      state = await this.#jumphippo?.secretStorage?.getMode?.();
     } catch {
       return; // can't read the state → nothing to prompt for
     }
@@ -152,7 +152,7 @@ export class UnlockPrompt {
     if (this.#unlockBtn) this.#unlockBtn.disabled = true;
     let res;
     try {
-      res = await this.#porthippo?.secretStorage?.unlock?.(pw);
+      res = await this.#jumphippo?.secretStorage?.unlock?.(pw);
     } catch {
       res = { ok: false, reason: "error" };
     }

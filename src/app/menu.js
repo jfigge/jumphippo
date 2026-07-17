@@ -19,7 +19,7 @@
  *
  * Built from a localized template and installed with `Menu.setApplicationMenu`.
  * Electron `role` items (cut/copy/paste, reload, minimize, …) carry their own
- * platform-localized labels; only Port Hippo's custom items are labelled through
+ * platform-localized labels; only Jump Hippo's custom items are labelled through
  * the injected `label(key, fallback)` resolver. Custom items either invoke a
  * main-process action directly (arm-all, quit, copy-diagnostics) or dispatch a
  * command to the renderer (new-tunnel, settings, view switch) via the `actions`
@@ -31,6 +31,8 @@
  * menu re-localizes without a restart.
  */
 "use strict";
+
+const { isStoreBuild } = require("./store-build");
 
 /**
  * Build and install the application menu.
@@ -119,7 +121,7 @@ function installAppMenu({
 
   const helpItems = [
     {
-      label: label("menu.userGuide", "Port Hippo User Guide"),
+      label: label("menu.userGuide", "Jump Hippo User Guide"),
       click: () => a.userGuide?.(),
     },
     { type: "separator" },
@@ -131,31 +133,37 @@ function installAppMenu({
       label: label("menu.showLogs", "Show Logs Folder"),
       click: () => a.showLogs?.(),
     },
-    { type: "separator" },
-    {
-      label: label("menu.checkUpdates", "Check for Updates…"),
-      click: () => a.checkUpdates?.(),
-    },
+    // Omitted in store builds: the App Store / Microsoft Store deliver their
+    // own updates and the in-app updater is disabled (see store-build.js).
+    ...(isStoreBuild()
+      ? []
+      : [
+          { type: "separator" },
+          {
+            label: label("menu.checkUpdates", "Check for Updates…"),
+            click: () => a.checkUpdates?.(),
+          },
+        ]),
     ...(isMac
       ? []
       : [
           { type: "separator" },
           {
-            label: label("menu.about", "About Port Hippo"),
+            label: label("menu.about", "About Jump Hippo"),
             click: () => a.about?.(),
           },
         ]),
   ];
 
   const template = [
-    // macOS application menu (Port Hippo ▸ About / Settings / Hide / Quit).
+    // macOS application menu (Jump Hippo ▸ About / Settings / Hide / Quit).
     ...(isMac
       ? [
           {
-            label: app.name || "Port Hippo",
+            label: app.name || "Jump Hippo",
             submenu: [
               {
-                label: label("menu.about", "About Port Hippo"),
+                label: label("menu.about", "About Jump Hippo"),
                 click: () => a.about?.(),
               },
               { type: "separator" },
@@ -167,12 +175,12 @@ function installAppMenu({
               { type: "separator" },
               { role: "services" },
               { type: "separator" },
-              { role: "hide", label: label("menu.hide", "Hide Port Hippo") },
+              { role: "hide", label: label("menu.hide", "Hide Jump Hippo") },
               { role: "hideOthers" },
               { role: "unhide" },
               { type: "separator" },
               {
-                label: label("menu.quit", "Quit Port Hippo"),
+                label: label("menu.quit", "Quit Jump Hippo"),
                 accelerator: "Cmd+Q",
                 click: () => a.quit?.(),
               },
@@ -211,7 +219,7 @@ function installAppMenu({
               },
               { type: "separator" },
               {
-                label: label("menu.quit", "Quit Port Hippo"),
+                label: label("menu.quit", "Quit Jump Hippo"),
                 accelerator: "Ctrl+Q",
                 click: () => a.quit?.(),
               },

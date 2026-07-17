@@ -24,7 +24,7 @@
  * module stays pure delegation and never imports Electron (matching ipc/store.js
  * and ipc/engine.js).
  *
- * Every channel registered here MUST have a matching `window.porthippo.*`
+ * Every channel registered here MUST have a matching `window.jumphippo.*`
  * exposure in preload.js AND this file must be listed in the ipc-parity test's
  * scan set (tests/ipc-parity.test.js) — the guard fails the build otherwise.
  *

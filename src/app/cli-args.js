@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-// cli-args.js — pure parser for the launch flags Port Hippo understands.
+// cli-args.js — pure parser for the launch flags Jump Hippo understands.
 // Kept dependency-free and side-effect-free so it is trivially unit-testable
 // (see app/tests/cli-args.test.js). main.js calls parseArgs(process.argv).
 "use strict";
 
 /**
- * Parse Port Hippo's recognized launch flags out of an argv array.
+ * Parse Jump Hippo's recognized launch flags out of an argv array.
  *
  * @param {string[]} argv - typically process.argv (the leading node/electron
  *   and script entries are ignored; we only look for known flags anywhere).

@@ -50,7 +50,7 @@ A tunnel reads end to end as: **Entry port** (local listener) → *[jump hosts]*
   *Checked on save (or test)* via `resolve:bindcheck` → `classifyBindHost`.
 - **Warnings** (soft — never block the save):
   - The port conflicts with another tunnel's Entry port.
-  - The port is below the OS-restricted range (usually 1024): Port Hippo must run
+  - The port is below the OS-restricted range (usually 1024): Jump Hippo must run
     as **root** (macOS/Linux) or **Administrator** (Windows) to open it.
   - The address doesn't name a bindable local address.
 

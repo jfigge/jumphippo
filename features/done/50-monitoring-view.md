@@ -1,9 +1,9 @@
 # Feature 50 — Monitoring view (UI)
 
 ## Context
-Feature 30 streams per-tunnel snapshots over `porthippo:stats`, and Feature 40 built the
+Feature 30 streams per-tunnel snapshots over `jumphippo:stats`, and Feature 40 built the
 two-view shell and the Definition pane. This stage builds the **Monitoring view** — the
-live operational dashboard that makes Port Hippo feel like a tunnel manager rather than a
+live operational dashboard that makes Jump Hippo feel like a tunnel manager rather than a
 config editor. It renders the snapshot stream: a list of tunnels (toggleable between all
 and active), each showing current traffic rates, total data transmitted, last-active time,
 open time, connection count, and state — with pause/resume and arm/disarm controls. It also
@@ -13,12 +13,12 @@ completes the **split view** so definitions and live stats can be seen at once.
 A Monitoring view listing tunnels with live, throttled stats — up/down rate, total
 transmitted, active connections, last-active, open time, and a state badge — with an
 all/active filter toggle, per-tunnel pause/resume and arm/disarm controls, and a clean
-empty state, all driven purely by the `porthippo:stats` + `porthippo:tunnel-state` streams
+empty state, all driven purely by the `jumphippo:stats` + `jumphippo:tunnel-state` streams
 and rendered without a framework.
 
 ## Design decisions (settled — do not relitigate)
 - **Pure subscriber of the snapshot stream.** The view holds no source-of-truth state; it
-  renders the latest `porthippo:stats` snapshot (via Feature 30's `stats-store.js`) plus
+  renders the latest `jumphippo:stats` snapshot (via Feature 30's `stats-store.js`) plus
   definition names from `tunnels.list()`. It never computes stats itself. This keeps main
   authoritative and the UI trivially correct.
 - **All vs Active toggle.** A header toggle filters the list: **All** shows every
@@ -34,7 +34,7 @@ and rendered without a framework.
   `formatNumber`/`formatDate`.)
 - **Controls live on the row.** Each row carries: arm/disarm, pause/resume (enabled only
   when `connected`/`paused`), and a jump-to-edit affordance that switches to the Definition
-  view for that tunnel (via a `porthippo:edit-tunnel` event). Destructive actions are not
+  view for that tunnel (via a `jumphippo:edit-tunnel` event). Destructive actions are not
   here (delete stays in Definition).
 - **Optional sparkline, not required.** A tiny inline rate sparkline (from Feature 30's
   bounded ring buffer) is a nice-to-have; ship the numeric view first and add the sparkline
@@ -51,19 +51,19 @@ and rendered without a framework.
    `formatDuration`, `formatRelativeTime`, with unit tests (`format.test.js`). Pure
    functions; injectable "now" for the relative-time test.
 2. **`monitoring-view.js`** (`src/web/scripts/components/`): subscribes to
-   `porthippo:stats-updated` (Feature 30's store) and `porthippo:tunnel-state`; renders one
+   `jumphippo:stats-updated` (Feature 30's store) and `jumphippo:tunnel-state`; renders one
    row per tunnel; updates rows in place; renders an empty state ("No tunnels defined yet —
    add one in the Definition view") and an active-filter empty state ("No active tunnels").
 3. **All/Active toggle** in the view header; filter the rendered set; persist via
    `settings-store`; re-evaluate membership as states change.
 4. **Row controls.** Wire arm/disarm → `tunnels.arm/disarm`, pause/resume →
    `tunnels.pause/resume` (disabled unless `connected`/`paused`), edit → dispatch
-   `porthippo:edit-tunnel` `{ id }` (the shell switches to Definition and selects it).
+   `jumphippo:edit-tunnel` `{ id }` (the shell switches to Definition and selects it).
 5. **State badges + error surfacing.** Shared badge styling for
    disarmed/listening/connecting/connected/paused/error (reuse Feature 40's badge classes);
    on `error`, show the reason on hover and offer a re-arm.
 6. **Split view wiring.** Ensure the shell's `split` mode mounts both panes with a single
-   `porthippo:stats` subscription shared (or each pane subscribing idempotently); confirm no
+   `jumphippo:stats` subscription shared (or each pane subscribing idempotently); confirm no
    double-render or leak when toggling modes. Responsive CSS grid; collapse to stacked on
    narrow widths.
 7. **(Optional) sparkline.** If included, a `rate-sparkline.js` drawing the last N rate
@@ -71,14 +71,14 @@ and rendered without a framework.
 8. **Tests (jsdom).** `monitoring-view.test.js`: feed synthetic snapshots and assert rows
    render the right formatted values, update in place (same node, changed text), the
    all/active filter includes/excludes correctly, and control clicks call the right
-   `window.porthippo.*` methods. Fold into the `test-renderer` target.
+   `window.jumphippo.*` methods. Fold into the `test-renderer` target.
 9. **License headers**; centralize display strings behind the same `t()`-ready seam as
    Feature 40.
 
 ## Acceptance criteria
 - The Monitoring view shows a live row per tunnel with up/down rate, total transmitted,
   connection count, last-active, open time, and a state badge, updating smoothly from the
-  `porthippo:stats` stream (~1 Hz) with no full-list rebuilds.
+  `jumphippo:stats` stream (~1 Hz) with no full-list rebuilds.
 - The All/Active toggle correctly filters (Active = connected/paused) and persists.
 - Pause/resume and arm/disarm controls work from the row and reflect live state; pausing
   freezes the row's rates while it stays connected; edit jumps to the Definition view for
@@ -94,8 +94,8 @@ and rendered without a framework.
 - No framework, no charting library; plain DOM + a hand-drawn sparkline at most. Update
   rows in place. `PopupManager`/design tokens/class-naming per convention.
 - The view is a pure subscriber — no stat computation in the renderer; all numbers come
-  from `porthippo:stats`.
-- Controls act only through `window.porthippo.*`; no direct engine/socket access.
+  from `jumphippo:stats`.
+- Controls act only through `window.jumphippo.*`; no direct engine/socket access.
 - Keep the single-subscription discipline in split mode (no leaks when toggling views).
 
 ## Verify

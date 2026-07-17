@@ -17,7 +17,7 @@
 /**
  * notifications.js — desktop notifications for connection-health events
  * (Feature 130). A pure payload builder plus a small coalescing state machine,
- * fed by the same engine `porthippo:tunnel-state` broadcast that updates the tray.
+ * fed by the same engine `jumphippo:tunnel-state` broadcast that updates the tray.
  *
  * Like tray.js, every Electron collaborator is injected (the `Notification` class,
  * a label resolver, a live settings reader, a name resolver, a focus action), so
@@ -132,7 +132,7 @@ function createNotifications({
   }
 
   /**
-   * React to a `porthippo:tunnel-state` snapshot. Only the one-shot `transition`
+   * React to a `jumphippo:tunnel-state` snapshot. Only the one-shot `transition`
    * drives a notification; a plain state change (or a stats heartbeat) is ignored.
    */
   function onTunnelState(snapshot) {
@@ -176,7 +176,7 @@ function createNotifications({
   }
 
   /**
-   * React to a `porthippo:hostkey-changed` broadcast: a host's key changed since
+   * React to a `jumphippo:hostkey-changed` broadcast: a host's key changed since
    * we last trusted it (the connection was refused). A security alert — always
    * shown when notifications are enabled, using the tunnel name only.
    */

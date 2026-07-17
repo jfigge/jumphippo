@@ -149,7 +149,7 @@ test("parseJumpSpec handles [user@]host[:port]", () => {
 });
 
 test("committing a selected subset writes only those hosts + their dependencies", () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "porthippo-sshimport-"));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "jumphippo-sshimport-"));
   try {
     const stores = new Stores(dir);
     const proposal = sshConfig.proposeFromConfig(CONFIG, {

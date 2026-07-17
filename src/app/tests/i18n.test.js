@@ -94,6 +94,6 @@ test("label resolves active → fallback → literal → key; format interpolate
   assert.equal(label(cat, "no.such.key"), "no.such.key");
   assert.equal(
     format(label(cat, "tray.tooltip"), { active: 1, total: 3 }),
-    "Port Hippo — 1 of 3 active",
+    "Jump Hippo — 1 of 3 active",
   );
 });

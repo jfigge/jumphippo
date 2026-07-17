@@ -132,14 +132,14 @@ test("the zoom keys pass through inside a text field", () => {
   assert.equal(h.current(), 13);
 });
 
-test("porthippo:ui-font-change menu events step / reset the size", () => {
+test("jumphippo:ui-font-change menu events step / reset the size", () => {
   const h = setup({ fontSize: 13 });
   window.dispatchEvent(
-    new window.CustomEvent("porthippo:ui-font-change", { detail: "in" }),
+    new window.CustomEvent("jumphippo:ui-font-change", { detail: "in" }),
   );
   assert.equal(h.current(), 14);
   window.dispatchEvent(
-    new window.CustomEvent("porthippo:ui-font-change", { detail: "reset" }),
+    new window.CustomEvent("jumphippo:ui-font-change", { detail: "reset" }),
   );
   assert.equal(h.current(), 13);
 });

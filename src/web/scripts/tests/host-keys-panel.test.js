@@ -52,7 +52,7 @@ function stubBridge({
       return typeof os === "function" ? os() : os;
     };
   }
-  return { porthippo: { hostkeys }, calls };
+  return { jumphippo: { hostkeys }, calls };
 }
 
 const OS_DATA = {
@@ -66,8 +66,8 @@ const OS_DATA = {
 
 const osTab = (panel) =>
   panel.element.querySelector('.hostkeys-tab[data-tab="os"]');
-const porthippoTab = (panel) =>
-  panel.element.querySelector('.hostkeys-tab[data-tab="porthippo"]');
+const jumphippoTab = (panel) =>
+  panel.element.querySelector('.hostkeys-tab[data-tab="jumphippo"]');
 
 const ENTRY = (hostPort, fingerprint) => ({
   hostPort,
@@ -80,7 +80,7 @@ const tick = () => new Promise((r) => setTimeout(r, 0));
 
 test("load() renders a row per accepted key, sorted by host, with the fingerprint", async () => {
   resetDom();
-  const { porthippo } = stubBridge({
+  const { jumphippo } = stubBridge({
     pages: [
       [
         ENTRY("second.example.com:22", "SHA256:bbb"),
@@ -88,7 +88,7 @@ test("load() renders a row per accepted key, sorted by host, with the fingerprin
       ],
     ],
   });
-  const panel = new HostKeysPanel({ porthippo });
+  const panel = new HostKeysPanel({ jumphippo });
   await panel.load();
 
   const rows = panel.element.querySelectorAll(".hostkeys-item");
@@ -102,8 +102,8 @@ test("load() renders a row per accepted key, sorted by host, with the fingerprin
 
 test("an empty store shows the empty state, no rows", async () => {
   resetDom();
-  const { porthippo } = stubBridge({ pages: [[]] });
-  const panel = new HostKeysPanel({ porthippo });
+  const { jumphippo } = stubBridge({ pages: [[]] });
+  const panel = new HostKeysPanel({ jumphippo });
   await panel.load();
 
   assert.equal(panel.element.querySelector(".hostkeys-item"), null);
@@ -116,7 +116,7 @@ test("an empty store shows the empty state, no rows", async () => {
 test("a rejected list() shows the load-error state, NOT the empty state", async () => {
   resetDom();
   const panel = new HostKeysPanel({
-    porthippo: {
+    jumphippo: {
       hostkeys: {
         list: async () => {
           throw new Error("bridge down");
@@ -139,7 +139,7 @@ test("a rejected list() shows the load-error state, NOT the empty state", async 
 test("a missing hostkeys bridge (e.g. stale preload) shows the load-error state", async () => {
   resetDom();
   // No hostkeys.list function at all — the real-world stale-main-process case.
-  const panel = new HostKeysPanel({ porthippo: { hostkeys: {} } });
+  const panel = new HostKeysPanel({ jumphippo: { hostkeys: {} } });
   await panel.load();
   assert.ok(panel.element.querySelector(".hostkeys-error"));
   assert.equal(panel.element.querySelector(".hostkeys-empty"), null);
@@ -149,7 +149,7 @@ test("Retry re-runs the load and renders the list once it succeeds", async () =>
   resetDom();
   // Fail the first call, then succeed with one entry.
   let attempt = 0;
-  const porthippo = {
+  const jumphippo = {
     hostkeys: {
       list: async () => {
         attempt++;
@@ -158,7 +158,7 @@ test("Retry re-runs the load and renders the list once it succeeds", async () =>
       },
     },
   };
-  const panel = new HostKeysPanel({ porthippo });
+  const panel = new HostKeysPanel({ jumphippo });
   await panel.load();
   assert.ok(
     panel.element.querySelector(".hostkeys-error"),
@@ -178,8 +178,8 @@ test("Retry re-runs the load and renders the list once it succeeds", async () =>
 
 test("a successful read of an empty store still shows the empty state (not the error)", async () => {
   resetDom();
-  const { porthippo } = stubBridge({ pages: [[]] });
-  const panel = new HostKeysPanel({ porthippo });
+  const { jumphippo } = stubBridge({ pages: [[]] });
+  const panel = new HostKeysPanel({ jumphippo });
   await panel.load();
   assert.ok(panel.element.querySelector(".hostkeys-empty"));
   assert.equal(panel.element.querySelector(".hostkeys-error"), null);
@@ -187,10 +187,10 @@ test("a successful read of an empty store still shows the empty state (not the e
 
 test("forget is a two-step inline confirm — the first click only reveals the confirm", async () => {
   resetDom();
-  const { porthippo, calls } = stubBridge({
+  const { jumphippo, calls } = stubBridge({
     pages: [[ENTRY("db.example.com:22", "SHA256:abc")]],
   });
-  const panel = new HostKeysPanel({ porthippo });
+  const panel = new HostKeysPanel({ jumphippo });
   await panel.load();
 
   panel.element.querySelector(".hostkeys-forget").click();
@@ -206,10 +206,10 @@ test("forget is a two-step inline confirm — the first click only reveals the c
 
 test("cancelling the confirm restores the forget button and revokes nothing", async () => {
   resetDom();
-  const { porthippo, calls } = stubBridge({
+  const { jumphippo, calls } = stubBridge({
     pages: [[ENTRY("db.example.com:22", "SHA256:abc")]],
   });
-  const panel = new HostKeysPanel({ porthippo });
+  const panel = new HostKeysPanel({ jumphippo });
   await panel.load();
 
   panel.element.querySelector(".hostkeys-forget").click();
@@ -224,10 +224,10 @@ test("cancelling the confirm restores the forget button and revokes nothing", as
 test("confirming forget calls revoke with the host:port and re-pulls the list", async () => {
   resetDom();
   // First page has the entry; after the revoke the store is empty.
-  const { porthippo, calls } = stubBridge({
+  const { jumphippo, calls } = stubBridge({
     pages: [[ENTRY("db.example.com:22", "SHA256:abc")], []],
   });
-  const panel = new HostKeysPanel({ porthippo });
+  const panel = new HostKeysPanel({ jumphippo });
   await panel.load();
 
   panel.element.querySelector(".hostkeys-forget").click();
@@ -250,11 +250,11 @@ test("confirming forget calls revoke with the host:port and re-pulls the list", 
 
 test("a revoke that returns a write-error envelope leaves the row in place", async () => {
   resetDom();
-  const { porthippo, calls } = stubBridge({
+  const { jumphippo, calls } = stubBridge({
     pages: [[ENTRY("db.example.com:22", "SHA256:abc")], []],
     revokeResult: { __hippoError: true },
   });
-  const panel = new HostKeysPanel({ porthippo });
+  const panel = new HostKeysPanel({ jumphippo });
   await panel.load();
 
   panel.element.querySelector(".hostkeys-forget").click();
@@ -269,23 +269,23 @@ test("a revoke that returns a write-error envelope leaves the row in place", asy
   );
 });
 
-// ── Sub-tabs: Port Hippo (managed) vs Operating System (read-only) ────────────
+// ── Sub-tabs: Jump Hippo (managed) vs Operating System (read-only) ────────────
 
-test("renders two sub-tabs, Port Hippo active by default", async () => {
+test("renders two sub-tabs, Jump Hippo active by default", async () => {
   resetDom();
-  const { porthippo } = stubBridge({ pages: [[]], os: OS_DATA });
-  const panel = new HostKeysPanel({ porthippo });
+  const { jumphippo } = stubBridge({ pages: [[]], os: OS_DATA });
+  const panel = new HostKeysPanel({ jumphippo });
   const tabs = panel.element.querySelectorAll(".hostkeys-tab");
-  assert.equal(tabs.length, 2, "a Port Hippo and an Operating System tab");
+  assert.equal(tabs.length, 2, "a Jump Hippo and an Operating System tab");
   const active = panel.element.querySelector(".hostkeys-tab--active");
-  assert.equal(active.dataset.tab, "porthippo", "Port Hippo is active first");
+  assert.equal(active.dataset.tab, "jumphippo", "Jump Hippo is active first");
 });
 
 test("the OS tab lists read-only known_hosts with a path reference", async () => {
   resetDom();
-  const { porthippo, calls } = stubBridge({ pages: [[]], os: OS_DATA });
-  const panel = new HostKeysPanel({ porthippo });
-  await panel.load(); // Port Hippo tab first
+  const { jumphippo, calls } = stubBridge({ pages: [[]], os: OS_DATA });
+  const panel = new HostKeysPanel({ jumphippo });
+  await panel.load(); // Jump Hippo tab first
 
   osTab(panel).click();
   await tick();
@@ -300,7 +300,7 @@ test("the OS tab lists read-only known_hosts with a path reference", async () =>
   assert.equal(
     panel.element.querySelector(".hostkeys-forget"),
     null,
-    "OS keys can't be managed by Port Hippo",
+    "OS keys can't be managed by Jump Hippo",
   );
   // The named host, its fingerprint, and the key type all show.
   assert.match(panel.element.textContent, /github\.com/);
@@ -310,8 +310,8 @@ test("the OS tab lists read-only known_hosts with a path reference", async () =>
 
 test("a hashed OS host shows the placeholder instead of a hostname", async () => {
   resetDom();
-  const { porthippo } = stubBridge({ pages: [[]], os: OS_DATA });
-  const panel = new HostKeysPanel({ porthippo });
+  const { jumphippo } = stubBridge({ pages: [[]], os: OS_DATA });
+  const panel = new HostKeysPanel({ jumphippo });
   await panel.load();
   osTab(panel).click();
   await tick();
@@ -327,11 +327,11 @@ test("a hashed OS host shows the placeholder instead of a hostname", async () =>
 
 test("the OS tab shows its own empty state, keeping the path reference", async () => {
   resetDom();
-  const { porthippo } = stubBridge({
+  const { jumphippo } = stubBridge({
     pages: [[]],
     os: { path: "/x/known_hosts", entries: [] },
   });
-  const panel = new HostKeysPanel({ porthippo });
+  const panel = new HostKeysPanel({ jumphippo });
   await panel.load();
   osTab(panel).click();
   await tick();
@@ -347,7 +347,7 @@ test("the OS tab shows its own empty state, keeping the path reference", async (
 test("a rejected listOs shows the load-error state on the OS tab", async () => {
   resetDom();
   const panel = new HostKeysPanel({
-    porthippo: {
+    jumphippo: {
       hostkeys: {
         list: async () => [],
         listOs: async () => {
@@ -363,21 +363,21 @@ test("a rejected listOs shows the load-error state on the OS tab", async () => {
   assert.equal(panel.element.querySelector(".hostkeys-empty"), null);
 });
 
-test("switching back to the Port Hippo tab reloads its manageable keys", async () => {
+test("switching back to the Jump Hippo tab reloads its manageable keys", async () => {
   resetDom();
-  const { porthippo, calls } = stubBridge({
+  const { jumphippo, calls } = stubBridge({
     pages: [[ENTRY("db.example.com:22", "SHA256:abc")]],
     os: OS_DATA,
   });
-  const panel = new HostKeysPanel({ porthippo });
+  const panel = new HostKeysPanel({ jumphippo });
   await panel.load(); // list → 1
 
   osTab(panel).click();
   await tick();
-  porthippoTab(panel).click();
+  jumphippoTab(panel).click();
   await tick();
 
-  assert.ok(calls.list >= 2, "the Port Hippo list is re-pulled on return");
+  assert.ok(calls.list >= 2, "the Jump Hippo list is re-pulled on return");
   assert.ok(
     panel.element.querySelector(".hostkeys-forget"),
     "the manageable rows (with forget) are back",

@@ -50,7 +50,7 @@ const DEFAULT_SSH_KEEPALIVE_SECONDS = 15;
 // editor's "Test resolution" spinner forever; the run aborts and reports the reach.
 const PROBE_TIMEOUT_MS = 20000;
 
-// The `porthippo:stats` heartbeat: one throttled snapshot of every tunnel, on a
+// The `jumphippo:stats` heartbeat: one throttled snapshot of every tunnel, on a
 // timer while any tunnel is armed. State changes also emit an immediate snapshot,
 // so this only backstops steady-state rate/uptime updates between transitions.
 const STATS_INTERVAL_MS = 1000;
@@ -63,11 +63,11 @@ class TunnelEngine {
 
   #tunnels = new Map();
   #prompts = new Map(); // promptId → { resolve } for pending host-key decisions
-  #statsTimer = null; // the throttled porthippo:stats heartbeat (null when idle)
+  #statsTimer = null; // the throttled jumphippo:stats heartbeat (null when idle)
   // Feature 140 — bulk-action coalescing. While `applyToMany` runs, this is a
   // `Map<id, snapshot>` (last-wins) that collects each tunnel's state change
   // instead of broadcasting it, so the whole set produces ONE trailing
-  // `porthippo:tunnel-state` broadcast rather than one message per tunnel.
+  // `jumphippo:tunnel-state` broadcast rather than one message per tunnel.
   #batch = null;
 
   /**
@@ -152,7 +152,7 @@ class TunnelEngine {
    * Apply one action to a set of tunnels (Feature 140 bulk actions / group
    * arm-all). `action` is one of `arm` / `disarm` / `pause` / `resume`; it delegates
    * to the matching per-tunnel method for each id, best-effort (one failure never
-   * aborts the sweep), then emits a SINGLE coalesced `porthippo:tunnel-state`
+   * aborts the sweep), then emits a SINGLE coalesced `jumphippo:tunnel-state`
    * broadcast (array payload) plus one stats refresh — never one message per tunnel.
    * The engine stays group-unaware: "arm this group" is just the group's member ids.
    *
@@ -186,7 +186,7 @@ class TunnelEngine {
     this.#batch = null;
 
     // One coalesced state broadcast for the whole set, then one stats refresh.
-    this.#broadcast?.("porthippo:tunnel-state", snapshots);
+    this.#broadcast?.("jumphippo:tunnel-state", snapshots);
     this.#onTunnelStateChange();
     return snapshots;
   }
@@ -258,7 +258,7 @@ class TunnelEngine {
       if (tunnel) {
         await tunnel.dispose();
         this.#tunnels.delete(id);
-        this.#broadcast?.("porthippo:tunnel-state", {
+        this.#broadcast?.("jumphippo:tunnel-state", {
           id,
           state: "disarmed",
           removed: true,
@@ -385,7 +385,7 @@ class TunnelEngine {
           this.#batch.set(snapshot.id, snapshot);
           return;
         }
-        this.#broadcast?.("porthippo:tunnel-state", snapshot);
+        this.#broadcast?.("jumphippo:tunnel-state", snapshot);
         this.#onTunnelStateChange();
       },
     });
@@ -438,7 +438,7 @@ class TunnelEngine {
   }
 
   // ── Stats heartbeat (Feature 30) ──────────────────────────────────────────────
-  // One throttled `porthippo:stats` snapshot of every tunnel, plus an immediate
+  // One throttled `jumphippo:stats` snapshot of every tunnel, plus an immediate
   // snapshot on any state change so the UI reflects connect/disconnect/pause
   // without waiting up to a second. No per-byte or per-connection IPC.
 
@@ -451,7 +451,7 @@ class TunnelEngine {
   /** Collect every tunnel's stats snapshot and broadcast it in one message. */
   #emitStats() {
     const snapshots = [...this.#tunnels.values()].map((t) => t.statsSnapshot());
-    this.#broadcast?.("porthippo:stats", snapshots);
+    this.#broadcast?.("jumphippo:stats", snapshots);
   }
 
   /** Run the heartbeat while ≥1 tunnel is live; stop it once all are quiescent. */
@@ -484,7 +484,7 @@ class TunnelEngine {
       knownHostsFile: this.#knownHostsFile,
       requestTrust: (info) => this.#requestTrust(info),
       reportChanged: (info) =>
-        this.#broadcast?.("porthippo:hostkey-changed", info),
+        this.#broadcast?.("jumphippo:hostkey-changed", info),
     });
   }
 
@@ -493,7 +493,7 @@ class TunnelEngine {
     const promptId = crypto.randomUUID();
     return new Promise((resolve) => {
       this.#prompts.set(promptId, { resolve });
-      this.#broadcast?.("porthippo:hostkey-unknown", {
+      this.#broadcast?.("jumphippo:hostkey-unknown", {
         promptId,
         tunnelId: info.tunnelId,
         hop: info.hop,

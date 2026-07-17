@@ -35,7 +35,7 @@ const { SecretStorage } = require("../store/secret-storage");
 const { registerSecretStorageIPC } = require("../ipc/secret-storage");
 
 function harness() {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "porthippo-ssipc-"));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "jumphippo-ssipc-"));
   const sec = new SecretStorage(new Paths(dir));
   sec.bootstrap(); // app-key on a keystore-less test platform
 
@@ -147,7 +147,7 @@ test("a successful mode switch reconciles the engine and broadcasts the new stat
     assert.deepEqual(res, { ok: true });
     assert.equal(engineCalls.length, 1);
     assert.equal(broadcasts.length, 1);
-    assert.equal(broadcasts[0].channel, "porthippo:secret-storage-changed");
+    assert.equal(broadcasts[0].channel, "jumphippo:secret-storage-changed");
     assert.equal(broadcasts[0].payload.mode, "master-password");
     assert.equal(broadcasts[0].payload.locked, false);
     assert.equal(broadcasts[0].payload.hasPassword, true);

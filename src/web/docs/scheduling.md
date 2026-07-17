@@ -3,7 +3,7 @@
 A tunnel usually has a *context*. A work database is only wanted during work hours,
 and only on a trusted network; a home-lab tunnel is pointless when you're away from
 home. **Scheduling** lets a tunnel — or a whole group — **arm and disarm itself** on
-a **time window** and/or a **network condition**, so Port Hippo follows your day
+a **time window** and/or a **network condition**, so Jump Hippo follows your day
 instead of waiting on your hand toggles.
 
 All the detection is **local and read-only**. No network name, Wi-Fi SSID, or probe
@@ -41,7 +41,7 @@ Turn on **Only arm on certain networks** to gate a tunnel on where you are:
 - **Reachable host** — a `host:port` the tunnel probes with a plain TCP connection
   (for example an office server). The tunnel arms only while that address answers.
 
-> **Fail-safe.** When Port Hippo can't read the current Wi-Fi network (some platforms
+> **Fail-safe.** When Jump Hippo can't read the current Wi-Fi network (some platforms
 > don't expose it), an SSID condition is treated as *not met* — an ambiguous network
 > never arms a tunnel it shouldn't. The reachability probe only ever opens a socket;
 > it never runs a command anywhere.
@@ -62,7 +62,7 @@ group's for that tunnel. See [Defining Tunnels](defining-tunnels.md) for groups.
 ## Manual override
 
 A schedule never fights you. If you **arm or disarm a scheduled tunnel by hand** —
-from its row, the tray, or a group action — Port Hippo respects that until the next
+from its row, the tray, or a group action — Jump Hippo respects that until the next
 **boundary** (the next window edge, or the next network change), then the rule
 resumes. While you're in control the tunnel's badge says so.
 

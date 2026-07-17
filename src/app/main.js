@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-// main.js — Electron main process for Port Hippo.
+// main.js — Electron main process for Jump Hippo.
 //
 // Owns all native I/O — sockets, SSH, filesystem, the tray/menu, logging — and
-// exposes it to the sandboxed renderer only through the window.porthippo bridge
-// (preload.js). Feature 60 turns Port Hippo into a background-capable app: a
+// exposes it to the sandboxed renderer only through the window.jumphippo bridge
+// (preload.js). Feature 60 turns Jump Hippo into a background-capable app: a
 // single-instance lock, a status tray, hide-to-tray (closing the window keeps
 // tunnels alive — only an explicit Quit disarms), launch-at-login, a native
 // menu, rotating logs + diagnostics, and the i18n seam that localizes main-side
@@ -75,6 +75,7 @@ const {
   trackWindowState,
 } = require("./window-state");
 const updater = require("./updater");
+const { distribution } = require("./store-build");
 
 // Delay the silent startup update check so it never competes with window
 // creation / first paint. A manual check (Settings/menu) runs immediately.
@@ -98,7 +99,7 @@ function resolveLogsDir() {
   try {
     return path.join(app.getPath("userData"), "logs");
   } catch {
-    return path.join(os.tmpdir(), "porthippo-logs");
+    return path.join(os.tmpdir(), "jumphippo-logs");
   }
 }
 const logger = createLogger({ dir: resolveLogsDir() });
@@ -159,17 +160,17 @@ function broadcastToRenderer(channel, payload) {
 
 // The engine's broadcaster: fan out to the renderer AND refresh the tray + raise
 // desktop notifications on the relevant one-way events (byte-rate
-// `porthippo:stats` heartbeats don't affect the tray's count/tooltip, so those
+// `jumphippo:stats` heartbeats don't affect the tray's count/tooltip, so those
 // are skipped to avoid rebuilding the menu every second).
 function broadcast(channel, payload) {
   broadcastToRenderer(channel, payload);
-  if (channel === "porthippo:tunnel-state") {
+  if (channel === "jumphippo:tunnel-state") {
     _tray?.update(); // count/tooltip + health rollup
     // Feature 140: a bulk action coalesces into ONE broadcast carrying an ARRAY of
     // snapshots; a single change is still a lone object. Notify per tunnel.
     const list = Array.isArray(payload) ? payload : [payload];
     for (const one of list) _notifications?.onTunnelState(one);
-  } else if (channel === "porthippo:hostkey-changed") {
+  } else if (channel === "jumphippo:hostkey-changed") {
     _notifications?.onHostKeyChanged(payload); // security alert (name only)
   }
 }
@@ -230,7 +231,7 @@ const label = (key, fallback) => i18n.label(_catalog, key, fallback);
 const t = (key, params) => i18n.format(i18n.label(_catalog, key, key), params);
 
 // ─── Launch at login ─────────────────────────────────────────────────────────
-const loginItem = createLoginItem({ app, appName: "Port Hippo" });
+const loginItem = createLoginItem({ app, appName: "Jump Hippo" });
 
 // Sync the OS login-item with the persisted setting. Only in packaged builds —
 // in dev the executable is the Electron binary, which we must not register.
@@ -252,6 +253,9 @@ function collectAppInfo() {
     os: `${os.type()} ${os.release()}`,
     locale: app.getLocale(),
     packaged: String(app.isPackaged),
+    // "store" (Mac App Store / Microsoft Store) or "direct" (GitHub-release
+    // builds) — records which channel produced the build. See store-build.js.
+    distribution: distribution(),
   };
 }
 
@@ -584,7 +588,7 @@ function registerIpc() {
     safeCall,
     safeCallWrite,
     // The Host Keys panel's "Operating System" tab reads ~/.ssh/known_hosts for a
-    // read-only inventory (Port Hippo never edits that file — the OS owns it).
+    // read-only inventory (Jump Hippo never edits that file — the OS owns it).
     readOsKnownHosts: () => ({
       path: defaultKnownHostsPath(),
       entries: listOsKnownHosts(),
@@ -645,7 +649,7 @@ function registerIpc() {
 
   // Feature 150: current schedule status (which tunnels are managed, their next
   // transition, and any manual override) for the renderer's row adornments. Live
-  // updates arrive one-way over the porthippo:schedule broadcast.
+  // updates arrive one-way over the jumphippo:schedule broadcast.
   ipcMain.handle("schedule:status", () =>
     _scheduler ? _scheduler.status() : { enabled: false, tunnels: [] },
   );
@@ -664,7 +668,7 @@ function registerIpc() {
 
   // Hostname-resolution validation (Feature 100): live local DNS lookups + the
   // "Test resolution" probe that walks the real chain (host-key prompts flow over
-  // the engine's existing porthippo:hostkey-unknown broadcast).
+  // the engine's existing jumphippo:hostkey-unknown broadcast).
   registerResolveIPC({ ipcMain, getStores, getEngine });
 
   registerDialogIPC({ ipcMain, dialog, getMainWindow: () => mainWindow });
@@ -694,7 +698,7 @@ function registerIpc() {
     onUnlock: resumeDeferredArm,
   });
 
-  // Import / export (Feature 120): the `.porthippo` bundle round-trip and the
+  // Import / export (Feature 120): the `.jumphippo` bundle round-trip and the
   // read-only ~/.ssh/config importer. Native file dialogs are opened in main; a
   // successful import reconciles the engine so affected tunnels re-read.
   registerPortableIPC({
@@ -757,7 +761,7 @@ function installHotReload(win) {
 function loadAppIcon() {
   const file =
     process.platform === "darwin"
-      ? path.join(__dirname, "..", "web", "porthippo-mac-icon.png")
+      ? path.join(__dirname, "..", "web", "jumphippo-mac-icon.png")
       : path.join(__dirname, "..", "web", "icons", "512x512.png");
   const icon = nativeImage.createFromPath(file);
   return icon.isEmpty() ? undefined : icon;
@@ -889,7 +893,7 @@ function showDocsWindow() {
     minWidth: 640,
     minHeight: 480,
     autoHideMenuBar: true,
-    title: label("menu.userGuide", "Port Hippo User Guide"),
+    title: label("menu.userGuide", "Jump Hippo User Guide"),
     icon: appIcon,
     backgroundColor: "#1c1c1c",
     webPreferences: {

@@ -5,7 +5,7 @@
 Depends on: **20** (SSH tunnel engine), **30** (stats/pause), **45** (definition model +
 resolver), **50** (Monitoring view). Builds directly on the existing engine.
 
-Today every Port Hippo tunnel is a **local forward** (`ssh -L`): a local listener binds a
+Today every Jump Hippo tunnel is a **local forward** (`ssh -L`): a local listener binds a
 port, and on first access the engine opens a `direct-tcpip` channel (`forwardOut`) through
 the SSH chain to the destination and relays bytes (`src/app/tunnel/{listener,relay,ssh-chain}.js`).
 That is one of the three forwarding modes real SSH offers. The two missing modes are the
@@ -141,7 +141,7 @@ tunnel {
 - SOCKS5 is **CONNECT + no-auth only**; BIND/UDP and auth methods are rejected with correct
   replies (documented). No SOCKS library.
 - Remote non-loopback binds are a warned opt-in and honestly documented as requiring server
-  `GatewayPorts` — Port Hippo cannot make a server accept them.
+  `GatewayPorts` — Jump Hippo cannot make a server accept them.
 - All forwarding/parsing stays in main; the renderer edits references only.
 - Keep the model/migration behaviour-preserving: no field renames, additive only.
 

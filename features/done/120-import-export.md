@@ -9,7 +9,7 @@ envelope primitives). No engine changes.
 Everything a user builds — tunnels, reusable credentials, jump-host chains — lives only in
 `userData/tunnels.json`, sealed under the local machine's chosen backend (`enck:`/`enc:`/
 `encm:` prefixes). There is no way to **move a setup to another machine**, **back it up**,
-or **seed Port Hippo from an existing `~/.ssh/config`** — so a new install starts empty and
+or **seed Jump Hippo from an existing `~/.ssh/config`** — so a new install starts empty and
 every tunnel is retyped by hand. This is the highest-value quality-of-life gap after
 forwarding types.
 
@@ -19,7 +19,7 @@ blob won't decrypt anywhere else — that's the security design), so export need
 
 ## Goal
 
-A round-trippable **`.porthippo` bundle** — tunnels + credentials + jump hosts (and,
+A round-trippable **`.jumphippo` bundle** — tunnels + credentials + jump hosts (and,
 opt-in, app settings) — that can be exported and re-imported on another machine, with
 secrets **either stripped** (default) **or sealed under a user passphrase** (opt-in,
 `encp:v1:` PBKDF2→AES-256-GCM, independent of the device backend). Plus a **read-only
@@ -30,7 +30,7 @@ picks files and reviews the proposed diff.
 ## Design decisions (settled — do not relitigate)
 
 - **The bundle is a versioned, self-describing document**, never the raw `tunnels.json`:
-  `{ format: "porthippo-bundle", version: 1, exportedAt, contents: { tunnels[],
+  `{ format: "jumphippo-bundle", version: 1, exportedAt, contents: { tunnels[],
   credentials[], jumpHosts[], settings? }, secrets: "stripped" | "encp:v1" }`. Referential
   integrity (credentialId / jumpHostId) is preserved; ids are regenerated on import only on
   a collision (see merge).
@@ -65,7 +65,7 @@ picks files and reviews the proposed diff.
 
 ```jsonc
 {
-  "format": "porthippo-bundle", "version": 1,
+  "format": "jumphippo-bundle", "version": 1,
   "exportedAt": 1720300000000,
   "secrets": "stripped",              // or "encp:v1"
   "contents": {
@@ -92,7 +92,7 @@ picks files and reviews the proposed diff.
 3. **IPC + preload.** `portable:export` (→ dialog save), `portable:preview` (parse a chosen
    bundle → the add/update/conflict diff), `portable:import` (apply with a mode),
    `sshconfig:scan` (parse a chosen config → proposed drafts), `sshconfig:import` (commit the
-   selected drafts). Register in a new `ipc/portable.js`, expose under `window.porthippo.io.*`,
+   selected drafts). Register in a new `ipc/portable.js`, expose under `window.jumphippo.io.*`,
    keep preload in lockstep, and **add `ipc/portable.js` to the `ipc-parity` scan list**. Each
    commit triggers `engine.reconcileAll()`.
 4. **Renderer — Import/Export.** A new **Data** section in the Settings dialog (or a dedicated
@@ -111,7 +111,7 @@ picks files and reviews the proposed diff.
 
 ## Acceptance criteria
 
-- Export produces a `.porthippo` bundle; re-importing it on a **fresh** profile reproduces the
+- Export produces a `.jumphippo` bundle; re-importing it on a **fresh** profile reproduces the
   tunnels, credentials, and jump hosts with references intact.
 - With **stripped** secrets, imported credentials arm only after the user re-enters passwords;
   with an **`encp:` passphrase** bundle, the same passphrase on import restores secrets, which

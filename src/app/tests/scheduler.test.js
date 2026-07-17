@@ -342,7 +342,7 @@ test("driver: setEnabled(false) stops governing and announces it", async () => {
   assert.deepEqual(scheduler.status(), { enabled: false, tunnels: [] });
   const last = state.broadcasts[state.broadcasts.length - 1];
   assert.deepEqual(last, {
-    channel: "porthippo:schedule",
+    channel: "jumphippo:schedule",
     payload: { enabled: false, tunnels: [] },
   });
 });

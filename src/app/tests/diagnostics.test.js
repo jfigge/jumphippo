@@ -26,7 +26,7 @@ test("the header carries generatedAt and every app field", () => {
     app: { version: "1.2.3", platform: "darwin", electron: "42.0.0" },
     generatedAt: "2026-07-08T00:00:00.000Z",
   });
-  assert.ok(report.startsWith("Port Hippo diagnostics report"));
+  assert.ok(report.startsWith("Jump Hippo diagnostics report"));
   assert.ok(report.includes("generated: 2026-07-08T00:00:00.000Z"));
   assert.ok(report.includes("version: 1.2.3"));
   assert.ok(report.includes("platform: darwin"));

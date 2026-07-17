@@ -26,7 +26,7 @@ const { Paths } = require("../paths");
 const { KnownHostsStore } = require("../known-hosts-store");
 
 function freshStore() {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "porthippo-hosts-"));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "jumphippo-hosts-"));
   return { dir, store: new KnownHostsStore(new Paths(dir)) };
 }
 

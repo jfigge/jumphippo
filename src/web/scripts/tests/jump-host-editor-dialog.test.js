@@ -36,7 +36,7 @@ function stub(calls = {}) {
 
 function mount(calls = {}, onSaved) {
   resetDom();
-  return new JumpHostEditorDialog({ porthippo: stub(calls), onSaved });
+  return new JumpHostEditorDialog({ jumphippo: stub(calls), onSaved });
 }
 
 const q = (dlg, s) => dlg.element.querySelector(s);
@@ -53,7 +53,7 @@ test("a valid create persists, closes and emits jumphosts-changed", async () => 
   const calls = {};
   const changed = [];
   const dlg = mount(calls);
-  window.addEventListener("porthippo:jumphosts-changed", (e) =>
+  window.addEventListener("jumphippo:jumphosts-changed", (e) =>
     changed.push(e.detail),
   );
   await dlg.openCreate();

@@ -1,7 +1,7 @@
 # Feature 60 — App shell: tray, settings & platform integration
 
 ## Context
-By this stage Port Hippo is functionally complete: define tunnels, run them on-demand,
+By this stage Jump Hippo is functionally complete: define tunnels, run them on-demand,
 watch them live. But it still behaves like an ordinary windowed app that quits when you
 close the window — wrong for a **background utility whose whole job is to keep tunnels
 alive**. This stage makes it a proper always-available tool: a **system-tray / menu-bar
@@ -11,7 +11,7 @@ plumbing Rest Hippo has (single-instance lock, rotating logs, diagnostics). It a
 the **i18n seam** the UI stages were written to slot into.
 
 ## Goal
-Port Hippo runs as a background-capable app: a tray icon shows overall status and offers
+Jump Hippo runs as a background-capable app: a tray icon shows overall status and offers
 quick arm/disarm + show/quit; closing the window hides to tray while tunnels keep running;
 a settings panel controls launch-at-login, default linger, default bind host, theme, and
 language; single-instance lock, rotating logs, and a diagnostics report are in place; and
@@ -35,7 +35,7 @@ user-facing strings route through a `t()` i18n seam.
   over `settings-store` (Feature 10): appearance (theme, language), defaults (linger, bind
   host, all/active default, keep-alive default), behaviour (launch at login, start
   minimized to tray, arm-enabled-tunnels-on-launch, confirm-on-quit). Changes broadcast
-  `porthippo:settings-changed`.
+  `jumphippo:settings-changed`.
 - **i18n seam now, catalogs pragmatic.** Introduce Rest Hippo's `t()` architecture:
   renderer `i18n.js` (`t`, `formatNumber`, `formatDate`, `init()`), main `i18n.js` loading
   the active catalog over IPC, catalogs under `src/web/locales/`. Ship **English complete**;
@@ -46,7 +46,7 @@ user-facing strings route through a `t()` i18n seam.
   (`logger.js`), a `diagnostics.js` "copy report" (versions, platform, tunnel count with
   **secrets redacted**, recent log tail) reachable from Help/tray. No telemetry, no phone
   home.
-- **Native app menu** with the usual roles + Port Hippo items (Preferences, About,
+- **Native app menu** with the usual roles + Jump Hippo items (Preferences, About,
   Show/Hide, Quit), localized.
 
 ## Implementation steps
@@ -63,7 +63,7 @@ user-facing strings route through a `t()` i18n seam.
 5. **Startup arming.** On launch (post-store-load), optionally `engine.armAll()` for
    enabled definitions per the "arm on launch" setting.
 6. **Settings panel.** `settings-popup.js` (renderer) over `settings-store`; sections as
-   above; live-apply theme/language; broadcast `porthippo:settings-changed`; consumers
+   above; live-apply theme/language; broadcast `jumphippo:settings-changed`; consumers
    (views, engine defaults) react.
 7. **i18n.** Port `i18n.js` (main + renderer) and create `src/web/locales/en.json`; route
    the centralized UI strings (Features 40/50) and new shell/tray/menu/settings strings
@@ -72,7 +72,7 @@ user-facing strings route through a `t()` i18n seam.
 8. **Logging + diagnostics.** Port `logger.js` (install console tee + rotating file) and
    `diagnostics.js` (redacted report); expose a "Copy diagnostics" action (Help menu/tray)
    over IPC.
-9. **Native menu** (`Menu.setApplicationMenu`) with localized roles + Port Hippo items.
+9. **Native menu** (`Menu.setApplicationMenu`) with localized roles + Jump Hippo items.
 10. **Tests.** `settings-store` round-trip (already from Feature 10 — extend for new keys),
     `i18n.test.js` (en catalog completeness + `t()` fallback), a `login-item` unit test
     (mock the Electron API), and a redaction test for `diagnostics` (no secrets in the
@@ -96,7 +96,7 @@ user-facing strings route through a `t()` i18n seam.
 
 ## Constraints
 - All native integration (tray, login item, menus, logging) in **main**; the renderer drives
-  it via `window.porthippo.*` and reacts to `porthippo:*` events.
+  it via `window.jumphippo.*` and reacts to `jumphippo:*` events.
 - Hide-to-tray must never drop live tunnels; only explicit Quit disarms.
 - Diagnostics/logs must never contain secrets or private-key material (redact + test it).
 - No telemetry or remote calls. i18n via the `t()` seam only — no hardcoded display strings

@@ -5,12 +5,12 @@
 Depends on: **20/30** (engine arm/disarm/pause), **60** (settings, tray, `powerMonitor`
 lifecycle), **140** (groups — a rule can target a group). Optional but natural after groups.
 
-Port Hippo arms enabled definitions on launch (`armOnLaunch`) and otherwise leaves arm/disarm
+Jump Hippo arms enabled definitions on launch (`armOnLaunch`) and otherwise leaves arm/disarm
 entirely manual. But tunnels have a *context*: a work database tunnel is only wanted during
 work hours and only on a trusted network; a home-lab tunnel is pointless away from home. Today
 the user micromanages this by hand — arming in the morning, disarming at night, remembering to
 pause on public Wi-Fi. This feature lets a tunnel (or a group) **arm and disarm itself** on a
-**time schedule** and/or **network condition**, turning Port Hippo from a manual switchboard
+**time schedule** and/or **network condition**, turning Jump Hippo from a manual switchboard
 into something that follows the user's day.
 
 ## Goal

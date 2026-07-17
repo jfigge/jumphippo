@@ -21,7 +21,7 @@ import { ScheduleEditorField } from "../components/schedule-editor-field.js";
 
 function mount() {
   resetDom();
-  const field = new ScheduleEditorField({ porthippo: {} });
+  const field = new ScheduleEditorField({ jumphippo: {} });
   document.body.append(field.element);
   return field;
 }

@@ -39,7 +39,7 @@ const isWeekday = (v) => Number.isInteger(v) && v >= 0 && v <= 6;
 const str = (v) => (typeof v === "string" ? v : "");
 
 export class ScheduleEditorField {
-  #porthippo;
+  #jumphippo;
   #onChange;
   #heading;
 
@@ -64,15 +64,15 @@ export class ScheduleEditorField {
 
   /**
    * @param {object} [opts]
-   * @param {object} [opts.porthippo]  IPC bridge (for the "use current network" helper)
+   * @param {object} [opts.jumphippo]  IPC bridge (for the "use current network" helper)
    * @param {() => void} [opts.onChange]  fired on any edit (live revalidation)
    * @param {boolean} [opts.heading]  show the "Schedule" heading (default true);
    *        the tunnel editor omits it since a "Schedule" tab already labels it.
    */
-  constructor({ porthippo, onChange, heading = true } = {}) {
-    this.#porthippo =
-      porthippo ||
-      (typeof window !== "undefined" ? window.porthippo : undefined);
+  constructor({ jumphippo, onChange, heading = true } = {}) {
+    this.#jumphippo =
+      jumphippo ||
+      (typeof window !== "undefined" ? window.jumphippo : undefined);
     this.#onChange = onChange || (() => {});
     this.#heading = heading;
     this.#el = this.#build();
@@ -403,7 +403,7 @@ export class ScheduleEditorField {
     this.#setSsidNote("");
     let res;
     try {
-      res = await this.#porthippo?.schedule?.currentNetwork?.();
+      res = await this.#jumphippo?.schedule?.currentNetwork?.();
     } catch {
       res = null;
     }

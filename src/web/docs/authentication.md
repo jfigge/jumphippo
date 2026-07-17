@@ -12,7 +12,7 @@ Choose the **Type** in the credential's authentication section:
 ### SSH agent
 
 Uses your running SSH agent (the same one `ssh` uses). No key file or password is
-stored in Port Hippo — the agent holds the keys and does the signing. This is the
+stored in Jump Hippo — the agent holds the keys and does the signing. This is the
 most convenient and often the most secure option: nothing secret lives in Port
 Hippo's store at all.
 
@@ -20,7 +20,7 @@ Requires an agent to be running with the right key loaded (`ssh-add -l` to check
 
 ### Private key
 
-Point Port Hippo at a private key file. Use **Browse…** to pick the file, or type
+Point Jump Hippo at a private key file. Use **Browse…** to pick the file, or type
 its path (e.g. `~/.ssh/id_ed25519`).
 
 - If the key is protected by a **passphrase**, enter it. The passphrase is
@@ -61,8 +61,8 @@ new value on its next connection.
 ## Choosing a method
 
 - **Prefer the SSH agent** when you already run one — nothing sensitive is stored
-  in Port Hippo.
-- **Use a key file with a passphrase** for an identity you want Port Hippo to hold
+  in Jump Hippo.
+- **Use a key file with a passphrase** for an identity you want Jump Hippo to hold
   independently of an agent.
 - **Use a password** only when the server requires it.
 

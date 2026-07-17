@@ -1,4 +1,4 @@
-/* Port Hippo website — dynamic downloads + version history.
+/* Jump Hippo website — dynamic downloads + version history.
  *
  * Data comes from ./versions.json, generated at deploy time from the GitHub
  * Releases API (see scripts/build-versions.mjs). Progressive enhancement: if the
@@ -6,15 +6,15 @@
  * fallback links already in index.html are left in place.
  *
  * The release artifacts electron-builder publishes follow the naming scheme
- *   Port-Hippo-${version}-${arch}.${ext}          (dmg / zip / AppImage / deb / portable)
- *   Port-Hippo-Setup-${version}-${arch}.${ext}    (Windows NSIS installer)
+ *   Jump-Hippo-${version}-${arch}.${ext}          (dmg / zip / AppImage / deb / portable)
+ *   Jump-Hippo-Setup-${version}-${arch}.${ext}    (Windows NSIS installer)
  * build-versions.mjs parses those names into the { platform, arch, kind, label }
  * fields this script renders; it does not construct URLs itself — every href
  * comes straight from the GitHub Releases API via versions.json. */
 (function () {
   "use strict";
 
-  var RELEASES_URL = "https://github.com/jfigge/porthippo/releases";
+  var RELEASES_URL = "https://github.com/jfigge/jumphippo/releases";
 
   var DL_ICON =
     '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
