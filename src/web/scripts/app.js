@@ -29,6 +29,7 @@ import { UpdateNotifier } from "./update-notifier.js";
 import { SettingsPopup } from "./components/settings-popup.js";
 import { AboutDialog } from "./components/about-dialog.js";
 import { init as initI18n, t } from "./i18n.js";
+import { init as initBuildInfo } from "./build-info.js";
 import { icons } from "./icons.js";
 import {
   installZoomHandlers,
@@ -203,6 +204,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   // resolves correctly (English is embedded, so this only matters once other
   // locales ship — but awaiting it keeps the ordering guarantee).
   await initI18n();
+
+  // Fetch this build's capability map before any dialog/panel is built, so
+  // store-incompatible UI (ssh-agent auth, launch-at-login) can gate synchronously
+  // via build-info's can(). Fails open — a direct build is never degraded.
+  await initBuildInfo();
 
   // One settings read drives the pre-paint theme.
   let settings = {};

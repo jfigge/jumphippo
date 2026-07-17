@@ -849,6 +849,12 @@
   color: var(--color-muted);
 }
 
+/* ssh-agent auth is unavailable in this build (MAS sandbox) — an existing agent
+   credential opens with this warning instead of the normal hint. */
+.auth-agent-warning {
+  color: var(--color-warning);
+}
+
 /* ── Monitoring view ──────────────────────────────────────────────────────── */
 .monitoring-view {
   display: flex;
@@ -1100,6 +1106,19 @@
    generic `.field input` block (which stretches inputs to full width/height). */
 .settings-check {
   margin-bottom: var(--space-3);
+}
+
+/* A setting this build can't honour (e.g. launch-at-login in a store build):
+   the control is inert and the row is dimmed, with a hint explaining why. */
+.settings-check--disabled .settings-check-label {
+  color: var(--color-muted);
+  cursor: not-allowed;
+}
+
+/* A note under a data action that behaves differently in a store build. */
+.settings-store-note {
+  margin-top: var(--space-1);
+  color: var(--color-warning);
 }
 
 .settings-check-label {

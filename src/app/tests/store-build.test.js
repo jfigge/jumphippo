@@ -78,3 +78,49 @@ test("flags are strict-true only (a truthy non-true value is not a store build)"
     assert.equal(sb.distribution(), "direct");
   });
 });
+
+test("direct build enables every capability", () => {
+  withFlags({ mas: undefined, windowsStore: undefined }, () => {
+    assert.deepEqual(sb.capabilities(), {
+      sshAgentAuth: true,
+      launchAtLogin: true,
+      sshConfigDefaultPath: true,
+      selfUpdate: true,
+    });
+  });
+});
+
+test("MAS build disables ssh-agent, launch-at-login, ssh-config default, self-update", () => {
+  withFlags({ mas: true, windowsStore: undefined }, () => {
+    assert.deepEqual(sb.capabilities(), {
+      sshAgentAuth: false, // SSH_AUTH_SOCK is outside the sandbox
+      launchAtLogin: false,
+      sshConfigDefaultPath: false, // ~/.ssh unreadable from the sandbox $HOME
+      selfUpdate: false,
+    });
+  });
+});
+
+test("Microsoft Store build keeps ssh-agent + ssh-config (full trust) but drops login/update", () => {
+  withFlags({ mas: undefined, windowsStore: true }, () => {
+    assert.deepEqual(sb.capabilities(), {
+      sshAgentAuth: true, // full-trust Desktop Bridge reaches the agent pipe
+      launchAtLogin: false,
+      sshConfigDefaultPath: true,
+      selfUpdate: false,
+    });
+  });
+});
+
+test("buildInfo carries the distribution flavor and the capability map", () => {
+  withFlags({ mas: true, windowsStore: undefined }, () => {
+    const info = sb.buildInfo();
+    assert.equal(info.distribution, "store");
+    assert.equal(info.capabilities.sshAgentAuth, false);
+  });
+  withFlags({ mas: undefined, windowsStore: undefined }, () => {
+    const info = sb.buildInfo();
+    assert.equal(info.distribution, "direct");
+    assert.equal(info.capabilities.launchAtLogin, true);
+  });
+});

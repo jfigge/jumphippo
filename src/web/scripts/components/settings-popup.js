@@ -30,6 +30,7 @@ import { el } from "../dom.js";
 import { field } from "../field.js";
 import { PopupManager } from "../popup-manager.js";
 import { t, LOCALE_OPTIONS } from "../i18n.js";
+import { can } from "../build-info.js";
 import { SecuritySettings } from "./settings-security.js";
 import { HostKeysPanel } from "./host-keys-panel.js";
 import { ImportExportDialog } from "./import-export-dialog.js";
@@ -274,8 +275,20 @@ export class SettingsPopup {
   }
 
   #behaviourPanel() {
+    // Launch-at-login is disabled in store builds (the store login-item mechanism
+    // isn't what Electron's setLoginItemSettings drives) — show the row disabled
+    // with an explanatory hint rather than silently omitting it. Main also refuses
+    // to apply it (applyLoginItem). See build-info.js / store-build.js.
+    const launchAtLogin = can("launchAtLogin")
+      ? this.#check("setting-launchAtLogin", "settings.behaviour.launchAtLogin")
+      : this.#check(
+          "setting-launchAtLogin",
+          "settings.behaviour.launchAtLogin",
+          "settings.behaviour.launchAtLogin.storeHint",
+          { disabled: true },
+        );
     return this.#panel("behaviour", [
-      this.#check("setting-launchAtLogin", "settings.behaviour.launchAtLogin"),
+      launchAtLogin,
       this.#check(
         "setting-startMinimized",
         "settings.behaviour.startMinimized",
@@ -377,6 +390,20 @@ export class SettingsPopup {
         el("p", { class: "field-hint", text: t(descKey) }),
       ]);
 
+    // In a MAS build the sandbox can't read ~/.ssh/config from its own $HOME, so
+    // the import can't default to it — note that the file must be picked manually.
+    const sshImport = action("io.data.importSsh", "io.data.importSshDesc", () =>
+      this.#importExport().startSshImport(),
+    );
+    if (!can("sshConfigDefaultPath")) {
+      sshImport.append(
+        el("p", {
+          class: "field-hint settings-store-note",
+          text: t("io.data.importSsh.storeHint"),
+        }),
+      );
+    }
+
     return this.#panel("data", [
       el("p", { class: "settings-help", text: t("io.data.help") }),
       action("io.data.export", "io.data.exportDesc", () =>
@@ -385,9 +412,7 @@ export class SettingsPopup {
       action("io.data.importBundle", "io.data.importBundleDesc", () =>
         this.#importExport().startImport(),
       ),
-      action("io.data.importSsh", "io.data.importSshDesc", () =>
-        this.#importExport().startSshImport(),
-      ),
+      sshImport,
     ]);
   }
 
@@ -404,21 +429,29 @@ export class SettingsPopup {
     );
   }
 
-  // A checkbox row: [✓] label, with an optional hint beneath.
-  #check(id, labelKey, hintKey) {
+  // A checkbox row: [✓] label, with an optional hint beneath. `disabled` renders
+  // the row inert (used to surface a setting that a store build can't honour).
+  #check(id, labelKey, hintKey, { disabled = false } = {}) {
     const input = el("input", {
       id,
       type: "checkbox",
       class: "settings-check-input",
+      disabled,
       onChange: () => this.#emitChange(),
     });
-    return el("div", { class: "field settings-check" }, [
-      el("label", { class: "settings-check-label", for: id }, [
-        input,
-        el("span", { text: t(labelKey) }),
-      ]),
-      hintKey && el("p", { class: "field-hint", text: t(hintKey) }),
-    ]);
+    return el(
+      "div",
+      {
+        class: `field settings-check${disabled ? " settings-check--disabled" : ""}`,
+      },
+      [
+        el("label", { class: "settings-check-label", for: id }, [
+          input,
+          el("span", { text: t(labelKey) }),
+        ]),
+        hintKey && el("p", { class: "field-hint", text: t(hintKey) }),
+      ],
+    );
   }
 
   // ── Panels / values ────────────────────────────────────────────────────────

@@ -75,7 +75,7 @@ const {
   trackWindowState,
 } = require("./window-state");
 const updater = require("./updater");
-const { distribution } = require("./store-build");
+const { distribution, isStoreBuild, buildInfo } = require("./store-build");
 
 // Delay the silent startup update check so it never competes with window
 // creation / first paint. A manual check (Settings/menu) runs immediately.
@@ -234,9 +234,12 @@ const t = (key, params) => i18n.format(i18n.label(_catalog, key, key), params);
 const loginItem = createLoginItem({ app, appName: "Jump Hippo" });
 
 // Sync the OS login-item with the persisted setting. Only in packaged builds —
-// in dev the executable is the Electron binary, which we must not register.
+// in dev the executable is the Electron binary, which we must not register — and
+// never in a store build, where launch-at-login is disabled (the setting is
+// hidden in the renderer too; this is the belt-and-braces main-side guard). See
+// store-build.js → capabilities().launchAtLogin.
 function applyLoginItem(settings) {
-  if (!app.isPackaged) return;
+  if (!app.isPackaged || isStoreBuild()) return;
   loginItem.set(Boolean(settings.launchAtLogin), {
     openAsHidden: Boolean(settings.startMinimized),
   });
@@ -581,6 +584,10 @@ function showAbout() {
 function registerIpc() {
   const version = resolveAppVersion();
   ipcMain.handle("app:version", () => version);
+  // Build metadata + capability map for the sandboxed renderer, which can't read
+  // process.mas itself. The UI gates store-incompatible features on this. See
+  // store-build.js and preload.js (window.jumphippo.build).
+  ipcMain.handle("app:capabilities", () => buildInfo());
 
   registerStoreIPC({
     ipcMain,

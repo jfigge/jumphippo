@@ -47,6 +47,14 @@ contextBridge.exposeInMainWorld("jumphippo", {
   // proves the ipcMain <-> preload bridge is wired correctly.
   getVersion: () => ipcRenderer.invoke("app:version"),
 
+  // Build metadata (distribution flavor + capability map) so the sandboxed
+  // renderer can gate features a store build disables — ssh-agent auth,
+  // launch-at-login, the ssh-config default path. The renderer can't read
+  // process.mas itself, so main hands it the map. See store-build.js.
+  build: {
+    info: () => ipcRenderer.invoke("app:capabilities"),
+  },
+
   // ── Tunnel definitions (Feature 10 store) ─────────────────────────────────
   // CRUD over the encrypted-at-rest store. Reads return secrets as a `hasSecret`
   // flag only; a create/update writes a NEW secret as a plaintext string or keeps

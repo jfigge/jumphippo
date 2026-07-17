@@ -29,11 +29,18 @@
 // Gate scopes (see also STORE-PUBLISHING.md):
 //   • isStoreBuild() — disable the self-updater (both stores deliver their own
 //     updates; electron-builder strips the update feed from MAS/appx anyway)
-//     and omit the "Check for Updates…" menu item (menu.js).
-//   • isMas()        — reserved for macOS-App-Sandbox-only restrictions (none
-//     gated yet; the known sandbox caveats — ssh-agent socket, persisted
-//     key-file paths, ~/.ssh/known_hosts — degrade gracefully on their own and
-//     are documented in STORE-PUBLISHING.md).
+//     and omit the "Check for Updates…" menu item (menu.js); disable
+//     launch-at-login (the store login-item mechanisms aren't what Electron's
+//     setLoginItemSettings drives).
+//   • isMas()        — macOS-App-Sandbox-only restrictions: ssh-agent auth (the
+//     SSH_AUTH_SOCK socket is outside the sandbox) and the "Import from SSH
+//     config" default path (the sandbox can't read ~/.ssh from its own $HOME).
+//
+// The renderer is sandboxed and can't read process.mas itself, so `capabilities()`
+// is handed to it over IPC (app:capabilities → window.jumphippo.build) and the UI
+// gates on the map; main gates the same features directly on the predicates. The
+// remaining sandbox caveats (~/.ssh/known_hosts, key-file paths across relaunch)
+// still degrade gracefully and are documented in STORE-PUBLISHING.md.
 "use strict";
 
 /** True in a Mac App Store (sandboxed) build. */
@@ -60,4 +67,50 @@ function distribution() {
   return isStoreBuild() ? "store" : "direct";
 }
 
-module.exports = { isMas, isAppx, isStoreBuild, distribution };
+/**
+ * The feature capabilities of THIS build, derived from the store flags. The
+ * sandboxed renderer fetches this (app:capabilities → window.jumphippo.build) to
+ * gate store-incompatible UI; main gates the same features directly on the
+ * predicates. Each entry is `true` when the feature is available:
+ *
+ *   • sshAgentAuth        — false in a MAS build: the ssh-agent socket
+ *     (SSH_AUTH_SOCK) lives outside the App Sandbox. Works on the full-trust
+ *     Microsoft Store build.
+ *   • launchAtLogin       — false in any store build: the sandbox/store login-item
+ *     mechanisms aren't what Electron's setLoginItemSettings drives.
+ *   • sshConfigDefaultPath — false in a MAS build: the sandbox can't read
+ *     ~/.ssh/config from its own $HOME, so the import can't default to it (the
+ *     user can still pick the file via the open panel).
+ *   • selfUpdate          — false in any store build: the store delivers updates
+ *     (already gated in updater.js / menu.js; included for a complete map).
+ *
+ * @returns {{ sshAgentAuth: boolean, launchAtLogin: boolean,
+ *   sshConfigDefaultPath: boolean, selfUpdate: boolean }}
+ */
+function capabilities() {
+  return {
+    sshAgentAuth: !isMas(),
+    launchAtLogin: !isStoreBuild(),
+    sshConfigDefaultPath: !isMas(),
+    selfUpdate: !isStoreBuild(),
+  };
+}
+
+/**
+ * Build metadata for the sandboxed renderer (over app:capabilities): the
+ * distribution flavor plus the capability map, so the UI can gate features the
+ * store build disables without reading process.mas itself.
+ * @returns {{ distribution: "store"|"direct", capabilities: object }}
+ */
+function buildInfo() {
+  return { distribution: distribution(), capabilities: capabilities() };
+}
+
+module.exports = {
+  isMas,
+  isAppx,
+  isStoreBuild,
+  distribution,
+  capabilities,
+  buildInfo,
+};

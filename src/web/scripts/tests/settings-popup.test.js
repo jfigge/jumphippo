@@ -19,6 +19,25 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { SettingsPopup } from "../components/settings-popup.js";
 import { PopupManager } from "../popup-manager.js";
+import { init as initBuildInfo } from "../build-info.js";
+
+// Drive the shared build-info singleton to a capability map, then restore the
+// "everything enabled" default (build-info is a module singleton shared across
+// tests). Store builds gate launch-at-login and the ssh-config default path.
+async function withCaps(capabilities, fn) {
+  await initBuildInfo({
+    build: { info: async () => ({ distribution: "store", capabilities }) },
+  });
+  try {
+    await fn();
+  } finally {
+    await initBuildInfo({
+      build: {
+        info: async () => ({ distribution: "direct", capabilities: {} }),
+      },
+    });
+  }
+}
 
 // PopupManager keeps its active popup in module state; resetting the DOM per test
 // would strand the popup in a detached document. Use a single DOM for the file
@@ -307,4 +326,55 @@ test("a locked session shows the unlock row and sends the password to unlock", a
   root.querySelector(".security-unlock-btn").dispatchEvent(clickEvent());
   await tick();
   assert.deepEqual(calls.unlock, ["right"]);
+});
+
+// ── Store-build gating ────────────────────────────────────────────────────────
+
+test("launch-at-login is disabled with a store hint in a build that can't honour it", async () => {
+  await withCaps({ launchAtLogin: false }, async () => {
+    PopupManager.close();
+    const { jumphippo } = stubBridge();
+    const popup = new SettingsPopup({ jumphippo });
+    await popup.open();
+
+    const root = document.querySelector(".popup-settings");
+    const check = root.querySelector("#setting-launchAtLogin");
+    assert.equal(check.disabled, true, "launch-at-login checkbox disabled");
+    assert.ok(
+      check.closest(".settings-check--disabled"),
+      "row marked disabled",
+    );
+    // The other behaviour toggles stay live.
+    assert.equal(root.querySelector("#setting-armOnLaunch").disabled, false);
+  });
+});
+
+test("launch-at-login stays enabled in a normal (direct) build", async () => {
+  PopupManager.close();
+  const { jumphippo } = stubBridge();
+  const popup = new SettingsPopup({ jumphippo });
+  await popup.open();
+
+  const check = document
+    .querySelector(".popup-settings")
+    .querySelector("#setting-launchAtLogin");
+  assert.equal(check.disabled, false);
+});
+
+test("the SSH-config import shows a manual-pick note when the default path is gated", async () => {
+  await withCaps({ sshConfigDefaultPath: false }, async () => {
+    PopupManager.close();
+    const { jumphippo } = stubBridge();
+    const popup = new SettingsPopup({ jumphippo });
+    await popup.open();
+
+    const root = document.querySelector(".popup-settings");
+    root
+      .querySelector('.settings-nav-item[data-panel="data"]')
+      .dispatchEvent(clickEvent());
+    assert.ok(
+      root.querySelector(".settings-store-note"),
+      "ssh-config store note shown",
+    );
+  });
 });

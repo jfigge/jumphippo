@@ -16,20 +16,30 @@ build gate on those helpers at runtime instead of being compiled out:
 | Disabled in… | Feature | Why |
 | --- | --- | --- |
 | Both stores | In-app self-updater + "Check for Updates…" menu item | The store delivers updates; there is no update feed. |
+| Both stores | **Launch at login** (Settings → Behaviour) | The store login-item mechanisms aren't what Electron's `setLoginItemSettings` drives. The row is shown disabled with a hint; `applyLoginItem` also refuses to apply it. |
+| MAS only | **SSH-agent auth** (credential editor) | `SSH_AUTH_SOCK` is outside the App Sandbox. The "SSH agent" auth option is hidden; an existing agent credential still opens, with a warning to switch to a key/password. (Works on the full-trust Microsoft Store build.) |
+| MAS only | **"Import from SSH config" default path** | The sandbox can't read `~/.ssh` from its own `$HOME`, so the import can't default to it — a note tells the user to pick the file manually via the open panel. |
+
+Gating is data-driven: `src/app/store-build.js` `capabilities()` derives the map
+from `process.mas` / `process.windowsStore`, and it's handed to the sandboxed
+renderer over IPC (`app:capabilities` → `window.jumphippo.build` →
+`web/scripts/build-info.js`), which the UI reads via `can(feature)`. The map
+**fails open** — a broken bridge never hides a feature in a direct build.
 
 ### MAS functional caveats (App Sandbox)
 
 The MAS build runs under Apple's App Sandbox
 (`src/packaging/entitlements.mas.plist`), which constrains an SSH tunnel
-manager more than a typical app. These degrade gracefully but are worth
-knowing before shipping:
+manager more than a typical app. The gated features above surface an in-UI
+explanation; the remaining caveats degrade gracefully:
 
 - **`~/.ssh/known_hosts` is invisible** — the sandbox container gets its own
   `$HOME`, so OS-level known hosts can't be read. Host-key verification falls
   back to Jump Hippo's own accepted-keys store and the TOFU prompts, which work
   unchanged.
 - **ssh-agent auth doesn't work** — the agent's socket (`SSH_AUTH_SOCK`) is
-  outside the sandbox. Use key-file or password credentials in the MAS build.
+  outside the sandbox. The agent auth option is now **gated out** of the MAS
+  build (see the table above); use key-file or password credentials.
 - **Key-file paths don't survive a relaunch** — the open dialog
   (`files.user-selected.read-only`) grants access only for the session; on the
   next launch the stored path can't be re-read until the user re-picks the

@@ -18,8 +18,32 @@ import { resetDom, typeInto, change } from "./jsdom-setup.js";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { CredentialEditorDialog } from "../components/credential-editor-dialog.js";
+import { init as initBuildInfo } from "../build-info.js";
 
 const flush = () => new Promise((r) => setTimeout(r, 0));
+
+// Drive the shared build-info singleton to a given capability map for one case,
+// then restore the "everything enabled" default so cases don't leak (build-info
+// is a module singleton shared across every renderer test).
+async function withCaps(capabilities, fn) {
+  await initBuildInfo({
+    build: { info: async () => ({ distribution: "store", capabilities }) },
+  });
+  try {
+    await fn();
+  } finally {
+    await initBuildInfo({
+      build: {
+        info: async () => ({ distribution: "direct", capabilities: {} }),
+      },
+    });
+  }
+}
+
+const typeValues = (dlg) =>
+  [...dlg.element.querySelectorAll(".cred-type-select option")].map(
+    (o) => o.value,
+  );
 
 function stub(calls = {}) {
   return {
@@ -165,4 +189,34 @@ test("editing keeps a stored secret when it isn't retyped", async () => {
     authType: "password",
     hasSecret: true, // retained, no plaintext resent
   });
+});
+
+// ── Store-build gating (ssh-agent auth unavailable in the MAS sandbox) ─────────
+
+test("a build without ssh-agent hides the agent option and defaults new creds to key", async () => {
+  await withCaps({ sshAgentAuth: false }, () => {
+    const dlg = mount();
+    dlg.openCreate();
+    assert.deepEqual(typeValues(dlg), ["key", "password"], "no agent option");
+    assert.equal(el(dlg, ".auth-agent-hint"), null, "no agent hint");
+    assert.ok(el(dlg, ".cred-keypath-input"), "defaults to key auth fields");
+  });
+});
+
+test("editing an existing agent credential in that build shows it with a warning", async () => {
+  await withCaps({ sshAgentAuth: false }, () => {
+    const dlg = mount();
+    dlg.openEdit({ id: "c1", label: "L", user: "u", authType: "agent" });
+    // The agent option is re-added so the loaded credential still displays…
+    assert.deepEqual(typeValues(dlg), ["agent", "key", "password"]);
+    // …and the fields warn that it can't authenticate here.
+    assert.ok(el(dlg, ".auth-agent-warning"), "agent warning shown");
+  });
+});
+
+test("agent stays available in a normal (direct) build", () => {
+  const dlg = mount();
+  dlg.openCreate();
+  assert.deepEqual(typeValues(dlg), ["agent", "key", "password"]);
+  assert.ok(el(dlg, ".auth-agent-hint"), "normal agent hint");
 });

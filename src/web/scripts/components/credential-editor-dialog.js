@@ -27,6 +27,7 @@
 import { el, clear } from "../dom.js";
 import { field, applyFieldErrors } from "../field.js";
 import { t } from "../i18n.js";
+import { can } from "../build-info.js";
 import { Dialog } from "../dialog.js";
 import {
   AUTH_TYPES,
@@ -102,16 +103,47 @@ export class CredentialEditorDialog {
     this.#form = {
       label: str(c.label),
       user: str(c.user),
-      authType: AUTH_TYPES.includes(c.authType) ? c.authType : "agent",
+      authType: AUTH_TYPES.includes(c.authType)
+        ? c.authType
+        : this.#defaultAuthType(),
       keyPath: str(c.keyPath),
       secretValue: "",
     };
     this.#labelInput.value = this.#form.label;
     this.#userInput.value = this.#form.user;
+    // Repopulate the type options first — the available set depends on the loaded
+    // credential (a store build without ssh-agent still shows "agent" when the
+    // credential being edited uses it, so it displays with a warning).
+    this.#populateTypeOptions();
     this.#typeSelect.value = this.#form.authType;
     this.#renderTypeFields();
     applyFieldErrors(this.#dialog.body, {});
     this.#dialog.clearError();
+  }
+
+  /** The default auth type for a NEW credential: agent when this build allows it. */
+  #defaultAuthType() {
+    return can("sshAgentAuth") ? "agent" : "key";
+  }
+
+  /**
+   * The auth types this build offers. A store build without ssh-agent support
+   * (the MAS sandbox) drops "agent" — unless the credential being edited already
+   * uses it, so it still displays (with a warning) and can be switched away from.
+   */
+  #availableTypes() {
+    if (can("sshAgentAuth")) return AUTH_TYPES;
+    const usable = AUTH_TYPES.filter((type) => type !== "agent");
+    return this.#loadedType === "agent" ? ["agent", ...usable] : usable;
+  }
+
+  #populateTypeOptions() {
+    clear(this.#typeSelect);
+    this.#typeSelect.append(
+      ...this.#availableTypes().map((type) =>
+        el("option", { value: type, text: t(`auth.type.${type}`) }),
+      ),
+    );
   }
 
   buildPayload() {
@@ -157,17 +189,12 @@ export class CredentialEditorDialog {
       "aria-label": t("cred.user"),
       onInput: (e) => (this.#form.user = e.target.value),
     });
-    this.#typeSelect = el(
-      "select",
-      {
-        class: "dialog-input cred-type-select",
-        "aria-label": t("auth.type"),
-        onChange: (e) => this.#changeType(e.target.value),
-      },
-      AUTH_TYPES.map((type) =>
-        el("option", { value: type, text: t(`auth.type.${type}`) }),
-      ),
-    );
+    this.#typeSelect = el("select", {
+      class: "dialog-input cred-type-select",
+      "aria-label": t("auth.type"),
+      onChange: (e) => this.#changeType(e.target.value),
+    });
+    this.#populateTypeOptions();
     this.#typeFieldsEl = el("div", { class: "cred-type-fields" });
 
     this.#dialog.body.append(
@@ -196,8 +223,17 @@ export class CredentialEditorDialog {
     const type = this.#form.authType;
 
     if (type === "agent") {
+      // In a build without ssh-agent support (MAS sandbox) an existing agent
+      // credential still opens here — warn that it can't authenticate and to
+      // switch to a key or password, rather than showing the normal hint.
+      const supported = can("sshAgentAuth");
       this.#typeFieldsEl.append(
-        el("p", { class: "auth-agent-hint", text: t("auth.agentHint") }),
+        el("p", {
+          class: supported
+            ? "auth-agent-hint"
+            : "auth-agent-hint auth-agent-warning",
+          text: t(supported ? "auth.agentHint" : "auth.agentUnavailable"),
+        }),
       );
       return;
     }

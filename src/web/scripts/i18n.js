@@ -220,6 +220,8 @@ export const EN = {
   "auth.secretSet": "•••• set",
   "auth.secretKeep": "Stored — leave blank to keep",
   "auth.agentHint": "Uses your running SSH agent — no key file or password.",
+  "auth.agentUnavailable":
+    "SSH agent authentication isn't available in this build. Choose a private key or a password instead.",
 
   // ── Monitoring view ─────────────────────────────────────────────────────
   "mon.title": "Live tunnels",
@@ -446,6 +448,8 @@ export const EN = {
     "The keep-alive default for new tunnels (they can override it).",
 
   "settings.behaviour.launchAtLogin": "Launch Jump Hippo at login",
+  "settings.behaviour.launchAtLogin.storeHint":
+    "Not available in this build — set launch at login in your operating system's startup settings.",
   "settings.behaviour.startMinimized": "Start minimized to the tray",
   "settings.behaviour.startMinimized.hint":
     "Only applies when launched at login.",
@@ -601,6 +605,8 @@ export const EN = {
   "io.data.importSsh": "Import from SSH config…",
   "io.data.importSshDesc":
     "Propose tunnels, credentials and jump hosts from your ~/.ssh/config.",
+  "io.data.importSsh.storeHint":
+    "In this build, choose your ~/.ssh/config file manually when prompted.",
 
   // Export dialog.
   "io.export.title": "Export bundle",

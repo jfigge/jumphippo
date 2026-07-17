@@ -22,6 +22,13 @@ Key facts:
 
 - [x] Store-build feature flag + gating (`src/app/store-build.js`; self-updater +
       "Check for Updates…" menu item disabled in store builds).
+- [x] Store-build **capability layer** — `capabilities()`/`buildInfo()` handed to
+      the sandboxed renderer over IPC (`app:capabilities` → `window.jumphippo.build`
+      → `web/scripts/build-info.js`, fails open). Gates **ssh-agent auth** (hidden in
+      MAS; existing agent creds warn), **launch-at-login** (disabled with a hint in
+      both stores; `applyLoginItem` also refuses it), and the **"Import from SSH
+      config" default path** (manual-pick note in MAS). Localised in all 6 shipped
+      locales; unit-tested (`store-build`, `build-info`, credential-editor, settings).
 - [x] `build.mas` / `build.masDev` / `build.appx` config in `src/package.json` +
       MAS entitlements (`src/packaging/entitlements.mas*.plist` — sandbox with
       network client **and** server for the tunnel listeners).
@@ -53,10 +60,12 @@ Key facts:
       smoke-tests) → save as `src/packaging/development.provisionprofile`.
 - [ ] Local smoke test: `make mas-dev` → run the app; then `make dist-mas` →
       universal signed `.pkg` in `build/src/dist/mas-universal/`.
-- [ ] **Before submitting**: write the numbered feature plan for MAS sandbox
-      fit-and-finish (security-scoped bookmarks for key files; see the caveats
-      in STORE-PUBLISHING.md) and decide whether v1 ships with the caveats
-      documented or waits for it.
+- [ ] **Before submitting**: the store-incompatible features are now gated in-UI
+      (ssh-agent, launch-at-login, ssh-config default path — see the Done section).
+      The one remaining MAS caveat is **key-file paths not surviving a relaunch** —
+      write the numbered feature plan for security-scoped bookmarks (see the caveats
+      in STORE-PUBLISHING.md) and decide whether v1 ships with that one documented
+      or waits for it.
 - [ ] Upload the first build via Transporter and submit for review.
 
 ### CI Phase A — build in CI, do NOT submit
