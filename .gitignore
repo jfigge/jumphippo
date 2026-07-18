@@ -2,6 +2,7 @@
 build/
 dist/
 data/
+certs/
 
 # ── Documentation screenshots (see .docs-build/) ──────────────────────────────
 # The seeded demo data dir and the full-res capture originals stay local; only the

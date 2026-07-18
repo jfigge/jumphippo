@@ -11,7 +11,7 @@ Key facts:
 | --- | --- |
 | Apple Team ID | `2C564TQ2FY` |
 | Bundle id | `com.jumphippo.app` |
-| App Store Connect app id | *(not created yet)* |
+| App Store Connect app id | `6792015212` (macOS) |
 | App Store Connect API key id | `G9W84MCW73` (`.keys/AuthKey_G9W84MCW73.p8`) |
 | CI kill-switch | `vars.STORE_SUBMIT_ENABLED` (off = build only, on = push to store) |
 | Signing key backups | `.keys/` (git-ignored; copied from Rest Hippo — the certs are team-level and shared) |
@@ -47,17 +47,19 @@ Key facts:
 
 ## 🍎 Apple — create the Jump Hippo records (blocking `dist-mas`)
 
-- [ ] **App ID**: <https://developer.apple.com/account> → Identifiers → **+** →
-      App ID `com.jumphippo.app` with the **App Sandbox** capability.
-- [ ] **App Store Connect record**: <https://appstoreconnect.apple.com> → Apps →
+- [x] **App ID**: <https://developer.apple.com/account> → Identifiers → **+** →
+      App ID `com.jumphippo.app` with the **App Sandbox** capability. *(done 2026-07-17)*
+- [x] **App Store Connect record**: <https://appstoreconnect.apple.com> → Apps →
       **+ New App** → macOS, bundle id `com.jumphippo.app`, set an SKU. Record
-      the app id here when created.
-- [ ] **MAS distribution provisioning profile**: Developer portal → Profiles →
+      the app id here when created. *(done 2026-07-17 — app id `6792015212`)*
+- [x] **MAS distribution provisioning profile**: Developer portal → Profiles →
       **+** → Mac App Store distribution for `com.jumphippo.app`, bound to the
       existing Apple Distribution cert → save as
-      `src/packaging/embedded.provisionprofile` (git-ignored).
-- [ ] *(Optional)* **MAS development profile** (for `make mas-dev` local sandbox
+      `src/packaging/embedded.provisionprofile` (git-ignored). *(done 2026-07-17 —
+      "Jump Hippo Mac App Store", cert fp CBB4AF99…A91C, expires 2027-07-07)*
+- [x] *(Optional)* **MAS development profile** (for `make mas-dev` local sandbox
       smoke-tests) → save as `src/packaging/development.provisionprofile`.
+      *(done 2026-07-17 — "Jump Hippo MAS Development", 1 device, expires 2027-07-17)*
 - [ ] Local smoke test: `make mas-dev` → run the app; then `make dist-mas` →
       universal signed `.pkg` in `build/src/dist/mas-universal/`.
 - [ ] **Before submitting**: the store-incompatible features are now gated in-UI
