@@ -576,6 +576,18 @@
   min-width: 0;
 }
 
+/* A row of equal-width fields (e.g. the three retry-backoff inputs), each
+   flexing to an even share of the dialog width. */
+.editor-field-row {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+}
+.editor-field-row > .field {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
 /* The forwarding-type description, shown full-width under the Name/Type row. */
 .editor-type-hint {
   margin: 0 0 var(--space-2);

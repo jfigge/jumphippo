@@ -455,35 +455,38 @@ export class TunnelEditorDialog {
       this.#section([
         el("span", { class: "field-label", text: t("editor.retry") }),
         el("p", { class: "field-hint", text: t("editor.retry.hint") }),
-        field({
-          label: t("editor.retry.baseMs"),
-          control: this.#input(
-            "retryBaseMs",
-            t("editor.retry.inherit"),
-            "number",
-            MS_STEP,
-          ),
-          errorKey: "retryBaseMs",
-        }),
-        field({
-          label: t("editor.retry.maxMs"),
-          control: this.#input(
-            "retryMaxMs",
-            t("editor.retry.inherit"),
-            "number",
-            MS_STEP,
-          ),
-          errorKey: "retryMaxMs",
-        }),
-        field({
-          label: t("editor.retry.maxAttempts"),
-          control: this.#input(
-            "retryMaxAttempts",
-            t("editor.retry.inherit"),
-            "number",
-          ),
-          errorKey: "retryMaxAttempts",
-        }),
+        // Base / Max backoff / Max attempts share one row, each a third-width.
+        el("div", { class: "editor-field-row" }, [
+          field({
+            label: t("editor.retry.baseMs"),
+            control: this.#input(
+              "retryBaseMs",
+              t("editor.retry.inherit"),
+              "number",
+              MS_STEP,
+            ),
+            errorKey: "retryBaseMs",
+          }),
+          field({
+            label: t("editor.retry.maxMs"),
+            control: this.#input(
+              "retryMaxMs",
+              t("editor.retry.inherit"),
+              "number",
+              MS_STEP,
+            ),
+            errorKey: "retryMaxMs",
+          }),
+          field({
+            label: t("editor.retry.maxAttempts"),
+            control: this.#input(
+              "retryMaxAttempts",
+              t("editor.retry.inherit"),
+              "number",
+            ),
+            errorKey: "retryMaxAttempts",
+          }),
+        ]),
       ]),
     );
 
