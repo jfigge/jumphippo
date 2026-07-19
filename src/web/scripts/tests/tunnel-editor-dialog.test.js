@@ -134,9 +134,9 @@ test("switching to dynamic hides the Exit field and drops the destination", asyn
   assert.equal(dlg.buildPayload().localPort, 1080);
   assert.equal("destination" in dlg.buildPayload(), false, "no destination");
   assert.ok(dlg.buildPayload().entryAddress === "1080");
-  // The Exit field's section is hidden for dynamic.
+  // The Exit field is hidden for dynamic (Entry then fills the shared row).
   assert.equal(
-    q(dlg, ".editor-input-exitAddress").closest(".editor-block").hidden,
+    q(dlg, ".editor-input-exitAddress").closest(".field").hidden,
     true,
   );
 });

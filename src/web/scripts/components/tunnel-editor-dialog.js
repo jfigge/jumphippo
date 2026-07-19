@@ -88,8 +88,7 @@ export class TunnelEditorDialog {
   #scheduleField; // Feature 150 — the optional per-tunnel schedule section
   #typeSelect; // Feature 110 forwarding-type <select>
   #entryField; // the Entry/Remote-bind/SOCKS field wrapper (relabelled per type)
-  #exitField; // the Exit/Local-target field wrapper (relabelled per type)
-  #exitSection; // hidden for the dynamic (SOCKS) type
+  #exitField; // the Exit/Local-target field wrapper (relabelled per type; hidden for dynamic)
   #entryWarningEl; // privileged-port / port-conflict (instant, soft)
   #entryResolveWarnEl; // Entry host not a bindable local address (debounced)
   #targetResolveWarnEl; // Target server doesn't resolve locally (debounced)
@@ -388,7 +387,6 @@ export class TunnelEditorDialog {
       hint: t("editor.exitPort.hint"),
       description: t("editor.exitPort.desc"),
     });
-    this.#exitSection = this.#section([this.#exitField]);
 
     // General — the basic tunnel: name, forwarding type, the three address fields,
     // and the credential. The route-validation block ("Test resolution") lives here
@@ -407,8 +405,13 @@ export class TunnelEditorDialog {
         }),
       ]),
       el("p", { class: "field-hint editor-type-hint" }),
+      // Entry point (left half) + Exit point (right half) share one row; for the
+      // dynamic type the Exit field is hidden and Entry fills the row.
       this.#section([
-        this.#entryField,
+        el("div", { class: "editor-field-row" }, [
+          this.#entryField,
+          this.#exitField,
+        ]),
         this.#entryWarningEl,
         this.#entryResolveWarnEl,
       ]),
@@ -426,7 +429,6 @@ export class TunnelEditorDialog {
         }),
         this.#targetResolveWarnEl,
       ]),
-      this.#exitSection,
       this.#credPicker.element,
     );
 
@@ -539,7 +541,9 @@ export class TunnelEditorDialog {
     if (cfg.exit) {
       this.#relabelField(this.#exitField, cfg.exit, this.#controls.exitAddress);
     }
-    this.#exitSection.hidden = !cfg.showExit;
+    // Hide the Exit field itself (not a wrapper section) so the flex row collapses
+    // Entry to full width for the dynamic type.
+    this.#exitField.hidden = !cfg.showExit;
     const hint = this.#dialog.body.querySelector(".editor-type-hint");
     if (hint) hint.textContent = t(`editor.type.${type}.desc`);
   }
