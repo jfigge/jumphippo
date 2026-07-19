@@ -561,5 +561,6 @@
   "console.window.title": "コンソール",
   "console.status.connecting": "接続中…",
   "console.status.closed": "接続が閉じられました。",
-  "menu.newConsole": "新しいコンソール"
+  "menu.newConsole": "新しいコンソール",
+  "consoles.menu.assign": "グループに割り当て"
 }

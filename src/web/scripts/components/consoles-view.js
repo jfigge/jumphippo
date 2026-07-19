@@ -16,16 +16,20 @@
 
 // consoles-view.js — the CONSOLES section controller (Feature 200): the console
 // sibling of TunnelsView, but lean. It owns the console IPC (window.jumphippo
-// .consoles.*), the ConsoleEditorDialog, and the ConsoleList, and mounts into the
-// sidebar stack beneath the TUNNELS section. Opening a console launches its own
-// terminal window (main process) — there is no detail pane here. Live session
-// state arrives over `jumphippo:console-state` and drives each row's status lamp.
+// .consoles.*), the ConsoleEditorDialog, the ConsoleList, and — reusing the SAME
+// shared groups tunnels use (Feature 140) — a GroupEditorDialog + the group model
+// (collapse, assign, reorder). It mounts into the sidebar stack beneath the TUNNELS
+// section. Opening a console launches its own terminal window (main process) —
+// there is no detail pane here. Live session state arrives over
+// `jumphippo:console-state` and drives each row's status lamp.
 
 import { el } from "../dom.js";
 import { t } from "../i18n.js";
 import { PopupManager } from "../popup-manager.js";
 import { ConsoleList } from "./console-list.js";
 import { ConsoleEditorDialog } from "./console-editor-dialog.js";
+import { GroupEditorDialog } from "./group-editor-dialog.js";
+import { UNGROUPED_ID } from "./tunnel-grouping.js";
 
 /** Lamp priority when a console has more than one open session. */
 function rankState(s) {
@@ -40,13 +44,18 @@ export class ConsolesView {
   #jumphippo;
   #list;
   #editor;
+  #groupEditor;
 
   #defs = [];
+  #groups = [];
+  #collapsed = new Set();
+  #pendingAssignIds = null; // consoles awaiting a just-created group
   #sessions = new Map(); // sessionId → { id, state } — the live open sessions
   #states = new Map(); // consoleId → aggregate lamp state
   #selectedId = null;
 
   #onConsolesChanged;
+  #onGroupsChanged;
   #onConsoleState;
   #onNewConsole;
 
@@ -59,25 +68,40 @@ export class ConsolesView {
       onSaved: (record) => this.#afterSaved(record),
     });
 
+    this.#groupEditor = new GroupEditorDialog({
+      jumphippo: this.#jumphippo,
+      onSaved: (record) => this.#afterGroupSaved(record),
+    });
+
     this.#list = new ConsoleList({
       onSelect: (id) => this.#select(id),
       onAdd: () => this.#editor.openCreate(),
       onOpen: (id) => this.#open(id),
       onContextMenu: (id) => this.#showContextMenu(id),
+      onToggleCollapse: (sectionId) => this.#toggleCollapse(sectionId),
+      onGroupMenu: (sectionId) => this.#showGroupMenu(sectionId),
+      onMoveConsole: (id, groupId, beforeId) =>
+        this.#moveConsole(id, groupId, beforeId),
+      onReorderGroups: (fromId, toId) => this.#reorderGroups(fromId, toId),
     });
 
     this.#el = el("div", { class: "consoles-view" }, [
       this.#list.element,
       this.#editor.element,
+      this.#groupEditor.element,
     ]);
 
     this.#onConsolesChanged = () => this.load();
+    // A group create/edit/delete anywhere (this view's editor, the tunnels view, or
+    // another window) re-reads the shared group list so the console tree refreshes.
+    this.#onGroupsChanged = () => this.load();
     this.#onConsoleState = (e) => this.#applyState(e.detail);
     this.#onNewConsole = () => this.createNew();
     window.addEventListener(
       "jumphippo:consoles-changed",
       this.#onConsolesChanged,
     );
+    window.addEventListener("jumphippo:groups-changed", this.#onGroupsChanged);
     window.addEventListener("jumphippo:console-state", this.#onConsoleState);
     window.addEventListener("jumphippo:new-console", this.#onNewConsole);
   }
@@ -86,13 +110,17 @@ export class ConsolesView {
     return this.#el;
   }
 
-  /** Load the console list + the currently-open sessions, then render. */
+  /** Load the console list, the shared groups, collapse state, and open sessions. */
   async load() {
-    const [defs, sessions] = await Promise.all([
+    const [defs, groups, sessions, settings] = await Promise.all([
       this.#jumphippo?.consoles?.list?.() ?? [],
+      this.#jumphippo?.groups?.list?.() ?? [],
       this.#jumphippo?.consoles?.sessions?.() ?? [],
+      this.#jumphippo?.settings?.get?.() ?? {},
     ]);
     this.#defs = Array.isArray(defs) ? defs : [];
+    this.#groups = Array.isArray(groups) ? groups : [];
+
     this.#sessions.clear();
     for (const s of Array.isArray(sessions) ? sessions : []) {
       if (s && s.sessionId) {
@@ -100,7 +128,21 @@ export class ConsolesView {
       }
     }
     this.#recomputeStates();
+
+    // Per-group collapsed state — the consoles' own map, independent of tunnels'.
+    const collapsedMap =
+      settings && typeof settings.consoleGroupCollapsed === "object"
+        ? settings.consoleGroupCollapsed
+        : {};
+    this.#collapsed = new Set(
+      Object.keys(collapsedMap).filter((k) => collapsedMap[k]),
+    );
+
     this.#list.setData(this.#defs, this.#states, this.#selectedId);
+    this.#list.setGrouping({
+      groups: this.#groups,
+      collapsedIds: this.#collapsed,
+    });
   }
 
   /** Open a blank console editor (the File ▸ New Console menu command). */
@@ -113,6 +155,10 @@ export class ConsolesView {
     window.removeEventListener(
       "jumphippo:consoles-changed",
       this.#onConsolesChanged,
+    );
+    window.removeEventListener(
+      "jumphippo:groups-changed",
+      this.#onGroupsChanged,
     );
     window.removeEventListener("jumphippo:console-state", this.#onConsoleState);
     window.removeEventListener("jumphippo:new-console", this.#onNewConsole);
@@ -153,6 +199,13 @@ export class ConsolesView {
       { id: "open", label: t("consoles.menu.open") },
       { type: "separator" },
       { id: "edit", label: t("consoles.menu.edit") },
+      // Assign to one of the shared groups (or create one). Empty groups appear
+      // here even though they're hidden from the sidebar tree.
+      {
+        label: t("consoles.menu.assign"),
+        submenu: this.#assignMenuItems(def.groupId || null),
+      },
+      { type: "separator" },
       { id: "delete", label: t("consoles.menu.delete") },
     ];
     const action = await this.#jumphippo?.contextMenu?.popup?.({ items });
@@ -167,6 +220,9 @@ export class ConsolesView {
         this.#confirmDelete(id);
         break;
       default:
+        if (typeof action === "string" && action.startsWith("assign:")) {
+          this.#handleAssignChoice(action, [id]);
+        }
         break;
     }
   }
@@ -189,6 +245,205 @@ export class ConsolesView {
         await this.load();
       },
     });
+  }
+
+  // ── Groups (shared with tunnels, Feature 140) ─────────────────────────────────
+
+  #toggleCollapse(sectionId) {
+    if (this.#collapsed.has(sectionId)) this.#collapsed.delete(sectionId);
+    else this.#collapsed.add(sectionId);
+    this.#list.setGrouping({
+      groups: this.#groups,
+      collapsedIds: this.#collapsed,
+    });
+    this.#persistCollapsed();
+  }
+
+  #persistCollapsed() {
+    const map = {};
+    for (const id of this.#collapsed) map[id] = true;
+    this.#jumphippo?.settings
+      ?.set?.({ consoleGroupCollapsed: map })
+      ?.catch?.(() => {});
+  }
+
+  async #showGroupMenu(sectionId) {
+    // Consoles have no arm/pause, so a group header menu is just edit / delete
+    // (Ungrouped has neither). Both act on the shared group record.
+    if (sectionId === UNGROUPED_ID) return;
+    const items = [
+      { id: "edit", label: t("group.menu.edit") },
+      { id: "delete", label: t("group.menu.delete") },
+    ];
+    const action = await this.#jumphippo?.contextMenu?.popup?.({ items });
+    if (action === "edit") this.#editGroup(sectionId);
+    else if (action === "delete") this.#confirmDeleteGroup(sectionId);
+  }
+
+  #newGroup(assignIds) {
+    this.#pendingAssignIds = Array.isArray(assignIds) ? assignIds : null;
+    this.#groupEditor.openCreate();
+  }
+
+  #editGroup(groupId) {
+    const group = this.#groups.find((g) => g.id === groupId);
+    if (group) this.#groupEditor.openEdit(group);
+  }
+
+  #confirmDeleteGroup(groupId) {
+    const group = this.#groups.find((g) => g.id === groupId);
+    if (!group) return;
+    PopupManager.confirmDelete({
+      message: t("group.delete.message", { name: group.label }),
+      onConfirm: async () => {
+        const result = await this.#jumphippo?.groups?.delete?.(groupId);
+        if (result && result.__hippoError) {
+          PopupManager.notify({ message: result.message || "Delete failed" });
+          return;
+        }
+        // The delete also cleared the group from any tunnels — tell the tunnels
+        // view (and any other listener) to re-read the shared group set.
+        window.dispatchEvent(new CustomEvent("jumphippo:groups-changed"));
+        await this.load();
+      },
+    });
+  }
+
+  async #afterGroupSaved(record) {
+    // A group created to receive a pending selection → move those consoles into it.
+    // Otherwise the jumphippo:groups-changed listener reloads.
+    if (this.#pendingAssignIds && record && record.id) {
+      const ids = this.#pendingAssignIds;
+      this.#pendingAssignIds = null;
+      await this.#assignMany(ids, record.id);
+    } else {
+      this.#pendingAssignIds = null;
+    }
+  }
+
+  /** Move a set of consoles into a group (or to Ungrouped when groupId is null). */
+  async #assignMany(ids, groupId) {
+    const writes = [];
+    for (const id of ids) {
+      const def = this.#defs.find((d) => d.id === id);
+      if (!def) continue;
+      writes.push(
+        this.#jumphippo?.consoles?.update?.(
+          id,
+          this.#assignPayload(def, groupId),
+        ),
+      );
+    }
+    try {
+      await Promise.all(writes);
+    } catch {
+      // best-effort; a failed assignment just leaves that console where it was
+    }
+    window.dispatchEvent(new CustomEvent("jumphippo:consoles-changed"));
+    await this.load();
+  }
+
+  /**
+   * Move a console into a group AND sequence it there (treeview drag): rebuild the
+   * global display order with the dragged console re-inserted before `beforeId` (or
+   * appended to the target group when `beforeId` is null), flip its group membership
+   * if it changed, and persist. `groupId` null → Ungrouped.
+   */
+  async #moveConsole(id, groupId, beforeId) {
+    const def = this.#defs.find((d) => d.id === id);
+    if (!def) return;
+    const groupOf = (d) =>
+      d.groupId && this.#groups.some((g) => g.id === d.groupId)
+        ? d.groupId
+        : null;
+    const target =
+      groupId && this.#groups.some((g) => g.id === groupId) ? groupId : null;
+    const currentGroupId = groupOf(def);
+
+    const order = this.#defs.map((d) => d.id).filter((x) => x !== id);
+    let idx;
+    if (beforeId != null && order.includes(beforeId)) {
+      idx = order.indexOf(beforeId);
+    } else {
+      const members = this.#defs.filter(
+        (d) => d.id !== id && groupOf(d) === target,
+      );
+      idx = members.length
+        ? order.indexOf(members[members.length - 1].id) + 1
+        : order.length;
+    }
+    order.splice(idx, 0, id);
+
+    const sameOrder =
+      order.length === this.#defs.length &&
+      order.every((x, i) => x === this.#defs[i].id);
+    if (currentGroupId === target && sameOrder) return; // nothing changed
+
+    if (currentGroupId !== target) {
+      const res = await this.#jumphippo?.consoles?.update?.(
+        id,
+        this.#assignPayload(def, target),
+      );
+      if (res && res.__hippoError) {
+        PopupManager.notify({ message: res.message || "Update error" });
+        return;
+      }
+    }
+    await this.#jumphippo?.consoles?.reorder?.(order);
+    window.dispatchEvent(new CustomEvent("jumphippo:consoles-changed"));
+    await this.load();
+  }
+
+  /** A full-definition update payload that only changes group membership. */
+  #assignPayload(def, groupId) {
+    const payload = { ...def };
+    delete payload.order; // derived
+    delete payload.routeSummary; // derived
+    delete payload.group; // derived
+    if (groupId) payload.groupId = groupId;
+    else delete payload.groupId; // omit → the store drops it (ungrouped)
+    return payload;
+  }
+
+  async #reorderGroups(fromId, toId) {
+    const ids = this.#groups.map((g) => g.id);
+    const from = ids.indexOf(fromId);
+    if (from === -1 || fromId === toId) return;
+    ids.splice(from, 1);
+    const at = ids.indexOf(toId);
+    ids.splice(at === -1 ? ids.length : at, 0, fromId);
+    const result = await this.#jumphippo?.groups?.reorder?.(ids);
+    if (result && result.__hippoError) return;
+    // Group order is shared — refresh the tunnels view too.
+    window.dispatchEvent(new CustomEvent("jumphippo:groups-changed"));
+    await this.load();
+  }
+
+  /** The "Assign to group" submenu items — ALL groups, incl. currently-empty ones. */
+  #assignMenuItems(currentGroupId) {
+    const items = this.#groups.map((g) => ({
+      id: `assign:${g.id}`,
+      label: g.label,
+      enabled: g.id !== currentGroupId,
+    }));
+    items.push({
+      id: `assign:${UNGROUPED_ID}`,
+      label: t("group.ungrouped"),
+      enabled: Boolean(currentGroupId),
+    });
+    items.push({ type: "separator" });
+    items.push({ id: "assign:__new", label: t("group.newEllipsis") });
+    return items;
+  }
+
+  #handleAssignChoice(choice, ids) {
+    if (typeof choice !== "string" || !choice.startsWith("assign:")) return;
+    const target = choice.slice("assign:".length);
+    if (target === "__new") {
+      this.#newGroup(ids);
+      return;
+    }
+    this.#assignMany(ids, target === UNGROUPED_ID ? null : target);
   }
 
   // ── Live session state → row lamps ────────────────────────────────────────────

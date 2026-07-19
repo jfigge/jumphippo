@@ -216,6 +216,22 @@ test("renders a section per group plus an implicit Ungrouped section", () => {
   assert.equal(rows(list).length, 2);
 });
 
+test("an empty group is hidden from the tree (still available in the assign menu)", () => {
+  const { list } = mount();
+  list.setData([{ id: "a", name: "A", groupId: "g1" }], new Map());
+  list.setGrouping({
+    groups: [
+      { id: "g1", label: "Work", color: "blue" },
+      { id: "g2", label: "Home", color: "teal" }, // empty → hidden
+    ],
+    collapsedIds: [],
+  });
+  const names = headers(list).map(
+    (h) => h.querySelector(".group-name").textContent,
+  );
+  assert.deepEqual(names, ["Work"], "the empty 'Home' group is not rendered");
+});
+
 test("rows in a section carry a data-section hook (tree indent); flat rows don't", () => {
   const { list } = mount();
   // No groups → a flat list, rows are not nested (no hook).

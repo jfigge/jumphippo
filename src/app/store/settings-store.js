@@ -45,6 +45,10 @@ const DEFAULTS = Object.freeze({
   // A single object-valued key — the renderer read-modify-writes the whole map (the
   // store shallow-merges, so a partial write would replace, not merge, the map).
   groupCollapsed: {},
+  // Feature 200: the SAME groups render in both the tunnels and consoles sidebars,
+  // so each section tracks its own collapsed state — this is the consoles' map,
+  // independent of `groupCollapsed` (a group can be collapsed in one, open in the other).
+  consoleGroupCollapsed: {},
 
   // ── Feature 60 behaviour ──────────────────────────────────────────────────
   launchAtLogin: false, // start Jump Hippo at OS login

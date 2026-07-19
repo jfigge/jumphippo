@@ -62,7 +62,9 @@ function applyDefaults(def) {
 // blank. On update the (full, authoritative) payload's ABSENCE of one means the
 // user cleared it, so a shallow merge must not resurrect the stored value. `sshHost`
 // (the mandatory target server) is NOT here — omitting it keeps the stored value.
-const OPTIONAL_FIELDS = ["sshPort"];
+// `groupId` (Feature 140-style grouping) IS here: absent means the user cleared it
+// (moved the console to Ungrouped), so a shallow merge must drop the stored group.
+const OPTIONAL_FIELDS = ["sshPort", "groupId"];
 
 /** Index an array of `{ id }` records into a Map for O(1) reference lookup. */
 function indexById(records) {
@@ -87,22 +89,30 @@ class ConsoleStore {
     writeDoc(this._paths, { ...doc, consoles });
   }
 
-  /** Renderer view of a stored console: record + derived order/routeSummary. */
-  _view(def, order, jumpHostsById) {
+  /**
+   * Renderer view of a stored console: record + derived order/routeSummary and the
+   * resolved group (label/colour) so the list needn't join. `group` is the stored
+   * group record (`{ id, label, color }`) or null when ungrouped / dangling.
+   */
+  _view(def, order, jumpHostsById, groupsById) {
     return {
       ...def,
       order,
       routeSummary: summariseConsoleRoute(def, { jumpHostsById }),
+      group: def.groupId ? (groupsById.get(def.groupId) ?? null) : null,
     };
   }
 
   // ── Renderer-facing reads (reference shape; no secrets on a console) ──────────
 
-  /** Every console, in order, with a derived route summary. */
+  /** Every console, in order, with a derived route summary + resolved group. */
   list() {
     const doc = this._read();
     const jumpHostsById = indexById(doc.jumpHosts);
-    return doc.consoles.map((def, i) => this._view(def, i, jumpHostsById));
+    const groupsById = indexById(doc.groups);
+    return doc.consoles.map((def, i) =>
+      this._view(def, i, jumpHostsById, groupsById),
+    );
   }
 
   /** One console by id, or null if absent. */
@@ -110,7 +120,12 @@ class ConsoleStore {
     const doc = this._read();
     const i = doc.consoles.findIndex((d) => d && d.id === id);
     if (i === -1) return null;
-    return this._view(doc.consoles[i], i, indexById(doc.jumpHosts));
+    return this._view(
+      doc.consoles[i],
+      i,
+      indexById(doc.jumpHosts),
+      indexById(doc.groups),
+    );
   }
 
   // ── In-process reads (resolved + decrypted — manager only, never over IPC) ────
@@ -163,12 +178,14 @@ class ConsoleStore {
     record.id = io.newUUID();
     delete record.order; // derived from array position, never stored
     delete record.routeSummary; // derived, never stored
+    delete record.group; // derived from groupId, never stored
     doc.consoles.push(record);
     this._writeConsoles(doc, doc.consoles);
     return this._view(
       record,
       doc.consoles.length - 1,
       indexById(doc.jumpHosts),
+      indexById(doc.groups),
     );
   }
 
@@ -193,9 +210,15 @@ class ConsoleStore {
 
     delete merged.order;
     delete merged.routeSummary;
+    delete merged.group; // derived, never stored
     doc.consoles[i] = merged;
     this._writeConsoles(doc, doc.consoles);
-    return this._view(merged, i, indexById(doc.jumpHosts));
+    return this._view(
+      merged,
+      i,
+      indexById(doc.jumpHosts),
+      indexById(doc.groups),
+    );
   }
 
   /** Remove a console. Throws NOT_FOUND for an unknown id. */
@@ -234,7 +257,8 @@ class ConsoleStore {
 
     this._writeConsoles(doc, next);
     const jumpHostsById = indexById(doc.jumpHosts);
-    return next.map((def, i) => this._view(def, i, jumpHostsById));
+    const groupsById = indexById(doc.groups);
+    return next.map((def, i) => this._view(def, i, jumpHostsById, groupsById));
   }
 
   /**
@@ -255,6 +279,11 @@ class ConsoleStore {
         errors[`jumpHostIds[${i}]`] = "referenced jump host does not exist";
       }
     });
+    // Group membership is optional: only a NON-empty groupId that doesn't resolve
+    // is an error. Unset / null (ungrouped) is always valid.
+    if (def.groupId && !doc.groups.some((g) => g && g.id === def.groupId)) {
+      errors.groupId = "referenced group does not exist";
+    }
     if (Object.keys(errors).length > 0) throw invalidConsoleError(errors);
   }
 }

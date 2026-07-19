@@ -177,6 +177,60 @@ test("reorder rewrites display order and appends any omitted console", () => {
   }
 });
 
+test("group membership resolves in the view, rejects a dangling id, and clears on update", () => {
+  const dir = freshDir();
+  try {
+    const stores = new Stores(dir);
+    const cred = makeCred(stores.credentialStore());
+    const group = stores.groupStore().create({ label: "Work", color: "blue" });
+
+    // Create with a group → the view carries the resolved group record.
+    const created = stores
+      .consoleStore()
+      .create(makeConsole(cred.id, { groupId: group.id }));
+    assert.equal(created.groupId, group.id);
+    assert.equal(created.group.label, "Work");
+
+    // A dangling groupId is rejected.
+    assert.throws(
+      () =>
+        stores
+          .consoleStore()
+          .create(makeConsole(cred.id, { groupId: "ghost" })),
+      (err) => err.code === "INVALID_DEFINITION" && !!err.errors.groupId,
+    );
+
+    // Omitting groupId on update moves the console to Ungrouped (group cleared).
+    const updated = stores
+      .consoleStore()
+      .update(created.id, makeConsole(cred.id));
+    assert.equal(updated.groupId, undefined);
+    assert.equal(updated.group, null);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("deleting a group clears the groupId from its consoles (no dangling ref)", () => {
+  const dir = freshDir();
+  try {
+    const stores = new Stores(dir);
+    const cred = makeCred(stores.credentialStore());
+    const group = stores.groupStore().create({ label: "Work", color: "teal" });
+    const c = stores
+      .consoleStore()
+      .create(makeConsole(cred.id, { groupId: group.id }));
+
+    // Delete is not blocked; the console falls back to ungrouped in the same write.
+    stores.groupStore().delete(group.id);
+    const after = stores.consoleStore().get(c.id);
+    assert.equal(after.groupId, undefined);
+    assert.equal(after.group, null);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 test("a credential / jump host used by a console cannot be deleted", () => {
   const dir = freshDir();
   try {

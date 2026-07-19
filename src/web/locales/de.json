@@ -561,5 +561,6 @@
   "console.window.title": "Konsole",
   "console.status.connecting": "Verbindung wird hergestellt…",
   "console.status.closed": "Verbindung geschlossen.",
-  "menu.newConsole": "Neue Konsole"
+  "menu.newConsole": "Neue Konsole",
+  "consoles.menu.assign": "Gruppe zuweisen"
 }

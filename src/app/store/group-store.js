@@ -112,9 +112,9 @@ class GroupStore {
   }
 
   /**
-   * Remove a group. Not delete-guarded: any tunnel that referenced it falls back
-   * to ungrouped (its `groupId` is cleared in the SAME write, so a dangling
-   * reference can never be left behind). Throws NOT_FOUND for an unknown id.
+   * Remove a group. Not delete-guarded: any tunnel OR console that referenced it
+   * falls back to ungrouped (its `groupId` is cleared in the SAME write, so a
+   * dangling reference can never be left behind). Throws NOT_FOUND for an unknown id.
    */
   delete(id) {
     const doc = this._read();
@@ -122,15 +122,24 @@ class GroupStore {
     if (i === -1) throw io.notFoundError(`group not found: ${id}`);
 
     doc.groups.splice(i, 1);
-    const tunnels = doc.tunnels.map((t) => {
-      if (t && t.groupId === id) {
-        const { groupId, ...rest } = t;
-        void groupId; // dropped: this tunnel falls back to ungrouped
+    // Drop the deleted group's id from every member (tunnels + consoles) so nothing
+    // is left dangling — each falls back to ungrouped.
+    const dropGroup = (r) => {
+      if (r && r.groupId === id) {
+        const { groupId, ...rest } = r;
+        void groupId;
         return rest;
       }
-      return t;
+      return r;
+    };
+    const tunnels = doc.tunnels.map(dropGroup);
+    const consoles = doc.consoles.map(dropGroup);
+    writeDoc(this._paths, {
+      ...doc,
+      groups: doc.groups,
+      tunnels,
+      consoles,
     });
-    writeDoc(this._paths, { ...doc, groups: doc.groups, tunnels });
     return { id };
   }
 

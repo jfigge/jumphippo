@@ -467,6 +467,27 @@ test("renders a group header row (spanning all columns) + an Ungrouped section",
   );
 });
 
+test("an empty group is hidden from the table (parity with the tree)", () => {
+  const { table } = mount();
+  table.setData(
+    [{ id: "a", name: "A", groupId: "g1" }],
+    new Map([["a", "connected"]]),
+    new Map(),
+    "a",
+  );
+  table.setGrouping({
+    groups: [
+      { id: "g1", label: "Work", color: "blue" },
+      { id: "g2", label: "Home", color: "teal" }, // empty → hidden
+    ],
+    collapsedIds: [],
+  });
+  const names = groupRows(table).map(
+    (r) => r.querySelector(".group-name").textContent,
+  );
+  assert.deepEqual(names, ["Work"], "the empty 'Home' group is not rendered");
+});
+
 test("a collapsed group hides its rows but keeps the header row", () => {
   const { table } = mount();
   table.setData([{ id: "a", name: "A", groupId: "g1" }], new Map(), new Map());

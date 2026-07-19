@@ -768,6 +768,9 @@ export class TunnelsView {
           PopupManager.notify({ message: result.message || "Delete failed" });
           return;
         }
+        // Groups are shared with the consoles sidebar (Feature 200) — announce the
+        // change so it re-reads the group set too.
+        window.dispatchEvent(new CustomEvent("jumphippo:groups-changed"));
         await this.load();
       },
     });
@@ -882,6 +885,8 @@ export class TunnelsView {
     ids.splice(at === -1 ? ids.length : at, 0, fromId);
     const result = await this.#jumphippo?.groups?.reorder?.(ids);
     if (result && result.__hippoError) return;
+    // Group order is shared with the consoles sidebar (Feature 200).
+    window.dispatchEvent(new CustomEvent("jumphippo:groups-changed"));
     await this.load();
   }
 

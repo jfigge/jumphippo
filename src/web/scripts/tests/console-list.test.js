@@ -27,12 +27,25 @@ import { t } from "../i18n.js";
 
 function mount() {
   resetDom();
-  const calls = { select: [], add: 0, open: [], context: [] };
+  const calls = {
+    select: [],
+    add: 0,
+    open: [],
+    context: [],
+    collapse: [],
+    groupMenu: [],
+    move: [],
+    reorder: [],
+  };
   const list = new ConsoleList({
     onSelect: (id) => calls.select.push(id),
     onAdd: () => (calls.add += 1),
     onOpen: (id) => calls.open.push(id),
     onContextMenu: (id) => calls.context.push(id),
+    onToggleCollapse: (id) => calls.collapse.push(id),
+    onGroupMenu: (id) => calls.groupMenu.push(id),
+    onMoveConsole: (...a) => calls.move.push(a),
+    onReorderGroups: (...a) => calls.reorder.push(a),
   });
   document.body.appendChild(list.element);
   return { list, calls };
@@ -110,4 +123,69 @@ test("shows the empty state when there are no consoles", () => {
     empty.querySelector(".tunnel-list-empty-title").textContent,
     t("consoles.empty"),
   );
+});
+
+// ── Grouping (shared groups) ─────────────────────────────────────────────────
+
+const GROUPS = [
+  { id: "g1", label: "Work", color: "blue" },
+  { id: "g2", label: "Home", color: "teal" },
+];
+const headers = (list) => [...list.element.querySelectorAll(".group-header")];
+
+test("renders a section per NON-EMPTY group plus Ungrouped, hiding empty groups", () => {
+  const { list } = mount();
+  list.setData(
+    [
+      { id: "a", name: "db", groupId: "g1" },
+      { id: "b", name: "cache" }, // ungrouped
+    ],
+    new Map(),
+    null,
+  );
+  // g2 is empty → hidden; only "Work" + "Ungrouped" render.
+  list.setGrouping({ groups: GROUPS });
+  const names = headers(list).map(
+    (h) => h.querySelector(".group-name").textContent,
+  );
+  assert.deepEqual(names, ["Work", t("group.ungrouped")]);
+  assert.equal(rows(list).length, 2);
+});
+
+test("the group header count reads open/total from live state", () => {
+  const { list } = mount();
+  list.setData(
+    [
+      { id: "a", name: "db", groupId: "g1" },
+      { id: "b", name: "app", groupId: "g1" },
+    ],
+    new Map([["a", "connected"]]),
+    null,
+  );
+  list.setGrouping({ groups: GROUPS });
+  const work = headers(list)[0];
+  assert.equal(
+    work.querySelector(".group-count").textContent,
+    t("group.count", { armed: 1, total: 2 }),
+  );
+});
+
+test("a collapsed section hides its rows; the chevron toggles collapse", () => {
+  const { list, calls } = mount();
+  list.setData([{ id: "a", name: "db", groupId: "g1" }], new Map(), null);
+  list.setGrouping({ groups: GROUPS, collapsedIds: new Set(["g1"]) });
+  assert.equal(rows(list).length, 0, "collapsed → rows hidden");
+
+  headers(list)[0].querySelector(".group-chevron").click();
+  assert.deepEqual(calls.collapse, ["g1"]);
+});
+
+test("right-clicking a group header reports it for the group menu", () => {
+  const { list, calls } = mount();
+  list.setData([{ id: "a", name: "db", groupId: "g1" }], new Map(), null);
+  list.setGrouping({ groups: GROUPS });
+  headers(list)[0].dispatchEvent(
+    new Event("contextmenu", { bubbles: true, cancelable: true }),
+  );
+  assert.deepEqual(calls.groupMenu, ["g1"]);
 });

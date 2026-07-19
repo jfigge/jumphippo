@@ -240,6 +240,11 @@ const CONSOLE_FIXTURES = [
     credentialId: "cred-1",
     jumpHostIds: ["a", 5, ""],
   },
+  // Group membership (shared with tunnels).
+  { name: "s", sshHost: "h", credentialId: "cred-1", groupId: "g1" },
+  { name: "s", sshHost: "h", credentialId: "cred-1", groupId: null },
+  { name: "s", sshHost: "h", credentialId: "cred-1", groupId: "" },
+  { name: "s", sshHost: "h", credentialId: "cred-1", groupId: 5 },
   {},
   null,
   [],

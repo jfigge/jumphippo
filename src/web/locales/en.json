@@ -215,6 +215,7 @@
   "consoles.delete.message": "Delete the console “{name}”?",
   "consoles.menu.open": "Open",
   "consoles.menu.edit": "Edit",
+  "consoles.menu.assign": "Assign to group",
   "consoles.menu.delete": "Delete",
   "console.window.title": "Console",
   "console.status.connecting": "Connecting…",

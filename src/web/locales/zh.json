@@ -561,5 +561,6 @@
   "console.window.title": "控制台",
   "console.status.connecting": "正在连接…",
   "console.status.closed": "连接已关闭。",
-  "menu.newConsole": "新建控制台"
+  "menu.newConsole": "新建控制台",
+  "consoles.menu.assign": "分配到组"
 }

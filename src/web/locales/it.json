@@ -561,5 +561,6 @@
   "console.window.title": "Console",
   "console.status.connecting": "Connessione…",
   "console.status.closed": "Connessione chiusa.",
-  "menu.newConsole": "Nuova console"
+  "menu.newConsole": "Nuova console",
+  "consoles.menu.assign": "Assegna al gruppo"
 }

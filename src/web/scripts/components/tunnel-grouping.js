@@ -23,6 +23,11 @@
 // collapsible sections ordered by group order; ungrouped tunnels fall into an
 // implicit "Ungrouped" section shown last. When there are NO groups at all,
 // `buildSections` returns null so a view renders its plain flat list unchanged.
+//
+// A group with NO members is omitted from the tree (it would just be visual noise)
+// — it stays reachable through each view's "Assign to group" menu, which lists every
+// group regardless of membership. This is the single, shared rule so the tunnels
+// cards sidebar, the tunnels list table, and the consoles sidebar all behave alike.
 
 import { GROUP_COLORS } from "../validate.js";
 
@@ -42,10 +47,11 @@ export function groupColorKey(group) {
 
 /**
  * Split `defs` into ordered sections by group. Returns null when there are no
- * groups (the caller renders a flat list). Every group gets a section (even an
- * empty one, so it stays a visible drop target); ungrouped tunnels — including any
- * whose `groupId` no longer resolves — collect into a trailing "Ungrouped" section
- * shown only when non-empty.
+ * groups (the caller renders a flat list). Only groups that actually hold a member
+ * get a section — an EMPTY group is omitted (see the module note; it stays in each
+ * view's "Assign to group" menu). Ungrouped rows — including any whose `groupId` no
+ * longer resolves — collect into a trailing "Ungrouped" section shown only when
+ * non-empty.
  *
  * @param {object[]} defs   tunnel rows (each may carry an optional `groupId`)
  * @param {object[]} groups ordered group records (`{ id, label, color }`)
@@ -74,12 +80,15 @@ export function buildSections(defs, groups, collapsedIds) {
     }
   }
 
-  const sections = list.map((g) => ({
-    id: g.id,
-    group: g,
-    defs: byGroup.get(g.id) || [],
-    collapsed: collapsed.has(g.id),
-  }));
+  // Only non-empty groups get a section; an empty group is hidden from the tree.
+  const sections = list
+    .map((g) => ({
+      id: g.id,
+      group: g,
+      defs: byGroup.get(g.id) || [],
+      collapsed: collapsed.has(g.id),
+    }))
+    .filter((s) => s.defs.length > 0);
   if (ungrouped.length > 0) {
     sections.push({
       id: UNGROUPED_ID,

@@ -505,5 +505,16 @@ export function validateConsole(def) {
     }
   }
 
+  // Optional group membership (shared with tunnels, Feature 140): absent / null =
+  // ungrouped; a present value must be a non-empty id string. Existence is a
+  // store-level concern (see console-store's _assertRefs).
+  if (
+    def.groupId !== undefined &&
+    def.groupId !== null &&
+    !isNonEmptyString(def.groupId)
+  ) {
+    errors.groupId = "groupId must be a non-empty string when set";
+  }
+
   return { valid: Object.keys(errors).length === 0, errors };
 }
