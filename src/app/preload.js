@@ -92,13 +92,16 @@ contextBridge.exposeInMainWorld("jumphippo", {
       ipcRenderer.invoke("tunnels:apply-many", { ids, action }),
   },
 
-  // ── Consoles (Feature 200) ────────────────────────────────────────────────
+  // ── Consoles (Feature 200 / Console Manager 210) ──────────────────────────
   // Interactive remote-shell targets. CRUD mirrors tunnels (reference records,
   // no secrets — secrets live in the shared credential store). `open` mints a
   // session + terminal window and resolves to `{ sessionId, id }` (or a
   // `{ __hippoError }` envelope); the interactive byte stream then flows over the
   // separate one-way console:* channels the terminal window's own bridge owns, not
-  // here. Live session state arrives via the jumphippo:console-state event below.
+  // here. The Console Manager (210) reads runtime snapshots (`sessions` / `session`,
+  // metadata + a bounded recent-output preview — never a secret), drives windows
+  // (`reveal` / `restart`), and gates the live `jumphippo:console-activity` stream
+  // with `watch`. Live state arrives via jumphippo:console-state / -activity below.
   consoles: {
     list: () => ipcRenderer.invoke("consoles:list"),
     get: (id) => ipcRenderer.invoke("consoles:get", id),
@@ -109,6 +112,10 @@ contextBridge.exposeInMainWorld("jumphippo", {
     open: (id) => ipcRenderer.invoke("consoles:open", id),
     close: (sessionId) => ipcRenderer.invoke("consoles:close", sessionId),
     sessions: () => ipcRenderer.invoke("consoles:sessions"),
+    session: (sessionId) => ipcRenderer.invoke("consoles:session", sessionId),
+    watch: (sessionIds) => ipcRenderer.invoke("consoles:watch", sessionIds),
+    reveal: (sessionId) => ipcRenderer.invoke("consoles:reveal", sessionId),
+    restart: (sessionId) => ipcRenderer.invoke("consoles:restart", sessionId),
   },
 
   // ── Reusable credentials (Feature 45) ─────────────────────────────────────
@@ -226,6 +233,12 @@ contextBridge.exposeInMainWorld("jumphippo", {
     copy: () => ipcRenderer.invoke("diagnostics:copy"),
   },
 
+  // clipboard.write copies plain (secret-free) text to the OS clipboard in main —
+  // the Console Manager's "Copy Connection Info" (Feature 210).
+  clipboard: {
+    write: (text) => ipcRenderer.invoke("shell:copy-text", text),
+  },
+
   // ── Scheduling & auto-arm (Feature 150) ───────────────────────────────────
   // `status` returns which tunnels the scheduler currently manages, each one's
   // next time-window transition, and whether the user has overridden it until
@@ -301,10 +314,17 @@ for (const channel of [
   // wanted, overridden, nextTransitionAt, nextTransitionKind }] } — ids + timings
   // only, never an SSID / network name / probe result.
   "jumphippo:schedule",
-  // Feature 200: a console session changed state. Carries { id, sessionId, state }
-  // (state ∈ connecting|connected|closed|error) — ids only, never a secret — so the
-  // sidebar's console row lamp can track open/closed.
+  // Feature 200/210: a console session changed state. Carries a runtime metadata
+  // snapshot { id, sessionId, state, windowNumber, openedAt, connectedAt,
+  // lastActivityAt, bytesIn, bytesOut, cols, rows, windowState, detail? } (state ∈
+  // connecting|connected|closed|error) — never output, never a secret — so the
+  // sidebar lamp + Console Manager details track state/window changes.
   "jumphippo:console-state",
+  // Feature 210: a coalesced byte/output heartbeat for the session(s) the main
+  // window is watching (see consoles.watch). Carries { sessionId, bytesIn, bytesOut,
+  // lastActivityAt, cols, rows, lines? } — `lines` (recent ANSI-stripped output)
+  // only when the consoleShowOutput setting permits it. Never a secret.
+  "jumphippo:console-activity",
 ]) {
   ipcRenderer.on(channel, (_event, detail) => {
     window.dispatchEvent(new CustomEvent(channel, { detail }));

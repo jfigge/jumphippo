@@ -57,11 +57,24 @@ function decodeSent(sent) {
     .join("");
 }
 
-function makeManager(def, sinks) {
+function makeSinks() {
+  return {
+    states: [],
+    opened: [],
+    sent: [],
+    activity: [],
+    revealed: [],
+    destroyed: [],
+  };
+}
+
+function makeManager(def, sinks, deps = {}) {
   return new ConsoleManager({
     getStores: () => fakeStores(def),
     broadcast: (channel, payload) => {
       if (channel === "jumphippo:console-state") sinks.states.push(payload);
+      if (channel === "jumphippo:console-activity")
+        sinks.activity.push(payload);
     },
     hostKeys: trustHostKeys,
     keyReader: fs.readFileSync,
@@ -69,6 +82,9 @@ function makeManager(def, sinks) {
     openWindow: (sessionId, meta) => sinks.opened.push({ sessionId, meta }),
     sendToWindow: (sessionId, channel, payload) =>
       sinks.sent.push({ sessionId, channel, payload }),
+    revealWindow: (sessionId) => sinks.revealed.push(sessionId),
+    destroyWindow: (sessionId) => sinks.destroyed.push(sessionId),
+    ...deps,
   });
 }
 
@@ -80,7 +96,7 @@ test("a console session relays a remote shell end-to-end", async () => {
     sshServer: sshHop(ssh.port),
     jumps: [],
   };
-  const sinks = { states: [], opened: [], sent: [] };
+  const sinks = makeSinks();
   const manager = makeManager(def, sinks);
 
   const { sessionId } = manager.open("c1");
@@ -115,7 +131,7 @@ test("a console session relays a remote shell end-to-end", async () => {
 test("opening an unknown console throws NOT_FOUND", () => {
   const manager = makeManager(
     { id: "known", name: "x", sshServer: sshHop(1), jumps: [] },
-    { states: [], opened: [], sent: [] },
+    makeSinks(),
   );
   assert.throws(() => manager.open("missing"), /console not found/);
 });
@@ -128,7 +144,7 @@ test("a failed connect ends the session with an error", async () => {
     sshServer: sshHop(deadPort),
     jumps: [],
   };
-  const sinks = { states: [], opened: [], sent: [] };
+  const sinks = makeSinks();
   const manager = makeManager(def, sinks);
 
   const { sessionId } = manager.open("c2");
@@ -142,4 +158,129 @@ test("a failed connect ends the session with an error", async () => {
     sinks.sent.some((m) => m.channel === "console:closed" && m.payload.error),
   );
   assert.equal(manager.sessions().length, 0);
+});
+
+// ── Console Manager runtime (Feature 210) ─────────────────────────────────────
+
+/** Open + connect a session against an echo shell; returns the live handles. */
+async function connectedSession(deps = {}) {
+  const ssh = await startSsh({ shell: true });
+  const def = {
+    id: "c1",
+    name: "test console",
+    sshServer: sshHop(ssh.port),
+    jumps: [],
+  };
+  const sinks = makeSinks();
+  const manager = makeManager(def, sinks, deps);
+  const { sessionId } = manager.open("c1");
+  manager.ready(sessionId, { cols: 80, rows: 24 });
+  await waitFor(() => sinks.states.some((s) => s.state === "connected"), {
+    timeout: 5000,
+  });
+  return { ssh, def, sinks, manager, sessionId };
+}
+
+test("sessions() returns a runtime metadata snapshot with no output", async () => {
+  const { ssh, manager, sessionId } = await connectedSession();
+  const [snap] = manager.sessions();
+  assert.equal(snap.sessionId, sessionId);
+  assert.equal(snap.state, "connected");
+  assert.equal(snap.windowNumber, 1);
+  assert.equal(typeof snap.openedAt, "number");
+  assert.equal(typeof snap.connectedAt, "number");
+  assert.deepEqual(Object.keys(snap.windowState).sort(), [
+    "focused",
+    "fullScreen",
+    "minimized",
+    "visible",
+  ]);
+  assert.equal("recentLines" in snap, false); // metadata only on the list snapshot
+  manager.close(sessionId);
+  await ssh.close();
+});
+
+test("a watched session streams coalesced activity with recent output", async () => {
+  const { ssh, manager, sinks, sessionId } = await connectedSession();
+  manager.watch([sessionId]);
+  manager.input(sessionId, "hello\n");
+  await waitFor(
+    () =>
+      sinks.activity.some(
+        (a) =>
+          a.sessionId === sessionId &&
+          Array.isArray(a.lines) &&
+          a.lines.some((l) => l.includes("hello")),
+      ),
+    { timeout: 5000 },
+  );
+  const last = sinks.activity[sinks.activity.length - 1];
+  assert.ok(last.bytesIn > 0);
+  assert.ok(last.bytesOut > 0);
+  manager.close(sessionId);
+  await ssh.close();
+});
+
+test("activity carries no output lines when the setting disables it", async () => {
+  const { ssh, manager, sinks, sessionId } = await connectedSession({
+    getShowOutput: () => false,
+  });
+  manager.watch([sessionId]);
+  manager.input(sessionId, "secret\n");
+  await waitFor(() => sinks.activity.some((a) => a.sessionId === sessionId), {
+    timeout: 5000,
+  });
+  assert.ok(sinks.activity.every((a) => !("lines" in a)));
+  manager.close(sessionId);
+  await ssh.close();
+});
+
+test("watch gates activity — an unwatched session never streams", async () => {
+  const { ssh, manager, sinks, sessionId } = await connectedSession();
+  manager.input(sessionId, "quiet\n");
+  // Give any (erroneous) coalescing flush time to fire.
+  await new Promise((r) => setTimeout(r, 300));
+  assert.equal(sinks.activity.length, 0);
+  manager.close(sessionId);
+  await ssh.close();
+});
+
+test("reveal brings a live session's window forward", async () => {
+  const { ssh, manager, sinks, sessionId } = await connectedSession();
+  assert.deepEqual(manager.reveal(sessionId), { ok: true });
+  assert.deepEqual(sinks.revealed, [sessionId]);
+  assert.deepEqual(manager.reveal("nope"), { ok: false });
+  manager.close(sessionId);
+  await ssh.close();
+});
+
+test("restart closes the old session + window and opens a fresh one", async () => {
+  const { ssh, manager, sinks, sessionId } = await connectedSession();
+  const res = manager.restart(sessionId);
+  assert.ok(res && res.sessionId && res.sessionId !== sessionId);
+  assert.equal(res.id, "c1");
+  assert.ok(sinks.destroyed.includes(sessionId)); // old window torn down
+  assert.equal(sinks.opened.length, 2); // a fresh window opened
+  assert.ok(!manager.sessions().some((s) => s.sessionId === sessionId));
+  manager.close(res.sessionId);
+  await ssh.close();
+});
+
+test("setWindowState updates the snapshot and broadcasts state", async () => {
+  const { ssh, manager, sinks, sessionId } = await connectedSession();
+  const before = sinks.states.length;
+  manager.setWindowState(sessionId, { minimized: true });
+  assert.equal(manager.sessions()[0].windowState.minimized, true);
+  assert.ok(sinks.states.length > before);
+  const last = sinks.states[sinks.states.length - 1];
+  assert.equal(last.windowState.minimized, true);
+  manager.close(sessionId);
+  await ssh.close();
+});
+
+test("close destroys the console window", async () => {
+  const { ssh, manager, sinks, sessionId } = await connectedSession();
+  manager.close(sessionId);
+  assert.ok(sinks.destroyed.includes(sessionId));
+  await ssh.close();
 });

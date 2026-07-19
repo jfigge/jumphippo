@@ -73,6 +73,7 @@ export class ConsoleList {
   #onSelect;
   #onAdd;
   #onOpen;
+  #onOverview;
   #onContextMenu;
   #onToggleCollapse;
   #onGroupMenu;
@@ -83,6 +84,7 @@ export class ConsoleList {
     onSelect,
     onAdd,
     onOpen,
+    onOverview,
     onContextMenu,
     onToggleCollapse,
     onGroupMenu,
@@ -92,6 +94,7 @@ export class ConsoleList {
     this.#onSelect = onSelect || (() => {});
     this.#onAdd = onAdd || (() => {});
     this.#onOpen = onOpen || (() => {});
+    this.#onOverview = onOverview || (() => {});
     this.#onContextMenu = onContextMenu || (() => {});
     this.#onToggleCollapse = onToggleCollapse || (() => {});
     this.#onGroupMenu = onGroupMenu || (() => {});
@@ -137,9 +140,15 @@ export class ConsoleList {
       },
       [
         el("div", { class: "tunnel-sidebar-header" }, [
-          el("span", {
-            class: "tunnel-sidebar-title",
+          // The title doubles as the "Open Consoles" overview affordance: clicking
+          // it hands the centre pane the all-consoles dashboard (Feature 210).
+          el("button", {
+            class: "tunnel-sidebar-title tunnel-sidebar-title--btn",
+            type: "button",
             text: t("consoles.title"),
+            title: t("console.overview.title"),
+            "aria-label": t("console.overview.title"),
+            onClick: () => this.#onOverview(),
           }),
           addBtn,
         ]),
@@ -238,10 +247,21 @@ export class ConsoleList {
       "aria-label": t("consoles.title"),
     });
 
+    // Feature 210: consoles read as running processes — a name over a runtime
+    // sub-line ("Running 24m" / "Idle" / …), fed live by ConsolesView.updateRuntime.
+    const sub = el("span", { class: "console-row-sub" });
+    const main = el("div", { class: "console-row-main" }, [
+      el("span", {
+        class: "tunnel-row-name",
+        text: def.name || t("consoles.unnamed"),
+      }),
+      sub,
+    ]);
+
     const root = el(
       "div",
       {
-        class: "tunnel-row",
+        class: "tunnel-row tunnel-row--console",
         role: "listitem",
         tabindex: "0",
         draggable: "true",
@@ -265,17 +285,16 @@ export class ConsoleList {
         onDragstart: (e) => this.#onRowDragStart(e, def.id),
         onDragend: () => this.#clearDrag(),
       },
-      [
-        signal,
-        typeIcon,
-        el("span", {
-          class: "tunnel-row-name",
-          text: def.name || t("consoles.unnamed"),
-        }),
-      ],
+      [signal, typeIcon, main],
     );
 
-    return { root, signal, sectionId: section ? section.id : null };
+    return { root, signal, sub, sectionId: section ? section.id : null };
+  }
+
+  /** Set a row's runtime sub-line ("Running 24m" / "Idle" / …). */
+  updateRuntime(id, text) {
+    const rec = this.#rows.get(id);
+    if (rec && rec.sub) rec.sub.textContent = text || "";
   }
 
   #buildGroupHeader(section) {

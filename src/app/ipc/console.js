@@ -94,13 +94,52 @@ function registerConsoleIPC({
     }),
   );
 
-  // Snapshot of the currently-open sessions (id + sessionId + state) for the
-  // sidebar row lamps on (re)load. Live changes arrive over jumphippo:console-state.
+  // Snapshot of the currently-open sessions (runtime metadata, no output) for the
+  // sidebar + overview on (re)load. Live changes arrive over jumphippo:console-state.
   ipcMain.handle("consoles:sessions", () =>
     safeCall(
       "consoles:sessions",
       () => getConsoleManager()?.sessions() ?? [],
       [],
+    ),
+  );
+
+  // A full runtime snapshot for ONE session (Console Manager details), Feature 210.
+  // recentLines is included only when the consoleShowOutput setting permits it
+  // (enforced in the manager). Never carries a secret.
+  ipcMain.handle("consoles:session", (_event, sessionId) =>
+    safeCall(
+      "consoles:session",
+      () =>
+        getConsoleManager()?.session(sessionId, { includeOutput: true }) ??
+        null,
+      null,
+    ),
+  );
+
+  // Set which sessions the main window is watching — enables the coalesced
+  // jumphippo:console-activity stream for exactly those (an array, or null to stop).
+  ipcMain.handle("consoles:watch", (_event, sessionIds) =>
+    safeCall("consoles:watch", () => {
+      getConsoleManager()?.watch(sessionIds);
+      return { ok: true };
+    }),
+  );
+
+  // Bring a session's terminal window forward (restore + raise + focus).
+  ipcMain.handle("consoles:reveal", (_event, sessionId) =>
+    safeCall(
+      "consoles:reveal",
+      () => getConsoleManager()?.reveal(sessionId) ?? { ok: false },
+      { ok: false },
+    ),
+  );
+
+  // Restart a session: close it + its window, then open a fresh session for the
+  // same console. Returns the new { sessionId, id } (or a { __hippoError } envelope).
+  ipcMain.handle("consoles:restart", (_event, sessionId) =>
+    safeCallWrite("consoles:restart", () =>
+      getConsoleManager()?.restart(sessionId),
     ),
   );
 }

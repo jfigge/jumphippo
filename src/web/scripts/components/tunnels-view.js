@@ -58,10 +58,14 @@ export class TunnelsView {
 
   #split;
   #sidebarStack; // left-column stack: TUNNELS sidebar + the CONSOLES mount slot
+  #detailRegion; // right cell: the tunnel detail + the console detail/overview slot
+  #consoleSlot; // Feature 210: where ConsolesView mounts the Console Manager views
+  #centerConsole = false; // true → the console slot owns the centre pane, not tunnels
   #resizer;
   #listResizer;
   #tableEl;
   #mode = "cards";
+  #onTunnelSelected;
 
   #defs = [];
   #states = new Map();
@@ -84,9 +88,10 @@ export class TunnelsView {
   #onSetMode;
   #onScheduleUpdated;
 
-  constructor({ jumphippo, openKeyFile, now } = {}) {
+  constructor({ jumphippo, openKeyFile, now, onTunnelSelected } = {}) {
     this.#jumphippo = jumphippo || window.jumphippo;
     this.#now = now || Date.now;
+    this.#onTunnelSelected = onTunnelSelected || (() => {});
 
     this.#editor = new TunnelEditorDialog({
       jumphippo: this.#jumphippo,
@@ -150,9 +155,17 @@ export class TunnelsView {
     this.#sidebarStack = el("div", { class: "sidebar-stack" }, [
       this.#list.element,
     ]);
+    // The right cell hosts the tunnel detail AND a slot the CONSOLES section fills
+    // with the Console Manager views (Feature 210). Exactly one is visible; the
+    // slot is toggled by setCenterMode(). Both share the same split column width.
+    this.#consoleSlot = el("div", { class: "console-slot", hidden: true });
+    this.#detailRegion = el("div", { class: "detail-region" }, [
+      this.#detail.element,
+      this.#consoleSlot,
+    ]);
     this.#split = el("div", { class: "tunnels-split" }, [
       this.#sidebarStack,
-      this.#detail.element,
+      this.#detailRegion,
     ]);
     this.#tableEl = this.#table.element;
 
@@ -176,7 +189,7 @@ export class TunnelsView {
       label: t("tunnels.split.resize"),
       onCommit: (px) => this.#persistSplit(px),
     });
-    this.#split.insertBefore(this.#resizer.element, this.#detail.element);
+    this.#split.insertBefore(this.#resizer.element, this.#detailRegion);
 
     // List view: the same split width fixes the tunnel-name column; an overlay
     // divider on the table drags the shared `--split-left` (persisted alike).
@@ -228,6 +241,38 @@ export class TunnelsView {
   /** The left-column stack element — the app mounts the CONSOLES section here. */
   get sidebarStack() {
     return this.#sidebarStack;
+  }
+
+  /** The centre-pane slot the CONSOLES section fills with the Console Manager
+   *  views (Feature 210). Shown/hidden via setCenterMode(). */
+  get consoleSlot() {
+    return this.#consoleSlot;
+  }
+
+  /**
+   * Choose what the centre pane shows (Feature 210): the tunnel detail, or the
+   * console slot (details / overview — which one is toggled inside the slot by the
+   * CONSOLES section itself). Persisted across a cards↔list switch by #applyCenter.
+   */
+  setCenterMode(mode) {
+    this.#centerConsole =
+      mode === "console-detail" || mode === "console-overview";
+    this.#applyCenter();
+  }
+
+  /** Drop the tunnel selection + its detail (a console took the centre pane). */
+  clearSelection() {
+    this.#selectedId = null;
+    this.#list.setSelected(null);
+    this.#table.setSelected(null);
+    this.#detail.clear();
+  }
+
+  /** Show the tunnel detail or the console slot, per the current centre mode. Only
+   *  meaningful in cards mode (list mode hides the whole split). */
+  #applyCenter() {
+    this.#detail.element.hidden = this.#centerConsole;
+    this.#consoleSlot.hidden = !this.#centerConsole;
   }
 
   /** Load definitions, jump hosts (breadcrumb), groups, live state, card order + mode. */
@@ -345,6 +390,10 @@ export class TunnelsView {
     // the stored width against the now-measurable container the moment it shows.
     if (list) this.#listResizer.refresh();
     else this.#resizer.refresh();
+    // Re-assert which centre view (tunnel detail vs console slot) owns the cards
+    // pane — the console slot lives inside the split, so switching back to cards
+    // must restore whichever was showing.
+    if (!list) this.#applyCenter();
   }
 
   // ── Selection ─────────────────────────────────────────────────────────────
@@ -439,6 +488,11 @@ export class TunnelsView {
     this.#list.setSelected(id);
     this.#table.setSelected(id);
     this.#renderDetail();
+    // Selecting a tunnel reclaims the centre pane from any console view, and tells
+    // the app so it can drop the CONSOLES section's selection (Feature 210).
+    this.#centerConsole = false;
+    this.#applyCenter();
+    this.#onTunnelSelected(id);
   }
 
   #renderDetail() {

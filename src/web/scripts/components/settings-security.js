@@ -138,8 +138,49 @@ export class SecuritySettings {
           role: "status",
           "aria-live": "polite",
         }),
+
+        // Console Manager output preview (Feature 210). Shell output can echo
+        // secrets, so this data-exposure control lives with the other security
+        // settings; default on, and the output never leaves the device or is logged.
+        el("h3", {
+          class: "settings-subhead",
+          text: t("settings.security.consoleHeading"),
+        }),
+        el("div", { class: "field settings-check" }, [
+          el(
+            "label",
+            { class: "settings-check-label", for: "security-console-output" },
+            [
+              el("input", {
+                id: "security-console-output",
+                type: "checkbox",
+                class: "settings-check-input security-console-output-check",
+                onChange: (e) => this.#setConsoleOutput(e.target.checked),
+              }),
+              el("span", { text: t("settings.security.consoleOutput") }),
+            ],
+          ),
+          el("p", {
+            class: "field-hint",
+            text: t("settings.security.consoleOutputHint"),
+          }),
+        ]),
       ],
     );
+  }
+
+  /** Persist the console-output preview toggle + broadcast so open panes re-read it. */
+  #setConsoleOutput(on) {
+    this.#jumphippo?.settings
+      ?.set?.({ consoleShowOutput: Boolean(on) })
+      ?.catch?.(() => {});
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(
+        new CustomEvent("jumphippo:console-output-changed", {
+          detail: { consoleShowOutput: Boolean(on) },
+        }),
+      );
+    }
   }
 
   // One radio card; `extra` (the master-password fields) nests inside when given.
@@ -235,6 +276,18 @@ export class SecuritySettings {
 
   /** (Re)read the live secret-storage state from main and reflect it in the panel. */
   async load() {
+    // Console-output preview toggle (Feature 210) — independent of the secret-storage
+    // read below, so a getMode failure still leaves it in sync.
+    try {
+      const settings = await this.#jumphippo?.settings?.get?.();
+      const check = this.#root?.querySelector(".security-console-output-check");
+      if (check && settings) {
+        check.checked = settings.consoleShowOutput !== false;
+      }
+    } catch {
+      /* leave the toggle as-is on a read failure */
+    }
+
     let state;
     try {
       state = await this.#jumphippo?.secretStorage?.getMode?.();

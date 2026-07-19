@@ -189,3 +189,16 @@ test("right-clicking a group header reports it for the group menu", () => {
   );
   assert.deepEqual(calls.groupMenu, ["g1"]);
 });
+
+test("updateRuntime sets and clears a row's runtime sub-line", () => {
+  const { list } = mount();
+  list.setData(DEFS, new Map([["a", "connected"]]), null);
+  list.updateRuntime("a", "Running 24m");
+  const r = rows(list);
+  assert.equal(
+    r[0].querySelector(".console-row-sub").textContent,
+    "Running 24m",
+  );
+  list.updateRuntime("a", "");
+  assert.equal(r[0].querySelector(".console-row-sub").textContent, "");
+});

@@ -730,6 +730,10 @@ function registerIpc() {
     safeCall,
     loadCatalog: () => refreshCatalog(),
     copyDiagnostics,
+    copyText: (text) => {
+      clipboard.writeText(String(text ?? ""));
+      return { ok: true };
+    },
   });
 
   // Selectable secret storage (Feature 90): mode switch / unlock / lock. On a
@@ -1026,6 +1030,16 @@ function sshKeepaliveMs() {
   return Number.isFinite(secs) && secs > 0 ? Math.round(secs * 1000) : 0;
 }
 
+/** Whether recent console output may cross to the main window (Feature 210, default
+ *  on). When off, no shell output ever reaches the Console Manager. */
+function consoleShowOutput() {
+  return safeCall(
+    "console:show-output",
+    () => getStores().settingsStore().get().consoleShowOutput !== false,
+    true,
+  );
+}
+
 /** Open a terminal window for a session; the console manager connects on ready. */
 function openConsoleWindow(sessionId, { title } = {}) {
   const theme = safeCall(
@@ -1060,6 +1074,32 @@ function openConsoleWindow(sessionId, { title } = {}) {
     _consoleWins.delete(sessionId);
     getConsoleManager()?.close(sessionId);
   });
+
+  // Feature 210: surface window visibility to the Console Manager so the details
+  // view can show whether a console window is visible / minimized / focused / full
+  // screen. Event-driven — no polling.
+  const pushWinState = () => {
+    if (win.isDestroyed()) return;
+    getConsoleManager()?.setWindowState(sessionId, {
+      visible: win.isVisible(),
+      minimized: win.isMinimized(),
+      focused: win.isFocused(),
+      fullScreen: win.isFullScreen(),
+    });
+  };
+  for (const ev of [
+    "focus",
+    "blur",
+    "minimize",
+    "restore",
+    "show",
+    "hide",
+    "enter-full-screen",
+    "leave-full-screen",
+  ]) {
+    win.on(ev, pushWinState);
+  }
+  win.once("ready-to-show", pushWinState);
 }
 
 /** Push a console:* message to one session's window (used by the manager). */
@@ -1074,6 +1114,38 @@ function sendToConsoleWindow(sessionId, channel, payload) {
         err && err.message,
       );
     }
+  }
+}
+
+/** Bring a console window forward: restore, show, raise, and focus it — even when
+ *  another app has focus (macOS needs an explicit app activation). Feature 210. */
+function revealConsoleWindow(sessionId) {
+  const win = _consoleWins.get(sessionId);
+  if (!win || win.isDestroyed()) return;
+  try {
+    if (win.isMinimized()) win.restore();
+    win.show();
+    win.moveTop?.();
+    win.focus();
+    if (process.platform === "darwin") app.focus({ steal: true });
+  } catch (err) {
+    console.error(
+      `[main] reveal console ${sessionId} failed:`,
+      err && err.message,
+    );
+  }
+}
+
+/** Destroy one console window (Close Console / Restart). Guarded + idempotent —
+ *  the window's own `closed` handler then routes back to the manager harmlessly. */
+function destroyConsoleWindow(sessionId) {
+  const win = _consoleWins.get(sessionId);
+  if (!win) return;
+  _consoleWins.delete(sessionId);
+  try {
+    if (!win.isDestroyed()) win.destroy();
+  } catch {
+    /* best-effort teardown */
   }
 }
 
@@ -1215,8 +1287,12 @@ function bootstrap() {
       hostKeys: _hostKeys,
       keyReader,
       getSshKeepaliveMs: sshKeepaliveMs,
+      getShowOutput: consoleShowOutput,
+      now: Date.now,
       openWindow: openConsoleWindow,
       sendToWindow: sendToConsoleWindow,
+      revealWindow: revealConsoleWindow,
+      destroyWindow: destroyConsoleWindow,
     });
 
     // Scheduler (Feature 150): time/network auto-arm. It only reaches the renderer

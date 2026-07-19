@@ -322,6 +322,63 @@ export const EN = {
   "console.status.connecting": "Connecting…",
   "console.status.closed": "Connection closed.",
 
+  // ── Console Manager (Feature 210) ───────────────────────────────────────
+  // Session status (the details pill + overview cards).
+  "console.state.connecting": "Connecting…",
+  "console.state.connected": "Connected",
+  "console.state.idle": "Idle",
+  "console.state.error": "Disconnected",
+  "console.state.closed": "Closed",
+  "console.state.notRunning": "Not running",
+  // Details header.
+  "console.details.connectedTo": "Connected to {host}",
+  "console.details.window": "Window #{n}",
+  "console.details.notRunningHint":
+    "This console isn’t running. Open it to start a session.",
+  // Section headings.
+  "console.section.window": "Window",
+  "console.section.output": "Recent output",
+  "console.section.runtime": "Runtime",
+  "console.section.activity": "Activity",
+  // Window-state chips.
+  "console.window.visible": "Visible",
+  "console.window.hidden": "Hidden",
+  "console.window.minimized": "Minimized",
+  "console.window.fullScreen": "Full screen",
+  "console.window.focused": "Focused",
+  // Recent-output panel.
+  "console.output.empty": "No output yet.",
+  "console.output.disabled": "Output preview disabled.",
+  "console.output.disabledHint": "Enable it in Settings → Security.",
+  // Runtime metadata labels.
+  "console.runtime.started": "Started",
+  "console.runtime.runningTime": "Running time",
+  "console.runtime.destination": "SSH destination",
+  "console.runtime.jumpHost": "Jump host",
+  "console.runtime.size": "Rows × columns",
+  "console.runtime.none": "—",
+  // Activity labels.
+  "console.activity.sent": "Bytes sent",
+  "console.activity.received": "Bytes received",
+  "console.activity.lastActivity": "Last activity",
+  // Actions.
+  "console.action.bringForward": "Bring Window Forward",
+  "console.action.openNew": "Open New Console",
+  "console.action.restart": "Restart",
+  "console.action.close": "Close Console",
+  "console.action.copyInfo": "Copy Connection Info",
+  "console.action.copied": "Connection info copied to the clipboard.",
+  // Overview.
+  "console.overview.title": "Open Consoles",
+  "console.overview.empty": "No consoles are running.",
+  "console.overview.emptyHint": "Open a console to start a session.",
+  "console.overview.lastOutput": "Last output",
+  // Sidebar sub-line (running processes).
+  "console.sidebar.running": "Running {duration}",
+  "console.sidebar.idle": "Idle",
+  "console.sidebar.connecting": "Connecting…",
+  "console.sidebar.disconnected": "Disconnected",
+
   // ── Tunnel groups (Feature 140) ─────────────────────────────────────────
   "group.newTitle": "New group",
   "group.editTitle": "Edit group",
@@ -573,6 +630,10 @@ export const EN = {
   "settings.security.help":
     "Choose how Jump Hippo encrypts SSH passwords and key passphrases on this device. Switching re-encrypts every stored secret.",
   "settings.security.modeAria": "Secret storage mode",
+  "settings.security.consoleHeading": "Console Manager",
+  "settings.security.consoleOutput": "Show recent console output",
+  "settings.security.consoleOutputHint":
+    "Preview the last lines of each console in the Console Manager. Shell output can echo secrets, so it stays on this device and is never logged or exported.",
   "settings.security.mode.appKey": "This device (no prompt)",
   "settings.security.mode.appKeyDesc":
     "Encrypt with a key kept on this device. No system prompts — but anyone who can read this computer’s files could read your secrets.",

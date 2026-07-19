@@ -69,6 +69,12 @@ const DEFAULTS = Object.freeze({
 
   // ── Feature 150: scheduling & connectivity-aware auto-arm ─────────────────
   schedulingEnabled: false, // master switch: honour per-tunnel/group schedules
+
+  // ── Feature 210: Console Manager ──────────────────────────────────────────
+  // Show a recent-output preview (ANSI-stripped) in the Console Manager. Default on;
+  // when false, no shell output ever crosses to the main window. A privacy control:
+  // shell output can echo secrets, so this hard-gates that first-ever exposure.
+  consoleShowOutput: true,
 });
 
 class SettingsStore {

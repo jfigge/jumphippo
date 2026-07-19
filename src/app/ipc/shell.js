@@ -33,14 +33,28 @@
  * @param {(channel: string, fn: Function, fallback?: any) => any} deps.safeCall
  * @param {() => object} deps.loadCatalog  resolve the active i18n catalog
  * @param {() => string} deps.copyDiagnostics  build the report, copy it, return it
+ * @param {(text: string) => object} deps.copyText  write plain text to the clipboard
  */
-function registerShellIPC({ ipcMain, safeCall, loadCatalog, copyDiagnostics }) {
+function registerShellIPC({
+  ipcMain,
+  safeCall,
+  loadCatalog,
+  copyDiagnostics,
+  copyText,
+}) {
   ipcMain.handle("i18n:load", () =>
     safeCall("i18n:load", () => loadCatalog(), null),
   );
 
   ipcMain.handle("diagnostics:copy", () =>
     safeCall("diagnostics:copy", () => copyDiagnostics(), ""),
+  );
+
+  // Copy arbitrary (secret-free) text to the clipboard in main — used by the
+  // Console Manager's "Copy Connection Info" (Feature 210). Write-only; the caller
+  // builds host/port/jump-chain text that carries no credential.
+  ipcMain.handle("shell:copy-text", (_event, text) =>
+    safeCall("shell:copy-text", () => copyText(text), { ok: false }),
   );
 }
 

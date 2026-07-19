@@ -650,3 +650,43 @@ test("dropping a tunnel back at its own position is a no-op (no write)", async (
   assert.equal(calls.update, undefined, "no group change written");
   assert.equal(calls.tunnelReorder, undefined, "no reorder written");
 });
+
+// ── Console Manager centre-pane ownership (Feature 210) ───────────────────────
+
+test("setCenterMode('console-detail') hands the centre pane to the console slot", async () => {
+  const { view } = await mount();
+  const detail = view.element.querySelector(".detail-region > .tunnel-detail");
+  assert.equal(detail.hidden, false);
+  assert.equal(view.consoleSlot.hidden, true);
+  view.setCenterMode("console-detail");
+  assert.equal(detail.hidden, true);
+  assert.equal(view.consoleSlot.hidden, false);
+});
+
+test("selecting a tunnel reclaims the centre pane and notifies onTunnelSelected", async () => {
+  resetDom();
+  const picked = [];
+  const view = new TunnelsView({
+    jumphippo: stub(DEFS, {}),
+    now: () => NOW,
+    onTunnelSelected: (id) => picked.push(id),
+  });
+  document.body.appendChild(view.element);
+  await view.load();
+  view.setCenterMode("console-detail"); // hand the pane to a console
+  const detail = view.element.querySelector(".detail-region > .tunnel-detail");
+  assert.equal(detail.hidden, true);
+  picked.length = 0;
+  view.element.querySelectorAll(".tunnel-row")[1].click();
+  assert.equal(detail.hidden, false); // reclaimed for the tunnel
+  assert.equal(view.consoleSlot.hidden, true);
+  assert.deepEqual(picked, ["b"]);
+});
+
+test("clearSelection drops the tunnel highlight and clears its detail", async () => {
+  const { view } = await mount();
+  assert.ok(view.element.querySelector(".tunnel-row--selected"));
+  view.clearSelection();
+  assert.equal(view.element.querySelector(".tunnel-row--selected"), null);
+  assert.equal(view.element.querySelector(".detail-empty").hidden, false);
+});

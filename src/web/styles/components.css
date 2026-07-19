@@ -1766,6 +1766,26 @@
   color: var(--color-subtext);
 }
 
+/* Console rows read as running processes (Feature 210): a name over a runtime
+   sub-line. The status dot + terminal glyph sit beside the two-line name column. */
+.tunnel-row--console {
+  align-items: center;
+}
+.console-row-main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1 1 auto;
+  line-height: 1.25;
+}
+.console-row-sub {
+  font-size: 11px;
+  color: var(--color-muted);
+}
+.console-row-sub:empty {
+  display: none;
+}
+
 .tunnel-sidebar-header {
   display: flex;
   align-items: center;
@@ -3096,6 +3116,387 @@
   box-shadow: 0 0 0 2px var(--color-base);
 }
 .group-swatches .group-swatch:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* ── Console Manager (Feature 210) ─────────────────────────────────────────── */
+
+/* The right cell of the split hosts the tunnel detail AND the console slot; each
+   fills the cell and exactly one is shown at a time (setCenterMode). */
+.detail-region {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  overflow: hidden;
+}
+.detail-region > .tunnel-detail,
+.detail-region > .console-slot {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+}
+.detail-region > .console-slot {
+  display: flex;
+}
+.detail-region > .console-slot[hidden],
+.detail-region > .tunnel-detail[hidden] {
+  display: none;
+}
+.console-slot > .console-detail,
+.console-slot > .console-overview {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+}
+/* Both panes set `display: flex`, which (as an author rule) out-ranks the UA
+   `[hidden] { display: none }` — so hiding one via the attribute needs an explicit
+   author override, or both would render side by side in the flex slot. */
+.console-detail[hidden],
+.console-overview[hidden] {
+  display: none;
+}
+
+.console-detail {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--space-4);
+  gap: var(--space-4);
+}
+.console-detail-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.console-detail-content[hidden] {
+  display: none;
+}
+
+/* Header: name + status pill, then a muted sub-line. */
+.console-detail-header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.console-detail-heading {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.console-detail-name {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+.console-detail-sub {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  color: var(--color-muted);
+  font-size: 12px;
+}
+
+/* Window switcher — one pill per open session when a console has several windows. */
+.console-session-switcher {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  margin-top: var(--space-1);
+}
+.console-session-switcher[hidden] {
+  display: none;
+}
+.console-session-pill {
+  padding: 2px var(--space-2);
+  border: 1px solid var(--color-overlay);
+  border-radius: 999px;
+  background: var(--color-surface-0);
+  color: var(--color-subtext);
+  font-size: 11px;
+}
+.console-session-pill:hover {
+  background: var(--color-surface-1);
+}
+.console-session-pill--active {
+  border-color: var(--color-accent);
+  color: var(--color-text);
+  background: var(--color-surface-1);
+  font-weight: 600;
+}
+.console-session-pill:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* Status pill — a coloured chip echoing the session lifecycle. */
+.console-status-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px var(--space-2);
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--color-base);
+  background: var(--color-muted);
+}
+.console-status-pill--connected {
+  background: var(--color-success);
+}
+.console-status-pill--connecting {
+  background: var(--color-warning);
+}
+.console-status-pill--idle {
+  background: var(--color-overlay);
+  color: var(--color-text);
+}
+.console-status-pill--error {
+  background: var(--color-danger);
+}
+.console-status-pill--closed,
+.console-status-pill--none {
+  background: var(--color-surface-1);
+  color: var(--color-subtext);
+}
+
+/* Actions row — the big buttons; the first is the primary "Bring Window Forward". */
+.console-detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.console-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: var(--control-height);
+  padding: 0 var(--space-3);
+  border: 1px solid var(--color-overlay);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-0);
+  color: var(--color-text);
+}
+.console-action-btn:hover:not(:disabled) {
+  background: var(--color-surface-1);
+}
+.console-action-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.console-action-btn--primary {
+  background: var(--color-success);
+  border-color: var(--color-success);
+  color: var(--color-base);
+  font-weight: 600;
+}
+.console-action-btn--primary:hover:not(:disabled) {
+  background: var(--color-success);
+  filter: brightness(1.08);
+}
+.console-action-glyph {
+  display: inline-flex;
+}
+.console-action-glyph svg {
+  display: block;
+}
+
+/* A titled group of related fields. */
+.console-card-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.console-card-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+/* Window-status chips. */
+.console-window-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.console-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  border: 1px solid var(--color-overlay);
+  color: var(--color-subtext);
+  background: var(--color-surface-0);
+}
+.console-chip--on {
+  border-color: var(--color-success);
+  color: var(--color-success);
+}
+.console-chip--off {
+  color: var(--color-muted);
+}
+
+/* Recent-output preview — read-only, monospaced, auto-scrolled. NOT a terminal. */
+.console-output {
+  margin: 0;
+  max-height: 220px;
+  min-height: 64px;
+  overflow: auto;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-overlay);
+  border-radius: var(--radius-md);
+  background: var(--color-crust);
+  color: var(--color-subtext);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.console-output--empty,
+.console-output--disabled {
+  color: var(--color-muted);
+  font-style: italic;
+}
+
+/* Two-column label/value runtime + activity grid. */
+.console-info-grid {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: var(--space-1) var(--space-4);
+  margin: 0;
+}
+.console-info-label {
+  color: var(--color-muted);
+  font-size: 12px;
+}
+.console-info-value {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 12px;
+}
+
+/* ── Consoles overview (Feature 210) — a card per running session ───────────── */
+.console-overview {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--space-4);
+  gap: var(--space-3);
+}
+.console-overview-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+.console-overview-empty {
+  color: var(--color-muted);
+}
+.console-overview-empty[hidden] {
+  display: none;
+}
+.console-overview-empty-hint {
+  font-size: 12px;
+  margin-top: var(--space-1);
+}
+.console-overview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--space-3);
+}
+.console-overview-grid[hidden] {
+  display: none;
+}
+.console-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border: 1px solid var(--color-overlay);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-0);
+  cursor: pointer;
+}
+.console-card:hover {
+  background: var(--color-surface-1);
+}
+.console-card:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+.console-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+.console-card-name {
+  font-weight: 600;
+  color: var(--color-text);
+}
+.console-card-output-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.console-card-output-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--color-muted);
+}
+.console-card-output {
+  margin: 0;
+  max-height: 76px;
+  overflow: hidden;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--color-subtext);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.console-card-output--disabled {
+  font-style: italic;
+  color: var(--color-muted);
+}
+.console-card-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-top: auto;
+}
+.console-card-duration {
+  font-size: 11px;
+  color: var(--color-muted);
+}
+.console-card-forward {
+  height: 26px;
+  padding: 0 var(--space-2);
+  font-size: 11px;
+}
+
+/* The CONSOLES section title doubles as the "Open Consoles" overview button. */
+.tunnel-sidebar-title--btn {
+  background: none;
+  border: none;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+}
+.tunnel-sidebar-title--btn:hover {
+  color: var(--color-subtext);
+}
+.tunnel-sidebar-title--btn:focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
 }

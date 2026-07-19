@@ -21,6 +21,29 @@ const assert = require("node:assert/strict");
 
 const { buildReport, redact, summarizeTunnel } = require("../diagnostics");
 
+test("recent console output can never reach a diagnostics report", () => {
+  // Feature 210 guardrail: the report is built ONLY from sealed tunnel/credential
+  // lists + a redacted log tail. Console session runtime — and its recent-output
+  // preview in particular — has no path in. Even if a caller mistakenly hands a
+  // `consoles` payload (with output lines) to buildReport, it is ignored.
+  const report = buildReport({
+    app: { version: "1.0.0" },
+    consoles: [
+      {
+        name: "db shell",
+        recentLines: [
+          "$ cat /etc/shadow",
+          "root:$6$SECRET_HASH:19000:0:99999:7:::",
+        ],
+      },
+    ],
+  });
+  assert.equal(report.includes("SECRET_HASH"), false);
+  assert.equal(report.includes("/etc/shadow"), false);
+  assert.equal(report.includes("recentLines"), false);
+  assert.equal(report.includes("db shell"), false);
+});
+
 test("the header carries generatedAt and every app field", () => {
   const report = buildReport({
     app: { version: "1.2.3", platform: "darwin", electron: "42.0.0" },

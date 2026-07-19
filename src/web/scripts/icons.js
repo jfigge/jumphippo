@@ -142,4 +142,28 @@ export const icons = {
   // Console (Feature 200): a shell prompt chevron + input line, row-inline sized.
   terminal: () =>
     stroke16('<path d="M3.5 5.2 6.2 8 3.5 10.8"/><path d="M7.6 11.2H12"/>'),
+
+  // Console Manager actions (Feature 210). external-link → "Bring Window Forward";
+  // refresh-cw → "Restart"; x → "Close Console"; copy → "Copy Connection Info".
+  externalWindow: () =>
+    stroke(
+      '<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>' +
+        '<polyline points="15 3 21 3 21 9"/>' +
+        '<line x1="10" y1="14" x2="21" y2="3"/>',
+    ),
+  refresh: () =>
+    stroke(
+      '<polyline points="23 4 23 10 17 10"/>' +
+        '<polyline points="1 20 1 14 7 14"/>' +
+        '<path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>',
+    ),
+  x: () =>
+    stroke(
+      '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>',
+    ),
+  copy: () =>
+    stroke(
+      '<rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>' +
+        '<path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',
+    ),
 };

@@ -107,7 +107,11 @@ function commitFontSize(size) {
 async function initTunnelsView() {
   const host = document.getElementById("tunnels-view");
   if (!host) return;
-  tunnelsView = new TunnelsView();
+  // Feature 210: selecting a tunnel reclaims the centre pane and drops the
+  // CONSOLES section's selection, so the two views never both look "active".
+  tunnelsView = new TunnelsView({
+    onTunnelSelected: () => consolesView?.clearSelection(),
+  });
   host.appendChild(tunnelsView.element);
   try {
     await tunnelsView.load();
@@ -117,12 +121,19 @@ async function initTunnelsView() {
 }
 
 // Mount the CONSOLES section (Feature 200) into the tunnels sidebar stack, so the
-// left tree shows TUNNELS then CONSOLES. Independent of the tunnels load, so a slow
-// console list never blocks tunnels (and vice-versa).
+// left tree shows TUNNELS then CONSOLES. Its Console Manager views (Feature 210)
+// mount into the tunnels view's centre slot; selecting a console hands that pane
+// to the console detail. Independent of the tunnels load, so a slow console list
+// never blocks tunnels (and vice-versa).
 async function initConsolesView() {
   if (!tunnelsView || !tunnelsView.sidebarStack) return;
-  consolesView = new ConsolesView();
+  consolesView = new ConsolesView({
+    onConsoleSelected: () => tunnelsView?.setCenterMode("console-detail"),
+    onOverviewSelected: () => tunnelsView?.setCenterMode("console-overview"),
+  });
   tunnelsView.sidebarStack.appendChild(consolesView.element);
+  tunnelsView.consoleSlot.appendChild(consolesView.detailElement);
+  tunnelsView.consoleSlot.appendChild(consolesView.overviewElement);
   try {
     await consolesView.load();
   } catch (err) {

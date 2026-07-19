@@ -47,6 +47,54 @@ remote shell. The window is a full, interactive terminal:
 Open the same console more than once for multiple independent shells; each gets its
 own window.
 
+## The Console Manager
+
+The terminal always lives in its own window — Jump Hippo never embeds it in the main
+window. Instead, the main window is a **manager** for your console windows: a
+lightweight window switcher and dashboard for your live SSH shells.
+
+- In the **CONSOLES** sidebar, consoles read as running processes: a status dot plus
+  a runtime line (**Running 24m**, **Idle**, **Connecting…**), so you can see at a
+  glance which are live.
+- **Select a console** (single click) and the centre pane becomes its **details**
+  view — no terminal, just information to help you manage the session:
+  - its **status** and which server it's **connected to**, the **window number**,
+    and how long it's been **running**;
+  - the **window state** — visible, hidden, minimized, or full screen;
+  - a read-only **recent-output** preview (the last lines the shell printed, with
+    colour codes stripped) so you can tell one console from another at a glance;
+  - **runtime** and **activity** — start time, running time, SSH destination and jump
+    host, terminal size, and bytes sent/received.
+- **Click the CONSOLES title** to open the **Open Consoles** overview: a card per
+  running session, each with its status, last output, and a **Bring Forward** button.
+  Double-click a card to jump to that window.
+
+### Actions
+
+The details view's big buttons act on the session:
+
+- **Bring Window Forward** — restores, raises, and focuses that console's window,
+  even from behind another app. (Double-clicking its sidebar row or overview card
+  does the same.)
+- **Open New Console** — starts another session for this console.
+- **Restart** — closes this session and opens a fresh one.
+- **Close Console** — ends the session and closes its window.
+- **Copy Connection Info** — copies the host, port, and jump chain (no secrets) to
+  the clipboard.
+
+### Recent output & your privacy
+
+The recent-output preview is a convenience for telling consoles apart — it is **not**
+a second terminal. It shows only the last handful of lines, control codes removed,
+and it is streamed to the main window **only while you're looking at that console**.
+Because a shell can echo secrets (a password you type, a token in a command's
+output), the preview **never leaves your device** and is **never written to a log,
+the diagnostics report, or an export**, and it's dropped the moment the session ends.
+
+If you'd rather no shell output reach the main window at all, turn it off in
+**Settings ▸ Security ▸ Console Manager** ("Show recent console output"). The rest of
+the manager — status, window state, runtime, activity — keeps working.
+
 ## Host-key trust
 
 The first time you open a console to an unrecognised server (or through an
